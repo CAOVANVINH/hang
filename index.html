@@ -3,438 +3,369 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Công Ty Thiết Kế In Ấn Hội An - Quản Lý Công Việc</title>
-    <!-- Tích hợp Tailwind CSS -->
+    <title>Trò Chơi Học Tập Vui</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" xintegrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        /* Font tùy chỉnh */
-        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800&display=swap');
         body {
-            font-family: 'Be Vietnam Pro', sans-serif;
+            font-family: 'Quicksand', sans-serif;
         }
-        /* Hiệu ứng chữ chạy màu gradient */
-        .animated-gradient-text {
-            background: linear-gradient(to right, #3b82f6, #8b5cf6, #ec4899, #f59e0b, #3b82f6);
-            background-size: 250% auto;
-            color: #000;
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: gradient-animation 5s linear infinite;
+        .choice-btn {
+            transition: all 0.2s ease-in-out;
         }
-
-        @keyframes gradient-animation {
-            to {
-                background-position: 250% center;
-            }
+        .choice-btn.selected {
+            transform: scale(1.05);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
         }
-        /* Hiệu ứng khi gạch ngang công việc */
-        .completed .task-content,
-        .completed .customer-info {
-            text-decoration: line-through;
-            color: #9ca3af; /* gray-400 */
+        .answer-option {
+            transition: all 0.2s ease-in-out;
         }
-        /* Style cho date time picker để dễ nhìn hơn trong dark mode */
-        input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(0.5);
+        .answer-option:hover:not(:disabled) {
+            background-color: #3b82f6;
+            color: white;
         }
-        .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-            filter: invert(1);
+        .answer-option.correct {
+            background-color: #22c55e !important;
+            color: white;
+            border-color: #16a34a;
         }
-        /* Ẩn các mục không cần thiết */
-        .hidden {
-            display: none !important;
-        }
-        /* Hiệu ứng cho modal */
-        .modal-enter-active, .modal-leave-active {
-            transition: opacity 200ms, transform 200ms;
-        }
-        .modal-enter {
-            opacity: 0;
-            transform: scale(0.95);
-        }
-        .modal-enter-active {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .modal-leave {
-            opacity: 1;
-            transform: scale(1);
-        }
-        .modal-leave-active {
-            opacity: 0;
-            transform: scale(0.95);
+        .answer-option.incorrect {
+            background-color: #ef4444 !important;
+            color: white;
+            border-color: #dc2626;
         }
     </style>
 </head>
-<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+<body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
 
-    <!-- Modal Thêm Công Việc -->
-    <div id="taskModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div id="modalContent" class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-2xl relative">
-            <button id="closeModalBtn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-2xl" aria-label="Đóng">&times;</button>
-            <div class="p-6 sm:p-8">
-                <h3 class="text-2xl font-bold mb-6 text-center text-blue-600 dark:text-blue-400">Thêm Công Việc Mới</h3>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                     <div>
-                        <label for="customerNameInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tên khách hàng <span class="text-red-500">*</span></label>
-                        <input type="text" id="customerNameInput" class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" placeholder="Nguyễn Văn A">
-                    </div>
-                    <div>
-                        <label for="phoneInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Số điện thoại</label>
-                        <input type="tel" id="phoneInput" class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" placeholder="(Không bắt buộc)">
-                    </div>
-                     <div>
-                        <label for="addressInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Địa chỉ</label>
-                        <input type="text" id="addressInput" class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" placeholder="(Không bắt buộc)">
-                    </div>
-                    <div>
-                        <label for="timeInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Thời gian <span class="text-red-500">*</span></label>
-                        <input type="datetime-local" id="timeInput" class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700">
-                    </div>
+    <div class="w-full max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-4 md:p-8">
+
+        <!-- Màn hình lựa chọn -->
+        <div id="selection-screen">
+            <h1 class="text-3xl md:text-4xl font-bold text-center text-gray-800 mb-2">Trò Chơi Học Tập</h1>
+            <p class="text-center text-gray-500 mb-8">Cùng bé vừa học vừa chơi!</p>
+
+            <!-- Chọn Môn học -->
+            <div class="mb-6">
+                <h2 class="text-xl font-semibold mb-3 text-gray-700">1. Chọn Môn Học</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button data-subject="toan" class="choice-btn bg-sky-500 text-white font-bold py-4 rounded-lg shadow-md hover:bg-sky-600">
+                        🔢 Toán Học
+                    </button>
+                    <button data-subject="tiengviet" class="choice-btn bg-emerald-500 text-white font-bold py-4 rounded-lg shadow-md hover:bg-emerald-600">
+                        ✍️ Tiếng Việt
+                    </button>
                 </div>
-                <div class="mb-6">
-                    <label for="taskInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nội dung công việc <span class="text-red-500">*</span></label>
-                    <textarea id="taskInput" rows="3" class="w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700" placeholder="Sửa chữa máy lạnh, thay gas..."></textarea>
-                </div>
-                <button id="addTaskBtn" class="w-full bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-blue-700 transition-colors duration-300 shadow-md flex items-center justify-center gap-2">
-                    <i class="fas fa-plus"></i>
-                    <span>Thêm Công Việc</span>
-                </button>
             </div>
-        </div>
-    </div>
-    
-    <!-- Modal Đăng nhập Admin -->
-    <div id="adminModal" class="fixed inset-0 bg-gray-900 bg-opacity-60 flex items-center justify-center p-4 z-50 hidden">
-        <div id="adminModalContent" class="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-sm relative">
-            <button id="closeAdminModalBtn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 text-2xl" aria-label="Đóng">&times;</button>
-            <div class="p-8">
-                <h3 class="text-2xl font-bold mb-6 text-center text-purple-600 dark:text-purple-400">Đăng Nhập Admin</h3>
-                <div class="space-y-4">
-                    <div>
-                        <label for="usernameInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Tên người dùng</label>
-                        <input type="text" id="usernameInput" class="mt-1 w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700">
-                    </div>
-                    <div>
-                        <label for="passwordInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Mật khẩu</label>
-                        <input type="password" id="passwordInput" class="mt-1 w-full p-3 border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700">
-                    </div>
+
+            <!-- Chọn Lớp -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold mb-3 text-gray-700">2. Chọn Lớp</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <button data-grade="lop1" class="choice-btn bg-amber-500 text-white font-bold py-4 rounded-lg shadow-md hover:bg-amber-600">
+                        Lớp 1
+                    </button>
+                    <button data-grade="lop2" class="choice-btn bg-rose-500 text-white font-bold py-4 rounded-lg shadow-md hover:bg-rose-600">
+                        Lớp 2
+                    </button>
                 </div>
-                 <p id="loginError" class="text-red-500 text-sm mt-2 text-center hidden">Sai thông tin đăng nhập!</p>
-                <button id="loginBtn" class="mt-6 w-full bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-purple-700 transition-colors duration-300 shadow-md">Đăng Nhập</button>
             </div>
-        </div>
-    </div>
 
-
-    <!-- Nội dung chính của trang -->
-    <div class="container mx-auto max-w-4xl mt-8 sm:mt-16 px-4 pb-20">
-        
-        <div class="text-center mb-6">
-            <h1 class="animated-gradient-text text-3xl sm:text-4xl md:text-5xl font-extrabold pb-2">Công Ty Thiết Kế In Ấn Hội An</h1>
-        </div>
-
-        <header class="text-center mb-8">
-            <h2 class="text-2xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">Quản Lý Công Việc</h2>
-            <p class="text-gray-600 dark:text-gray-400 mt-2">Nơi quản lý tất cả công việc của bạn.</p>
-        </header>
-
-        <div class="mb-8 text-center">
-             <button id="openModalBtn" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-blue-700 transition-all duration-300 shadow-lg transform hover:scale-105 flex items-center justify-center gap-2 mx-auto">
-                <i class="fas fa-plus-circle"></i>
-                <span>Tạo Công Việc Mới</span>
+            <!-- Nút Bắt đầu -->
+            <button id="start-btn" class="w-full bg-gray-400 text-white font-bold py-4 rounded-lg text-xl cursor-not-allowed" disabled>
+                Bắt đầu!
             </button>
         </div>
-        
-        <!-- Khu vực Admin Controls -->
-        <div id="adminControls" class="hidden my-6 p-4 bg-purple-100 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 rounded-lg">
-            <h3 class="text-lg font-bold text-purple-800 dark:text-purple-300 mb-3 text-center">Bảng điều khiển Admin</h3>
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button id="backupBtn" class="flex-1 bg-green-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"><i class="fas fa-download"></i> Sao lưu</button>
-                <button id="restoreBtn" class="flex-1 bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors flex items-center justify-center gap-2"><i class="fas fa-upload"></i> Phục hồi</button>
-                <button id="logoutBtn" class="flex-1 bg-red-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"><i class="fas fa-sign-out-alt"></i> Đăng xuất</button>
-                <input type="file" id="restoreFileInput" class="hidden" accept=".json">
+
+        <!-- Màn hình trò chơi -->
+        <div id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4">
+                <div id="progress-text" class="font-semibold text-gray-600">Câu 1/12</div>
+                <div id="score-text" class="font-bold text-lg text-green-600">Điểm: 0</div>
             </div>
+            <div id="question-container" class="bg-gray-100 p-6 rounded-lg text-center mb-6 min-h-[100px] flex items-center justify-center">
+                <p class="text-xl md:text-2xl font-semibold text-gray-800"></p>
+            </div>
+            <div id="options-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Các lựa chọn trả lời sẽ được thêm vào đây -->
+            </div>
+            <div id="feedback-container" class="text-center mt-4 font-bold text-2xl h-8"></div>
+            <button id="next-btn" class="hidden w-full mt-4 bg-blue-500 text-white font-bold py-3 rounded-lg hover:bg-blue-600">Câu tiếp theo</button>
         </div>
 
-        <!-- Danh sách công việc -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 sm:p-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 pb-2 border-b-2 border-gray-200 dark:border-gray-700">
-                <h3 class="text-2xl font-bold mb-2 sm:mb-0">Danh Sách Công Việc</h3>
-                <div class="flex items-center space-x-3">
-                    <label for="hideCompletedToggle" class="text-sm font-medium text-gray-600 dark:text-gray-300 select-none">Ẩn việc đã xong</label>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" id="hideCompletedToggle" class="sr-only peer">
-                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:peer-focus:ring-blue-800 rounded-full peer dark:bg-gray-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-500 peer-checked:bg-blue-600"></div>
-                    </label>
-                </div>
-            </div>
-            <ul id="taskList" class="space-y-4"></ul>
-            <div id="no-tasks-message" class="text-center text-gray-500 dark:text-gray-400 py-6 hidden">
-                <i class="fas fa-check-circle fa-2x mb-2"></i>
-                <p>Tuyệt vời! Không có công việc nào cần làm.</p>
-            </div>
+        <!-- Màn hình kết quả -->
+        <div id="results-screen" class="hidden text-center">
+            <h2 class="text-3xl font-bold text-gray-800 mb-4">Hoàn thành!</h2>
+            <p id="final-score-text" class="text-xl text-gray-600 mb-2">Bé đã đạt được</p>
+            <p id="final-score" class="text-6xl font-bold text-blue-600 mb-6">0/0</p>
+            <p id="final-message" class="text-lg text-gray-500 mb-8">Cố gắng lên ở lần sau nhé!</p>
+            <button id="play-again-btn" class="w-full bg-green-500 text-white font-bold py-4 rounded-lg text-xl hover:bg-green-600">Chơi lại</button>
         </div>
-        
-        <footer class="text-center mt-10 text-gray-500 dark:text-gray-400 text-sm">
-            <p>Tạo bởi Gemini với ❤️</p>
-        </footer>
     </div>
-    
-    <!-- Nút Admin nổi -->
-    <button id="openAdminModalBtn" class="fixed bottom-4 right-4 bg-purple-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-purple-700 transition-transform transform hover:scale-110 z-40">
-        <i class="fas fa-user-shield text-2xl"></i>
-    </button>
 
     <script>
-        // --- CONSTANTS & STATE ---
-        const LOCAL_STORAGE_KEY = 'customerTasksV10'; // Incremented version for stability
-        let allTasks = []; // The single source of truth for task data
-
-        // --- DOM ELEMENTS ---
-        const customerNameInput = document.getElementById('customerNameInput');
-        const phoneInput = document.getElementById('phoneInput');
-        const addressInput = document.getElementById('addressInput');
-        const timeInput = document.getElementById('timeInput');
-        const taskInput = document.getElementById('taskInput');
-        const addTaskBtn = document.getElementById('addTaskBtn');
-        const taskList = document.getElementById('taskList');
-        const noTasksMessage = document.getElementById('no-tasks-message');
-        const hideCompletedToggle = document.getElementById('hideCompletedToggle');
-        
-        const taskModal = document.getElementById('taskModal');
-        const modalContent = document.getElementById('modalContent');
-        const openModalBtn = document.getElementById('openModalBtn');
-        const closeModalBtn = document.getElementById('closeModalBtn');
-
-        const adminModal = document.getElementById('adminModal');
-        const adminModalContent = document.getElementById('adminModalContent');
-        const openAdminModalBtn = document.getElementById('openAdminModalBtn');
-        const closeAdminModalBtn = document.getElementById('closeAdminModalBtn');
-        const usernameInput = document.getElementById('usernameInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginError = document.getElementById('loginError');
-
-        const adminControls = document.getElementById('adminControls');
-        const backupBtn = document.getElementById('backupBtn');
-        const restoreBtn = document.getElementById('restoreBtn');
-        const restoreFileInput = document.getElementById('restoreFileInput');
-        const logoutBtn = document.getElementById('logoutBtn');
-
-        // --- MODAL HELPER ---
-        function setupModal(modal, openBtn, closeBtn, content) {
-            function show() {
-                modal.classList.remove('hidden');
-                content.classList.remove('modal-leave-active');
-                content.classList.add('modal-enter-active');
+        // --- NGÂN HÀNG CÂU HỎI LỚN ---
+        const questions = {
+            toan: {
+                lop1: [
+                    { question: "5 + 4 = ?", options: [8, 9, 10, 7], answer: 9 },
+                    { question: "10 - 6 = ?", options: [3, 4, 5, 6], answer: 4 },
+                    { question: "Số liền sau của 19 là?", options: [18, 20, 21, 10], answer: 20 },
+                    { question: "8 + ... = 12?", options: [3, 4, 5, 6], answer: 4 },
+                    { question: "Có bao nhiêu hình tam giác: 🔺 🔵 🔺 🔺", options: [1, 2, 3, 4], answer: 3 },
+                    { question: "9 + 5 = ?", options: [13, 14, 15, 16], answer: 14 },
+                    { question: "17 - 8 = ?", options: [7, 8, 9, 10], answer: 9 },
+                    { question: "Số bé nhất có hai chữ số là?", options: [9, 10, 11, 99], answer: 10 },
+                    { question: "Số liền trước của 30 là?", options: [28, 29, 31, 32], answer: 29 },
+                    { question: "Lan có 7 kẹo, mẹ cho thêm 5. Lan có tất cả...cái kẹo?", options: [11, 12, 13, 2], answer: 12 },
+                    { question: "10 + 40 = ?", options: [40, 50, 60, 70], answer: 50 },
+                    { question: "Hình vuông có mấy cạnh bằng nhau?", options: ["2", "3", "4", "0"], answer: "4" },
+                    { question: "Điền dấu: 18 ... 10 + 8", options: ["<", ">", "="], answer: "=" },
+                    { question: "Trên sân có 15 con vịt, 6 con xuống ao. Trên sân còn...con vịt?", options: [21, 8, 9, 10], answer: 9 },
+                    { question: "Số gồm 3 chục và 2 đơn vị là?", options: [30, 2, 32, 23], answer: 32 },
+                    { question: "Số lớn nhất trong các số: 15, 25, 5, 21 là?", options: [15, 25, 5, 21], answer: 25 },
+                    { question: "Hôm nay là thứ Ba, ngày mai là thứ mấy?", options: ["Thứ Hai", "Thứ Tư", "Thứ Năm"], answer: "Thứ Tư" },
+                    { question: "11 + 8 = ?", options: [18, 19, 20, 21], answer: 19 },
+                    { question: "14 - 7 = ?", options: [6, 7, 8, 9], answer: 7 },
+                    { question: "20, 30, 40, ..., 60. Số cần điền là?", options: [45, 50, 55, 41], answer: 50 }
+                ],
+                lop2: [
+                    { question: "3 x 7 = ?", options: [20, 21, 24, 27], answer: 21 },
+                    { question: "35 : 5 = ?", options: [6, 7, 8, 9], answer: 7 },
+                    { question: "56 + 28 = ?", options: [74, 84, 94, 78], answer: 84 },
+                    { question: "81 - 34 = ?", options: [47, 57, 53, 43], answer: 47 },
+                    { question: "Một giờ có bao nhiêu phút?", options: [30, 60, 90, 100], answer: 60 },
+                    { question: "4 x 9 = ?", options: [32, 35, 36, 40], answer: 36 },
+                    { question: "28 : 4 = ?", options: [6, 7, 8, 9], answer: 7 },
+                    { question: "87 + 13 = ?", options: [90, 99, 100, 110], answer: 100 },
+                    { question: "100 - 62 = ?", options: [38, 48, 42, 32], answer: 38 },
+                    { question: "Tìm x, biết x - 25 = 40", options: [15, 65, 55, 75], answer: 65 },
+                    { question: "Mỗi bàn có 2 học sinh. 9 bàn như vậy có...học sinh?", options: [11, 16, 18, 20], answer: 18 },
+                    { question: "Cái thước dài 30cm. Đổi 30cm = ...dm?", options: [3, 30, 300, 0.3], answer: 3 },
+                    { question: "Tìm y, biết y x 5 = 45", options: [7, 8, 9, 10], answer: 9 },
+                    { question: "Có 30 quả táo chia đều cho 5 đĩa. Mỗi đĩa có...quả táo?", options: [5, 6, 7, 8], answer: 6 },
+                    { question: "Số lớn nhất có ba chữ số là?", options: [100, 987, 999, 990], answer: 999 },
+                    { question: "Đồng hồ chỉ 9 giờ đúng, kim dài chỉ số mấy?", options: [9, 3, 6, 12], answer: 12 },
+                    { question: "Số gồm 5 trăm, 0 chục, 8 đơn vị là?", options: [508, 580, 805, 850], answer: 508 },
+                    { question: "1km bằng bao nhiêu mét?", options: [10, 100, 1000, 10000], answer: 1000 },
+                    { question: "Tìm hiệu của 72 và 19", options: [53, 63, 91, 51], answer: 53 },
+                    { question: "Có 5 túi kẹo, mỗi túi 8 cái. Tổng cộng có...cái kẹo?", options: [13, 35, 40, 45], answer: 40 }
+                ]
+            },
+            tiengviet: {
+                lop1: [
+                    { question: "Tìm từ có vần 'at'", options: ["nhà", "bài hát", "sách", "vở"], answer: "bài hát" },
+                    { question: "Trong từ 'quyển sách', tiếng nào có thanh sắc?", options: ["quyển", "sách", "cả hai", "không có"], answer: "sách" },
+                    { question: "Điền 'ch' hoặc 'tr': cây ...e", options: ["ch", "tr"], answer: "tr" },
+                    { question: "Sắp xếp thành câu: bà, em, yêu", options: ["Em yêu bà", "Bà yêu em", "Yêu bà em"], answer: "Em yêu bà" },
+                    { question: "Đâu là tên một loại quả?", options: ["bàn", "ghế", "xoài", "sông"], answer: "xoài" },
+                    { question: "Điền 'g' hay 'gh': ...à trống", options: ["g", "gh"], answer: "g" },
+                    { question: "Tìm từ có vần 'ươi'", options: ["tươi cười", "chuồn chuồn", "bút", "cá"], answer: "tươi cười" },
+                    { question: "Điền 's' hay 'x': ...e đạp", options: ["s", "x"], answer: "x" },
+                    { question: "Sắp xếp: xanh, bầu, trời", options: ["Xanh bầu trời", "Bầu trời xanh", "Trời xanh bầu"], answer: "Bầu trời xanh" },
+                    { question: "Từ nào chỉ hoạt động?", options: ["cái cặp", "ngôi sao", "xinh đẹp", "múa hát"], answer: "múa hát" },
+                    { question: "Điền vần 'iên' hay 'iêng': ... lặng", options: ["iên", "iêng"], answer: "iêng" },
+                    { question: "Tiếng 'phố' có âm đầu là gì?", options: ["ph", "ô", "p", "h"], answer: "ph" },
+                    { question: "Câu 'Con mèo trèo cây cau.' có mấy tiếng?", options: [5, 6, 7, 8], answer: 6 },
+                    { question: "Điền 'ng' hay 'ngh': ...é con", options: ["ng", "ngh"], answer: "ng" },
+                    { question: "Từ nào chỉ đồ vật trong nhà?", options: ["công viên", "cái giường", "con đường", "cánh đồng"], answer: "cái giường" },
+                    { question: "Điền 'c' hay 'k': ...im khâu", options: ["c", "k"], answer: "k" },
+                    { question: "Câu 'Bố là trụ cột của gia đình.' kết thúc bằng dấu gì?", options: [".", "?", "!", ","], answer: "." },
+                    { question: "Từ nào viết đúng chính tả?", options: ["quả chanh", "qủa chanh", "quả tranh"], answer: "quả chanh" },
+                    { question: "Tìm từ có vần 'oan'", options: ["cái bảng", "toán", "lan", "sách"], answer: "toán" },
+                    { question: "Điền 'd', 'gi' hay 'r': ...a đình", options: ["d", "gi", "r"], answer: "gi" }
+                ],
+                lop2: [
+                    { question: "Từ nào không cùng nhóm: bút, thước, sách, hoa", options: ["bút", "thước", "sách", "hoa"], answer: "hoa" },
+                    { question: "Câu 'Ai thế nào?':", options: ["Em đang học bài.", "Bông hoa này rất đẹp.", "Bố em là bác sĩ."], answer: "Bông hoa này rất đẹp." },
+                    { question: "Tìm từ trái nghĩa với 'nhanh'", options: ["vội", "gấp", "chậm", "mau"], answer: "chậm" },
+                    { question: "Dấu câu nào dùng để kết thúc một câu hỏi?", options: [".", "?", "!", ","], answer: "?" },
+                    { question: "Từ nào viết đúng chính tả?", options: ["ngon nghẻo", "ngoằn ngoèo", "ngon ngoeo"], answer: "ngoằn ngoèo" },
+                    { question: "Từ nào chỉ đặc điểm?", options: ["bơi", "tím", "ngủ", "cái nhà"], answer: "tím" },
+                    { question: "Đặt câu hỏi cho bộ phận gạch chân: '**Bác nông dân** đang cày ruộng.'", options: ["Ai làm gì?", "Làm gì?", "Ai là gì?"], answer: "Ai làm gì?" },
+                    { question: "Từ nào viết sai chính tả?", options: ["sản xuất", "xuất sắc", "dản dị", "dịu dàng"], answer: "dản dị" },
+                    { question: "Từ trái nghĩa với 'khỏe mạnh' là?", options: ["cường tráng", "dũng cảm", "yếu ớt", "to lớn"], answer: "yếu ớt" },
+                    { question: "Câu 'Những chú chim đang hót trên cành.' thuộc mẫu câu nào?", options: ["Ai là gì?", "Ai làm gì?", "Ai thế nào?"], answer: "Ai làm gì?" },
+                    { question: "Trong câu 'Mặt biển phẳng lặng và rộng mênh mông.', từ chỉ đặc điểm là?", options: ["Mặt biển", "phẳng lặng, rộng mênh mông", "và"], answer: "phẳng lặng, rộng mênh mông" },
+                    { question: "Dòng nào gồm các từ chỉ sự vật?", options: ["đẹp, xấu, tốt", "thầy giáo, cây cối, dòng sông", "đi, đứng, nằm"], answer: "thầy giáo, cây cối, dòng sông" },
+                    { question: "Tìm từ đồng nghĩa với 'to lớn'", options: ["nhỏ bé", "chật hẹp", "khổng lồ", "thấp"], answer: "khổng lồ" },
+                    { question: "Bộ phận trả lời câu hỏi 'Khi nào?' trong câu: '**Mùa hè**, hoa phượng nở đỏ rực.'", options: ["Mùa hè", "hoa phượng", "nở đỏ rực"], answer: "Mùa hè" },
+                    { question: "Từ nào viết đúng chính tả?", options: ["lắng lo", "nắng no", "lo lắng", "no nắng"], answer: "lo lắng" },
+                    { question: "Câu 'Ôi, bạn giỏi quá!' là loại câu gì?", options: ["Câu kể", "Câu hỏi", "Câu cảm"], answer: "Câu cảm" },
+                    { question: "Tìm từ có hai tiếng đều bắt đầu bằng 'ch'", options: ["chăm chỉ", "trung thực", "chắc chắn", "chóng vánh"], answer: "chăm chỉ" },
+                    { question: "Dấu phẩy trong câu 'Em thích học Toán, Tiếng Việt và Âm nhạc.' có tác dụng gì?", options: ["Ngăn cách các ý", "Kết thúc câu", "Bắt đầu câu"], answer: "Ngăn cách các ý" },
+                    { question: "Từ 'hiền lành' là từ chỉ ...", options: ["Hoạt động", "Đặc điểm", "Sự vật"], answer: "Đặc điểm" },
+                    { question: "Bộ phận trả lời câu hỏi 'Vì sao?' trong câu: 'Bạn Nam được cô giáo khen **vì bạn ấy học giỏi**.'", options: ["Bạn Nam", "được cô giáo khen", "vì bạn ấy học giỏi"], answer: "vì bạn ấy học giỏi" }
+                ]
             }
-            function hide() {
-                content.classList.add('modal-leave-active');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                    content.classList.remove('modal-leave-active');
-                }, 200);
-            }
-            if (openBtn) openBtn.addEventListener('click', show);
-            if (closeBtn) closeBtn.addEventListener('click', hide);
-            modal.addEventListener('click', (e) => { if (e.target === modal) hide(); });
-            return { show, hide };
-        }
+        };
 
-        const taskModalControls = setupModal(taskModal, openModalBtn, closeModalBtn, modalContent);
-        const adminModalControls = setupModal(adminModal, openAdminModalBtn, closeAdminModalBtn, adminModalContent);
+        // --- BIẾN TRẠNG THÁI ---
+        let selectedSubject = null;
+        let selectedGrade = null;
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const NUM_OF_QUESTIONS_PER_GAME = 12; // Số câu hỏi mỗi lần chơi
 
-        // --- ADMIN LOGIC ---
-        function handleAdminLogin() {
-            if (usernameInput.value === 'admin' && passwordInput.value === 'admin') {
-                adminControls.classList.remove('hidden');
-                openAdminModalBtn.classList.add('hidden');
-                adminModalControls.hide();
-                loginError.classList.add('hidden');
-                usernameInput.value = '';
-                passwordInput.value = '';
+        // --- LẤY CÁC PHẦN TỬ DOM ---
+        const selectionScreen = document.getElementById('selection-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startBtn = document.getElementById('start-btn');
+        const subjectBtns = document.querySelectorAll('[data-subject]');
+        const gradeBtns = document.querySelectorAll('[data-grade]');
+
+        // --- CÁC HÀM XỬ LÝ ---
+
+        function updateStartButtonState() {
+            if (selectedSubject && selectedGrade) {
+                startBtn.disabled = false;
+                startBtn.classList.remove('bg-gray-400', 'cursor-not-allowed');
+                startBtn.classList.add('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
             } else {
-                loginError.classList.remove('hidden');
-            }
-        }
-        function handleAdminLogout() {
-            adminControls.classList.add('hidden');
-            openAdminModalBtn.classList.remove('hidden');
-        }
-        
-        // --- BACKUP & RESTORE LOGIC ---
-        function backupTasks() {
-            if (allTasks.length === 0) {
-                alert('Không có công việc nào để sao lưu.');
-                return;
-            }
-            const dataStr = JSON.stringify(allTasks, null, 2);
-            const dataBlob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(dataBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            const date = new Date().toISOString().slice(0, 10);
-            a.download = `sao-luu-cong-viec-${date}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-        }
-
-        function handleFileRestore(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (!confirm('Bạn có chắc chắn muốn phục hồi? Hành động này sẽ XÓA TOÀN BỘ công việc hiện tại.')) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const restoredTasks = JSON.parse(e.target.result);
-                    if (!Array.isArray(restoredTasks)) throw new Error('Tệp không hợp lệ.');
-                    allTasks = restoredTasks;
-                    saveAndRender();
-                    alert('Phục hồi thành công!');
-                } catch (err) {
-                    alert('Lỗi: Không thể đọc tệp sao lưu. Tệp có thể bị hỏng hoặc không đúng định dạng.');
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = '';
-        }
-
-        // --- CORE DATA & RENDER LOGIC ---
-
-        /**
-         * A central function to save the current state and re-render the UI.
-         */
-        function saveAndRender() {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allTasks));
-            renderAllTasks();
-        }
-
-        /**
-         * Renders the entire list of tasks to the DOM from the `allTasks` array.
-         */
-        function renderAllTasks() {
-            taskList.innerHTML = '';
-            allTasks.forEach((taskData, index) => {
-                const { customerName, phone, address, time, text, completed } = taskData;
-                
-                const li = document.createElement('li');
-                li.className = `flex flex-col sm:flex-row items-start justify-between bg-gray-50 dark:bg-gray-700 p-3 sm:p-4 rounded-lg shadow-sm transition-all duration-300 ${completed ? 'completed' : ''}`;
-                
-                // Determine button text and class based on completion status
-                const completeBtnText = completed ? 'Làm lại' : 'Hoàn thành';
-                const completeBtnClass = completed ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600';
-
-                li.innerHTML = `
-                    <div class="flex-grow mr-0 sm:mr-4 mb-4 sm:mb-0 w-full">
-                        <p class="font-bold text-lg task-content">${text}</p>
-                        <div class="customer-info grid grid-cols-1 md:grid-cols-2 text-sm text-gray-600 dark:text-gray-400 mt-2 gap-x-4 gap-y-1">
-                            <span class="customer-name truncate"><i class="fas fa-user fa-fw mr-1.5 text-blue-500"></i>${customerName}</span>
-                            <span class="task-time truncate"><i class="fas fa-clock fa-fw mr-1.5 text-orange-500"></i>${new Date(time).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                            ${phone ? `<span class="customer-phone truncate"><i class="fas fa-phone fa-fw mr-1.5 text-green-500"></i>${phone}</span>` : ''}
-                            ${address ? `<span class="customer-address truncate"><i class="fas fa-map-marker-alt fa-fw mr-1.5 text-purple-500"></i>${address}</span>` : ''}
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-stretch space-y-2 flex-shrink-0 w-full sm:w-32">
-                        <button data-action="toggle" data-index="${index}" class="font-semibold py-2 px-3 rounded-lg text-sm text-white transition-colors duration-200 w-full ${completeBtnClass}">
-                            ${completeBtnText}
-                        </button>
-                        <button data-action="delete" data-index="${index}" class="flex items-center justify-center bg-red-500 text-white hover:bg-red-600 font-semibold py-2 px-3 rounded-lg text-sm transition-colors duration-200 w-full">
-                            <i class="fas fa-trash mr-2"></i> Xóa
-                        </button>
-                    </div>
-                `;
-                taskList.appendChild(li);
-            });
-            updateCompletedTasksVisibility();
-        }
-        
-        // --- UI UTILITY FUNCTIONS ---
-        function checkEmptyState() {
-            const hasVisibleTasks = Array.from(taskList.children).some(task => !task.classList.contains('hidden'));
-            noTasksMessage.classList.toggle('hidden', taskList.children.length > 0 && hasVisibleTasks);
-        }
-
-        function updateCompletedTasksVisibility() {
-            const shouldHide = hideCompletedToggle.checked;
-            taskList.querySelectorAll('li').forEach(li => {
-                const isCompleted = li.classList.contains('completed');
-                li.classList.toggle('hidden', shouldHide && isCompleted);
-            });
-            localStorage.setItem('hideCompletedState', shouldHide);
-            checkEmptyState();
-        }
-
-        // --- EVENT HANDLERS ---
-        
-        function handleTaskListClick(event) {
-            const button = event.target.closest('button[data-action]');
-            if (!button) return;
-
-            const action = button.dataset.action;
-            const index = parseInt(button.dataset.index, 10);
-
-            if (action === 'toggle') {
-                allTasks[index].completed = !allTasks[index].completed;
-                saveAndRender();
-            }
-
-            if (action === 'delete') {
-                if (confirm(`Bạn có chắc muốn xóa công việc của "${allTasks[index].customerName}"?`)) {
-                    allTasks.splice(index, 1);
-                    saveAndRender();
-                }
+                startBtn.disabled = true;
+                startBtn.classList.add('bg-gray-400', 'cursor-not-allowed');
+                startBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'cursor-pointer');
             }
         }
 
-        function handleAddTask() {
-            const taskData = {
-                customerName: customerNameInput.value.trim(),
-                phone: phoneInput.value.trim(),
-                address: addressInput.value.trim(),
-                time: timeInput.value,
-                text: taskInput.value.trim(),
-                completed: false,
-            };
-
-            if (!taskData.customerName || !taskData.time || !taskData.text) {
-                alert('Vui lòng nhập các trường bắt buộc: Tên khách hàng, Thời gian và Nội dung công việc!');
-                return;
-            }
-
-            allTasks.unshift(taskData);
-            saveAndRender();
-
-            [customerNameInput, phoneInput, addressInput, timeInput, taskInput].forEach(input => input.value = '');
-            taskModalControls.hide();
-        }
-
-        // --- INITIALIZATION ---
-        document.addEventListener('DOMContentLoaded', () => {
-            // Setup Admin Listeners
-            loginBtn.addEventListener('click', handleAdminLogin);
-            passwordInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleAdminLogin(); });
-            logoutBtn.addEventListener('click', handleAdminLogout);
-            backupBtn.addEventListener('click', backupTasks);
-            restoreBtn.addEventListener('click', () => restoreFileInput.click());
-            restoreFileInput.addEventListener('change', handleFileRestore);
-
-            // Setup Task Listeners
-            taskList.addEventListener('click', handleTaskListClick);
-            hideCompletedToggle.addEventListener('change', updateCompletedTasksVisibility);
-            addTaskBtn.addEventListener('click', handleAddTask);
-            taskInput.addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleAddTask(); }});
-
-            // Load initial state
-            const savedHideState = JSON.parse(localStorage.getItem('hideCompletedState'));
-            hideCompletedToggle.checked = savedHideState !== false; 
+        function startGame() {
+            let allQuestions = questions[selectedSubject][selectedGrade];
+            // Xáo trộn toàn bộ câu hỏi và lấy ra số lượng cần thiết
+            currentQuestions = allQuestions.sort(() => 0.5 - Math.random()).slice(0, NUM_OF_QUESTIONS_PER_GAME);
             
-            allTasks = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '[]');
-            renderAllTasks();
+            currentQuestionIndex = 0;
+            score = 0;
+
+            selectionScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            resultsScreen.classList.add('hidden');
+            
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            document.getElementById('feedback-container').innerHTML = '';
+            document.getElementById('next-btn').classList.add('hidden');
+
+            const questionData = currentQuestions[currentQuestionIndex];
+            document.getElementById('question-container').querySelector('p').textContent = questionData.question;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            const shuffledOptions = [...questionData.options].sort(() => Math.random() - 0.5);
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('answer-option', 'w-full', 'p-4', 'border-2', 'border-gray-300', 'rounded-lg', 'font-semibold', 'text-gray-700');
+                button.onclick = (e) => checkAnswer(e.target, questionData.answer);
+                optionsContainer.appendChild(button);
+            });
+
+            document.getElementById('progress-text').textContent = `Câu ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+            document.getElementById('score-text').textContent = `Điểm: ${score}`;
+        }
+
+        function checkAnswer(selectedButton, correctAnswer) {
+            const allOptions = document.querySelectorAll('.answer-option');
+            allOptions.forEach(btn => btn.disabled = true);
+
+            const feedbackContainer = document.getElementById('feedback-container');
+            if (selectedButton.textContent == correctAnswer) {
+                score++;
+                selectedButton.classList.add('correct');
+                feedbackContainer.textContent = '🎉 Đúng rồi!';
+                feedbackContainer.classList.add('text-green-500');
+                feedbackContainer.classList.remove('text-red-500');
+            } else {
+                selectedButton.classList.add('incorrect');
+                feedbackContainer.textContent = '😥 Sai rồi!';
+                feedbackContainer.classList.add('text-red-500');
+                feedbackContainer.classList.remove('text-green-500');
+                allOptions.forEach(btn => {
+                    if (btn.textContent == correctAnswer) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+            document.getElementById('score-text').textContent = `Điểm: ${score}`;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < currentQuestions.length) {
+                displayQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function showResults() {
+            gameScreen.classList.add('hidden');
+            resultsScreen.classList.remove('hidden');
+            
+            const finalScoreText = document.getElementById('final-score');
+            finalScoreText.textContent = `${score}/${currentQuestions.length}`;
+
+            const finalMessage = document.getElementById('final-message');
+            const percentage = (score / currentQuestions.length) * 100;
+            if (percentage === 100) {
+                finalMessage.textContent = "Xuất sắc! Bé thật là giỏi!";
+            } else if (percentage >= 70) {
+                finalMessage.textContent = "Giỏi lắm! Cố gắng thêm chút nữa nhé!";
+            } else if (percentage >= 50) {
+                finalMessage.textContent = "Làm tốt lắm! Tiếp tục luyện tập nhé!";
+            } else {
+                finalMessage.textContent = "Đừng buồn, lần sau sẽ tốt hơn!";
+            }
+        }
+
+        function resetGame() {
+            resultsScreen.classList.add('hidden');
+            selectionScreen.classList.remove('hidden');
+
+            selectedSubject = null;
+            selectedGrade = null;
+
+            subjectBtns.forEach(btn => btn.classList.remove('selected'));
+            gradeBtns.forEach(btn => btn.classList.remove('selected'));
+            updateStartButtonState();
+        }
+
+        // --- GẮN SỰ KIỆN ---
+        subjectBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedSubject = btn.dataset.subject;
+                subjectBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                updateStartButtonState();
+            });
         });
+
+        gradeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedGrade = btn.dataset.grade;
+                gradeBtns.forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                updateStartButtonState();
+            });
+        });
+
+        startBtn.addEventListener('click', () => {
+            if (!startBtn.disabled) {
+                startGame();
+            }
+        });
+        
+        document.getElementById('next-btn').addEventListener('click', nextQuestion);
+        document.getElementById('play-again-btn').addEventListener('click', resetGame);
+
     </script>
 </body>
 </html>
