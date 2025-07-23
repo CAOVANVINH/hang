@@ -26,6 +26,22 @@
         .dark .drag-over {
             background-color: #1e3a8a !important; /* dark-blue */
         }
+        /* Animation for new messages */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        /* Pulse animation for typing indicator */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .dot-pulse {
+            animation: pulse 1.4s infinite ease-in-out;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -37,11 +53,11 @@
             <form id="login-form">
                 <div class="mb-4">
                     <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tên đăng nhập</label>
-                    <input type="text" id="username" name="username" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    <input type="text" id="username" name="username" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required value="admin">
                 </div>
                 <div class="mb-6">
                     <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mật khẩu</label>
-                    <input type="password" id="password" name="password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                    <input type="password" id="password" name="password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required value="admin">
                 </div>
                 <p id="login-error" class="text-red-500 text-sm text-center mb-4 h-5"></p>
                 <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Đăng Nhập</button>
@@ -49,32 +65,53 @@
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm mx-4">
+            <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-4">Xác nhận xoá</h2>
+            <p id="delete-confirm-text" class="text-center text-gray-700 dark:text-gray-300 mb-6"></p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-delete-button" class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700">Huỷ</button>
+                <button id="confirm-delete-button" class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700">Xoá</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Content -->
     <div class="flex flex-col h-screen">
         <!-- Header -->
-        <header class="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-blue-600 text-white flex-shrink-0">
+        <header class="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-500 text-white flex-shrink-0 shadow-md">
             <div class="flex items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M12 15V12c0-2 2-4 4-4s4 2 4 4v3"/><path d="M8 15V12c0-2-2-4-4-4S0 10 0 12v3"/><path d="M12 15h0a2 0 0 0-2-2h-2a2 0 0 0-2 2v3c0 1.1.9 2 2 2h4a2 0 0 0 2-2v-3c0-1.1-.9-2-2-2Z"/><path d="M18 15h0a2 0 0 1 2-2h2a2 0 0 1 2 2v3c0 1.1-.9 2-2 2h-4a2 0 0 1-2-2v-3c0-1.1.9-2 2-2Z"/></svg>
                 <h1 class="text-lg md:text-xl font-bold">(Trợ Lý Ảo) Trần Hằng </h1>
             </div>
-            <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
+            <div class="flex items-center gap-2">
+                 <button id="clear-chat-button" title="Xoá cuộc trò chuyện" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+                <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
+            </div>
         </header>
 
         <!-- Chat UI -->
         <main id="chat-ui" class="flex-1 flex flex-col overflow-hidden">
-            <div class="chat-container flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900"></div>
+            <div class="chat-container flex-1 p-4 md:p-6 overflow-y-auto bg-gray-200 dark:bg-gray-800"></div>
             <div id="input-area" class="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg flex-shrink-0">
                 <div id="image-preview-container" class="mb-2 flex flex-wrap gap-2"></div>
                 <div id="image-info" class="text-xs text-gray-500 dark:text-gray-400 mb-2 h-4"></div>
                 <form id="chat-form" class="flex items-center gap-3">
                     <input type="file" id="image-input" accept="image/*" multiple>
-                    <label for="image-input" id="image-upload-button" class="cursor-pointer p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+                    <label for="image-input" id="image-upload-button" class="cursor-pointer p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </label>
-                    <input type="text" id="user-input" placeholder="Nhập tin nhắn, dán hoặc kéo thả ảnh..." class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
-                    <button type="submit" id="send-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center">
-                        <span id="send-text">Gửi</span>
-                        <svg id="loading-spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <input type="text" id="user-input" placeholder="Nhập tin nhắn, dán hoặc kéo thả ảnh..." class="flex-1 p-3 border rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
+                    <button type="submit" id="send-button" class="bg-blue-600 text-white w-12 h-12 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0 transition-colors">
+                        <span id="send-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                        </span>
+                        <span id="loading-spinner" class="hidden">
+                            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        </span>
                     </button>
                 </form>
             </div>
@@ -88,7 +125,7 @@
                     <h2 class="text-xl font-bold">Quản lý</h2>
                     <button id="logout-button" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">Đăng xuất</button>
                 </div>
-                <div class="p-6 flex gap-4">
+                <div class="p-6 flex flex-col sm:flex-row gap-4">
                     <button id="go-to-orders-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">Quản Lý Đơn Hàng</button>
                     <button id="go-to-kitchen-button" class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700">Quản Lý Bếp</button>
                     <button id="go-to-summary-button" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">Hàng Order</button>
@@ -102,10 +139,10 @@
                     <button id="back-to-admin-menu-button-orders" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
                 </div>
                 <div id="admin-content" class="p-6 overflow-y-auto">
-                    <div class="flex items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                        <label for="order-date-picker" class="font-semibold">Chọn ngày xem đơn hàng:</label>
-                        <input type="date" id="order-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
-                        <button id="view-orders-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed">Xem Đơn Hàng</button>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <label for="order-date-picker" class="font-semibold flex-shrink-0">Chọn ngày:</label>
+                        <input type="date" id="order-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
+                        <button id="view-orders-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem Đơn Hàng</button>
                     </div>
                     <h3 class="text-lg font-semibold mb-4">Kết quả đơn hàng</h3>
                     <div id="all-orders-container" class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
@@ -121,15 +158,20 @@
                     <button id="back-to-admin-menu-button-kitchen" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
                 </div>
                 <div id="kitchen-content" class="p-6 overflow-y-auto">
-                    <div class="flex items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                        <label for="kitchen-select" class="font-semibold">Chọn Bếp:</label>
-                        <select id="kitchen-select" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <label for="kitchen-select" class="font-semibold flex-shrink-0">Chọn Bếp:</label>
+                        <select id="kitchen-select" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
+                            <option value="all">Tất cả</option>
                             <option value="bep_mai">Bếp Mai</option>
                             <option value="taste_vietnam">TASTE VIET NAM</option>
                         </select>
                         <input type="file" id="excel-file-input" class="hidden" accept=".xlsx, .xls">
-                        <label for="excel-file-input" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-700 cursor-pointer">Chọn file Excel</label>
-                        <button id="import-excel-button" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700">Nhập từ Excel</button>
+                        <label for="excel-file-input" id="excel-upload-label" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-700 cursor-pointer text-center w-full sm:w-auto">Chọn file Excel</label>
+                        <button id="import-excel-button" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 w-full sm:w-auto">Nhập từ Excel</button>
+                    </div>
+                    <div class="mb-4 flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="kitchen-search-input" placeholder="Tìm kiếm mặt hàng..." class="flex-grow p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                        <button id="show-all-kitchen-items-btn" class="bg-gray-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-600 flex-shrink-0">Hiển thị tất cả</button>
                     </div>
                     <p id="excel-file-name" class="mb-4 text-sm text-gray-600 dark:text-gray-400"></p>
                     <h3 class="text-lg font-semibold mb-4">Danh sách mặt hàng</h3>
@@ -146,11 +188,11 @@
                     <button id="back-to-admin-menu-button-summary" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
                 </div>
                 <div id="order-summary-content" class="p-6 overflow-y-auto">
-                    <div class="flex items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
-                        <label for="summary-date-picker" class="font-semibold">Chọn ngày xem:</label>
-                        <input type="date" id="summary-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600">
-                        <button id="view-summary-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed">Xem</button>
-                        <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700" disabled>Xuất Excel</button>
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <label for="summary-date-picker" class="font-semibold flex-shrink-0">Chọn ngày xem:</label>
+                        <input type="date" id="summary-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
+                        <button id="view-summary-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem</button>
+                        <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
                     </div>
                     <div id="order-summary-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                          <p class="text-gray-500 md:col-span-3">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
@@ -161,17 +203,23 @@
     </div>
 
     <script type="module">
+        // Firebase SDK Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // DOM Elements
         const chatForm = document.getElementById('chat-form'), userInput = document.getElementById('user-input'),
-              sendButton = document.getElementById('send-button'), sendText = document.getElementById('send-text'), 
+              sendButton = document.getElementById('send-button'), sendIcon = document.getElementById('send-icon'), 
               loadingSpinner = document.getElementById('loading-spinner'), imageInput = document.getElementById('image-input'), 
               imagePreviewContainer = document.getElementById('image-preview-container'), imageInfo = document.getElementById('image-info'),
-              inputArea = document.getElementById('input-area'),
               loginModal = document.getElementById('login-modal'),
               loginForm = document.getElementById('login-form'),
               loginError = document.getElementById('login-error'),
               adminLoginButton = document.getElementById('admin-login-button'),
               chatUI = document.getElementById('chat-ui'),
+              chatContainer = document.querySelector('.chat-container'),
+              clearChatButton = document.getElementById('clear-chat-button'),
               adminPanel = document.getElementById('admin-panel'),
               adminMenuView = document.getElementById('admin-menu-view'),
               orderManagementView = document.getElementById('order-management-view'),
@@ -189,20 +237,33 @@
               viewOrdersButton = document.getElementById('view-orders-button'),
               kitchenSelect = document.getElementById('kitchen-select'),
               excelFileInput = document.getElementById('excel-file-input'),
+              excelUploadLabel = document.getElementById('excel-upload-label'),
               excelFileName = document.getElementById('excel-file-name'),
               importExcelButton = document.getElementById('import-excel-button'),
               kitchenItemsContainer = document.getElementById('kitchen-items-container'),
+              kitchenSearchInput = document.getElementById('kitchen-search-input'),
+              showAllKitchenItemsBtn = document.getElementById('show-all-kitchen-items-btn'),
               summaryDatePicker = document.getElementById('summary-date-picker'),
               viewSummaryButton = document.getElementById('view-summary-button'),
               exportSummaryButton = document.getElementById('export-summary-button'),
-              orderSummaryContainer = document.getElementById('order-summary-container');
+              orderSummaryContainer = document.getElementById('order-summary-container'),
+              deleteConfirmModal = document.getElementById('delete-confirm-modal'),
+              deleteConfirmText = document.getElementById('delete-confirm-text'),
+              cancelDeleteButton = document.getElementById('cancel-delete-button'),
+              confirmDeleteButton = document.getElementById('confirm-delete-button');
 
-        // State
+        // App State
         const MAX_IMAGES = 50;
         let chatHistory = [], uploadedImages = [];
         let currentApiKeyIndex = 0; 
-        let currentSummaryData = null; // To hold data for export
+        let currentSummaryData = null;
+        let activeKitchenItems = []; // State for kitchen items
+        let editingRowIndex = null; // Track which row is being edited
         
+        // Firebase State
+        let db, auth, userId, app;
+        const appId = 'tranhang-assistant-app'; // Use a fixed app ID for database paths
+
         // API Keys Configuration
         const apiKeys = [
             "AIzaSyCg4gg9GLf6SPzhYCNMvTZyIuuQZPRw04",
@@ -211,6 +272,46 @@
             "AIzaSyBR-duVUWZG-lD5usabYD3NS_-tZySMlcA",
             "AIzaSyBNagv3kn8vAJzbyMYlvLLCccNGbFa4ySc",
         ];
+
+        // --- Firebase Initialization ---
+        function initializeFirebase() {
+            try {
+                // User-provided Firebase configuration
+                const firebaseConfig = {
+                  apiKey: "AIzaSyDJBY6U0LUtmnk4PrfNeA7UE7qq1FZ84X8",
+                  authDomain: "data-chung-a62ee.firebaseapp.com",
+                  databaseURL: "https://data-chung-a62ee-default-rtdb.asia-southeast1.firebasedatabase.app",
+                  projectId: "data-chung-a62ee",
+                  storageBucket: "data-chung-a62ee.appspot.com",
+                  messagingSenderId: "453115303161",
+                  appId: "1:453115303161:web:d40a0ec5a38ab7d4863e28",
+                  measurementId: "G-WNVH78VY1Z"
+                };
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Authenticated. UserID:", userId);
+                        initializeAppUI(); // Start the app now that we are authenticated
+                    } else {
+                        console.log("User not signed in. Attempting anonymous sign-in.");
+                        try {
+                            await signInAnonymously(auth);
+                        } catch (error) {
+                            console.error("Firebase anonymous sign-in failed:", error);
+                            appendMessage({ text: "Lỗi kết nối đến máy chủ. Vui lòng tải lại trang." }, 'bot', true);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Could not initialize Firebase:", error);
+                appendMessage({ text: "Không thể khởi tạo cơ sở dữ liệu. Vui lòng kiểm tra cấu hình." }, 'bot', true);
+            }
+        }
 
         // --- Core AI Function ---
         const getAIResponse = async (options, retryCount = 0) => {
@@ -229,38 +330,37 @@
             if (options.useChatHistory) {
                 const systemInstructionText = `
                     Em là robot xử lý đơn hàng tự động.
-                    Khi nhận danh sách hàng, em CHỈ được trả lời bằng lệnh \`ORDER_SAVE: [...]\`.
-                    KHÔNG thêm bất kỳ lời nói, chào hỏi hay giải thích nào khác.
-                    Phân tích từng dòng trong **tin nhắn cuối cùng** để tìm 1 trong 3 dạng sau:
-                    1. \`[Tên hàng] [Tồn kho]\`
-                    2. \`[Tên hàng] [Tồn kho] [Số lượng đặt]\`
-                    3. \`[Tên hàng] [Số lượng đặt]\`
+                    **QUY TẮC VÀNG: Xử lý TOÀN BỘ tin nhắn người dùng như một đơn hàng duy nhất. Phân tích TẤT CẢ các dòng và trả về MỘT lệnh \`ORDER_SAVE\` duy nhất chứa tất cả các mặt hàng. KHÔNG BAO GIỜ được hỏi lại hay yêu cầu xác nhận.**
 
-                    Sau đó, trả về MỘT chuỗi lệnh DUY NHẤT, không thêm bất kỳ lời nói nào khác:
-                    \`ORDER_SAVE: [JSON data]\`
+                    **QUY TẮC PHÂN TÍCH:**
+                    1.  **Dạng \`[Tên hàng] [Số]\`:** Luôn hiểu là \`[Tên hàng] [Tồn kho]\`. Ví dụ: "cá 1" -> Tên: cá, Tồn kho: 1.
+                    2.  **Dạng \`[Tên hàng] [Số] [Chuỗi]\`:** Luôn hiểu là \`[Tên hàng] [Tồn kho] [Số lượng đặt]\`. **Quan trọng:** Phần "Số lượng đặt" chỉ bao gồm chuỗi đứng SAU Tồn kho. Ví dụ: "gà 1 1 con" -> Tên: gà, Tồn kho: 1, SL đặt: "1 con" (KHÔNG phải "gà 1 con").
+                    3.  **Dạng \`[Tên hàng] [Chuỗi]\`:** Luôn hiểu là \`[Tên hàng] [Số lượng đặt]\` (Tồn kho là 0). Ví dụ: "vịt 1kg" -> Tên: vịt, Tồn kho: 0, SL đặt: "1kg".
+
+                    Sau đó, trả về MỘT chuỗi lệnh DUY NHẤT: \`ORDER_SAVE: [JSON data]\`
 
                     **QUY TẮC TẠO JSON:**
                     - Dạng 1: \`{"item": "...", "inventory": ..., "quantity": null}\`
                     - Dạng 2: \`{"item": "...", "inventory": ..., "quantity": "..."}\`
                     - Dạng 3: \`{"item": "...", "inventory": 0, "quantity": "..."}\`
 
-                    **VÍ DỤ:**
+                    **VÍ DỤ TỔNG HỢP:**
                     Input:
                     cá 1
                     gà 1 1 con
                     vịt 1kg
-                    Output: \`ORDER_SAVE: [{"item": "cá", "inventory": 1, "quantity": null}, {"item": "gà", "inventory": 1, "quantity": "1 con"}, {"item": "vịt", "inventory": 0, "quantity": "1kg"}]\`
+                    heo quay 2kg
+                    tôm 5
+                    Output: \`ORDER_SAVE: [{"item": "cá", "inventory": 1, "quantity": null}, {"item": "gà", "inventory": 1, "quantity": "1 con"}, {"item": "vịt", "inventory": 0, "quantity": "1kg"}, {"item": "heo quay", "inventory": 0, "quantity": "2kg"}, {"item": "tôm", "inventory": 5, "quantity": null}]\`
 
-                    **CÁC LỆNH KHÁC (chỉ khi tin nhắn cuối là một trong các câu này):**
+                    **CÁC LỆNH KHÁC:**
                     - "xem đơn hàng hôm nay" -> \`ORDER_RETRIEVE: CURRENT_DAY\`
-                    - "lấy danh sách bếp tổng" -> \`KITCHEN_LIST: ALL\`
-                    - "lấy danh sách bếp mai" -> \`KITCHEN_LIST: bep_mai\`
-                    - "lấy danh sách bếp taste viet nam" -> \`KITCHEN_LIST: taste_vietnam\`
+                    - "lấy danh sách bếp..." -> \`KITCHEN_LIST: ...\`
                 `;
                 payload = {
                     contents: chatHistory,
                     systemInstruction: { parts: [{ text: systemInstructionText }] },
-                    generationConfig: { temperature: 0.2, topP: 1, topK: 1, maxOutputTokens: 2048 }
+                    generationConfig: { temperature: 0.1, topP: 1, topK: 1, maxOutputTokens: 4096 }
                 };
             } else { // For single prompts like aggregation
                 payload = {
@@ -269,7 +369,7 @@
                         temperature: 0.1, 
                         topP: 1, 
                         topK: 1,
-                        maxOutputTokens: 4096,
+                        maxOutputTokens: 8192,
                         ...(options.isJsonMode && { responseMimeType: "application/json" })
                     }
                 };
@@ -279,7 +379,7 @@
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (!response.ok) {
                     const errorBody = await response.json();
-                    throw new Error(`Lỗi API: ${errorBody.error.message}`);
+                    throw new Error(`Lỗi API: ${response.status} ${errorBody.error.message}`);
                 }
                 const result = await response.json();
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts) {
@@ -297,35 +397,30 @@
             }
         };
 
-        // --- Local Storage Functions ---
-        const LOCAL_STORAGE_KEY = 'all_orders';
-        const KITCHEN_STORAGE_PREFIX = 'kitchen_items_';
-
+        // --- Firebase Data Functions ---
         const saveOrder = async (items) => {
+            if (!db) {
+                appendMessage({ text: "Lỗi cơ sở dữ liệu. Không thể lưu đơn hàng." }, 'bot', true);
+                return;
+            }
             try {
-                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                let allOrders = storedData ? JSON.parse(storedData) : {};
-                const today = new Date();
-                const orderDate = today.toISOString().slice(0, 10);
-                if (!allOrders[orderDate]) {
-                    allOrders[orderDate] = [];
-                }
-                allOrders[orderDate].push({
+                const orderDate = new Date().toISOString().slice(0, 10);
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', orderDate, 'entries');
+                await addDoc(orderCollectionRef, {
                     items: items,
-                    timestamp: new Date().toISOString()
+                    timestamp: new Date().toISOString(),
+                    userId: userId 
                 });
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allOrders));
-                appendMessage({ text: `Dạ, em đã lưu thành công ${items.length} món hàng ạ!` }, 'bot');
+                appendMessage({ text: `Dạ, em đã lưu thành công ${items.length} món hàng vào cơ sở dữ liệu ạ!` }, 'bot');
             } catch (error) {
-                console.error("Lỗi khi lưu đơn hàng:", error);
+                console.error("Lỗi khi lưu đơn hàng vào Firestore:", error);
                 appendMessage({ text: `Dạ, em xin lỗi, có lỗi khi lưu đơn hàng: ${error.message}.` }, 'bot', true);
             }
         };
 
         const getOrders = async (date = null) => {
+            if (!db) return;
             try {
-                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                const allOrders = storedData ? JSON.parse(storedData) : {};
                 let targetDate = date;
                 let messagePrefix = 'Dạ, đây là các đơn hàng chị đã lưu ạ:';
                 if (date === 'CURRENT_DAY') {
@@ -334,7 +429,11 @@
                 } else if (date) {
                     messagePrefix = `Dạ, đây là các đơn hàng chị đã nhập vào ngày ${date} ạ:`;
                 }
-                const ordersForDate = allOrders[targetDate] || [];
+
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+                const querySnapshot = await getDocs(orderCollectionRef);
+                const ordersForDate = querySnapshot.docs.map(doc => doc.data());
+
                 if (ordersForDate.length === 0) {
                     appendMessage({ text: `Dạ, em không tìm thấy đơn hàng nào cho ngày ${targetDate === new Date().toISOString().slice(0, 10) ? 'hôm nay' : targetDate} ạ.` }, 'bot');
                     return;
@@ -343,32 +442,31 @@
                 ordersForDate.forEach((orderData) => {
                     const orderTimestamp = new Date(orderData.timestamp);
                     const formattedTime = orderTimestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                    const formattedDate = orderTimestamp.toLocaleDateString('vi-VN');
                     let itemsString = orderData.items.map(item => {
                         let parts = [item.item];
                         if (item.inventory > 0) parts.push(`(Tồn: ${item.inventory})`);
                         if (item.quantity) parts.push(`(SL: ${item.quantity})`);
                         return parts.join(' ');
                     }).join(', ');
-                    orderList.push(`- Đơn hàng lúc ${formattedTime} ngày ${formattedDate}: ${itemsString}`);
+                    orderList.push(`- Đơn hàng lúc ${formattedTime}: ${itemsString}`);
                 });
                 appendMessage({ text: `${messagePrefix}\n${orderList.join('\n')}` }, 'bot');
             } catch (error) {
-                console.error("Lỗi khi lấy đơn hàng:", error);
+                console.error("Lỗi khi lấy đơn hàng từ Firestore:", error);
                 appendMessage({ text: `Dạ, có lỗi khi lấy đơn hàng: ${error.message}.` }, 'bot', true);
             }
         };
 
-        const loadOrdersForAdmin = (targetDate) => {
-            allOrdersContainer.innerHTML = '<p class="text-gray-500">Dạ, em đang tổng hợp đơn hàng...</p>';
+        const loadOrdersForAdmin = async (targetDate) => {
+            allOrdersContainer.innerHTML = '<p class="text-gray-500">Dạ, em đang tổng hợp đơn hàng từ cơ sở dữ liệu...</p>';
+            if (!db) return;
             try {
-                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                const allOrders = storedData ? JSON.parse(storedData) : {};
                 const [year, month, day] = targetDate.split('-');
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+                const querySnapshot = await getDocs(orderCollectionRef);
+                const ordersForDate = querySnapshot.docs.map(doc => doc.data());
 
-                const ordersForDate = allOrders[targetDate];
-
-                if (!ordersForDate || ordersForDate.length === 0) {
+                if (ordersForDate.length === 0) {
                     allOrdersContainer.innerHTML = `<p class="text-gray-500">Không có đơn hàng nào được tìm thấy cho ngày ${day}/${month}/${year}.</p>`;
                     return;
                 }
@@ -378,44 +476,23 @@
                     allItems.push(...orderData.items);
                 });
 
-                const normalizeVnString = (str) => {
-                    if (!str) return '';
-                    return str
-                        .toLowerCase()
-                        .normalize("NFD")
-                        .replace(/[\u0300-\u036f]/g, "")
-                        .replace(/đ/g, "d")
-                        .trim();
-                };
-
                 const aggregatedItems = {};
-
                 allItems.forEach(item => {
                     const normalizedName = normalizeVnString(item.item);
                     if (!normalizedName) return;
-
                     if (!aggregatedItems[normalizedName]) {
-                        aggregatedItems[normalizedName] = {
-                            displayName: item.item,
-                            totalInventory: 0,
-                            totalQuantities: {}
-                        };
+                        aggregatedItems[normalizedName] = { displayName: item.item, totalInventory: 0, totalQuantities: {} };
                     }
-                    
                     aggregatedItems[normalizedName].totalInventory += item.inventory || 0;
-
                     if (item.quantity) {
                         const quantityStr = String(item.quantity).trim();
                         const match = quantityStr.match(/^(\d*[.,]?\d+)\s*(.*)$/);
-                        
                         let value = 1;
                         let unit = quantityStr;
-
                         if (match) {
                             value = parseFloat(match[1].replace(',', '.'));
                             unit = match[2].trim().toLowerCase() || 'đơn vị';
                         }
-
                         if (!aggregatedItems[normalizedName].totalQuantities[unit]) {
                             aggregatedItems[normalizedName].totalQuantities[unit] = 0;
                         }
@@ -438,78 +515,81 @@
                 const table = document.createElement('table');
                 table.className = 'w-full text-left border-collapse';
                 table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th class="p-2 border-b-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Hàng</th>
-                            <th class="p-2 border-b-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tổng Tồn Kho</th>
-                            <th class="p-2 border-b-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tổng Số Lượng Đặt</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                `;
+                    <thead><tr>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Hàng</th>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tổng Tồn Kho</th>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tổng Số Lượng Đặt</th>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Thao tác</th>
+                    </tr></thead>
+                    <tbody></tbody>`;
                 const tbody = table.querySelector('tbody');
-
                 for (const key of sortedItemKeys) {
                     const itemData = aggregatedItems[key];
-                    const totalInventory = itemData.totalInventory;
-                    const units = itemData.totalQuantities;
-
-                    const quantityStrings = Object.keys(units).map(unit => {
-                        let formattedValue = units[unit];
-                        if (formattedValue % 1 !== 0) {
-                           formattedValue = formattedValue.toFixed(2);
-                        }
-                        return `${formattedValue} ${unit}`;
+                    const quantityStrings = Object.keys(itemData.totalQuantities).map(unit => {
+                        let val = itemData.totalQuantities[unit];
+                        if (val % 1 !== 0) val = val.toFixed(2);
+                        return `${val} ${unit}`;
                     });
-
                     const row = document.createElement('tr');
                     row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
                     row.innerHTML = `
-                        <td class="p-2 border-b border-gray-200 dark:border-gray-700 capitalize">${itemData.displayName}</td>
-                        <td class="p-2 border-b border-gray-200 dark:border-gray-700">${totalInventory}</td>
-                        <td class="p-2 border-b border-gray-200 dark:border-gray-700">${quantityStrings.join(', ') || 'N/A'}</td>
-                    `;
+                        <td class="p-2 border-b dark:border-gray-700 capitalize">${itemData.displayName}</td>
+                        <td class="p-2 border-b dark:border-gray-700">${itemData.totalInventory}</td>
+                        <td class="p-2 border-b dark:border-gray-700">${quantityStrings.join(', ') || 'N/A'}</td>
+                        <td class="p-2 border-b dark:border-gray-700">
+                            <button class="delete-item-btn bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600" data-item-name="${itemData.displayName}">Xoá</button>
+                        </td>`;
                     tbody.appendChild(row);
                 }
                 allOrdersContainer.appendChild(table);
-
             } catch (error) {
-                 console.error("Lỗi khi tải và cộng dồn đơn hàng cho admin:", error);
-                 allOrdersContainer.innerHTML = `<p class="text-red-500">Dạ, em xin lỗi, đã có lỗi xảy ra khi tổng hợp đơn hàng.</p>`;
+                 console.error("Lỗi khi tải đơn hàng cho admin:", error);
+                 allOrdersContainer.innerHTML = `<p class="text-red-500">Dạ, em xin lỗi, đã có lỗi xảy ra: ${error.message}.</p>`;
             }
         };
         
         const getKitchenList = async (kitchenId) => {
-            let message = '';
-            const kitchenNames = {
-                bep_mai: "Bếp Mai",
-                taste_vietnam: "TASTE VIET NAM"
-            };
+            if (!db) return;
+            const kitchenNames = { bep_mai: "Bếp Mai", taste_vietnam: "TASTE VIET NAM" };
 
-            const fetchAndFormatList = (id) => {
-                const key = `${KITCHEN_STORAGE_PREFIX}${id}`;
-                const storedData = localStorage.getItem(key);
-                const items = storedData ? JSON.parse(storedData) : [];
+            const fetchAndFormatList = async (id) => {
+                const kitchenDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', id);
+                const docSnap = await getDoc(kitchenDocRef);
+                let items = [];
+                if (docSnap.exists() && docSnap.data().itemsJson) {
+                    items = JSON.parse(docSnap.data().itemsJson);
+                }
                 let listHtml = `<b>Danh sách ${kitchenNames[id]}:</b><br>`;
                 if (items.length === 0) {
                     listHtml += '<i>(Chưa có dữ liệu)</i><br>';
                 } else {
-                    listHtml += items.map(row => `- ${row[0]}`).join('<br>');
+                    listHtml += items.map(row => {
+                        const itemName = row[0];
+                        const itemUnit = row[1];
+                        if (itemName) {
+                            return itemUnit ? `- ${itemName} (ĐVT: ${itemUnit})` : `- ${itemName}`;
+                        }
+                        return null;
+                    }).filter(Boolean).join('<br>');
                 }
                 return listHtml;
             };
 
-            if (kitchenId === 'ALL') {
-                message += fetchAndFormatList('bep_mai');
-                message += '<br><br>'; // Add some space between lists
-                message += fetchAndFormatList('taste_vietnam');
-            } else if (kitchenNames[kitchenId]) {
-                message = fetchAndFormatList(kitchenId);
-            } else {
-                message = 'Dạ, em không tìm thấy bếp chị yêu cầu ạ.';
+            try {
+                let message = '';
+                if (kitchenId === 'ALL') {
+                    const [maiList, vietnamList] = await Promise.all([fetchAndFormatList('bep_mai'), fetchAndFormatList('taste_vietnam')]);
+                    message = `${maiList}<br><br>${vietnamList}`;
+                } else if (kitchenNames[kitchenId]) {
+                    message = await fetchAndFormatList(kitchenId);
+                } else {
+                    message = 'Dạ, em không tìm thấy bếp chị yêu cầu ạ.';
+                }
+                appendMessage({ text: message }, 'bot');
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách bếp:", error);
+                appendMessage({ text: `Lỗi khi lấy danh sách bếp: ${error.message}` }, 'bot', true);
             }
-
-            appendMessage({ text: message }, 'bot');
         };
 
         // --- UI & Event Handlers ---
@@ -523,7 +603,6 @@
             if (message) userParts.push({ text: message });
             uploadedImages.forEach(img => userParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } }));
             
-            // CRITICAL FIX: Only send the latest message to AI for order processing
             chatHistory = [{ role: "user", parts: userParts }];
 
             userInput.value = ''; 
@@ -533,29 +612,24 @@
             toggleLoading(true);
             try {
                 const botResponse = await getAIResponse({ useChatHistory: true });
-                const orderMatch = botResponse.trim().match(/^ORDER_SAVE:\s*(\[.*\])/s);
+                const orderMatch = botResponse.match(/ORDER_SAVE:\s*(\[[\s\S]*\])/);
                 const kitchenMatch = botResponse.trim().match(/^KITCHEN_LIST:\s*(.*)/);
 
                 if (orderMatch) {
                     try {
-                        const jsonString = orderMatch[1];
-                        const itemsToSave = JSON.parse(jsonString);
+                        const itemsToSave = JSON.parse(orderMatch[1]);
                         if (Array.isArray(itemsToSave) && itemsToSave.every(item => item.item && item.inventory !== undefined)) {
                             await saveOrder(itemsToSave);
                         } else {
                             appendMessage({ text: "Dạ em xin lỗi, em không hiểu định dạng đơn hàng chị muốn lưu." }, 'bot', true);
                         }
                     } catch (parseError) {
-                        console.error("Lỗi phân tích JSON đơn hàng:", parseError);
-                        appendMessage({ text: "Dạ em xin lỗi, em gặp chút trục trặc khi xử lý lệnh của chị. Em sẽ hiển thị nguyên văn phản hồi từ hệ thống ạ." }, 'bot', true);
-                        appendMessage({ text: botResponse }, 'bot');
+                        appendMessage({ text: `Lỗi xử lý lệnh từ AI: ${parseError.message}. Phản hồi gốc: ${botResponse}` }, 'bot', true);
                     }
                 } else if (botResponse.trim().startsWith('ORDER_RETRIEVE:')) {
-                    const dateCommand = botResponse.trim().substring('ORDER_RETRIEVE:'.length).trim();
-                    await getOrders(dateCommand);
+                    await getOrders(botResponse.trim().substring('ORDER_RETRIEVE:'.length).trim());
                 } else if (kitchenMatch) {
-                    const kitchenId = kitchenMatch[1].trim();
-                    await getKitchenList(kitchenId);
+                    await getKitchenList(kitchenMatch[1].trim());
                 } else {
                     appendMessage({ text: botResponse }, 'bot');
                 }
@@ -567,41 +641,13 @@
             }
         });
         
-        adminLoginButton.addEventListener('click', () => {
-            loginModal.classList.remove('hidden');
-        });
-
-        backToAdminMenuButtonOrders.addEventListener('click', () => {
-            orderManagementView.classList.add('hidden');
-            adminMenuView.classList.remove('hidden');
-        });
-        
-        backToAdminMenuButtonKitchen.addEventListener('click', () => {
-            kitchenManagementView.classList.add('hidden');
-            adminMenuView.classList.remove('hidden');
-        });
-
-        backToAdminMenuButtonSummary.addEventListener('click', () => {
-            orderSummaryView.classList.add('hidden');
-            adminMenuView.classList.remove('hidden');
-        });
-        
-        goToOrdersButton.addEventListener('click', () => {
-            adminMenuView.classList.add('hidden');
-            orderManagementView.classList.remove('hidden');
-        });
-
-        goToKitchenButton.addEventListener('click', () => {
-            adminMenuView.classList.add('hidden');
-            kitchenManagementView.classList.remove('hidden');
-            loadAndDisplayKitchenItems(kitchenSelect.value);
-        });
-        
-        goToSummaryButton.addEventListener('click', () => {
-            adminMenuView.classList.add('hidden');
-            orderSummaryView.classList.remove('hidden');
-        });
-
+        adminLoginButton.addEventListener('click', () => loginModal.classList.remove('hidden'));
+        backToAdminMenuButtonOrders.addEventListener('click', () => { orderManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        backToAdminMenuButtonKitchen.addEventListener('click', () => { kitchenManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        backToAdminMenuButtonSummary.addEventListener('click', () => { orderSummaryView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        goToOrdersButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderManagementView.classList.remove('hidden'); });
+        goToKitchenButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); kitchenManagementView.classList.remove('hidden'); loadAndDisplayKitchenItems(kitchenSelect.value); });
+        goToSummaryButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderSummaryView.classList.remove('hidden'); });
         logoutButton.addEventListener('click', () => {
             adminPanel.classList.add('hidden');
             orderManagementView.classList.add('hidden'); 
@@ -615,9 +661,7 @@
 
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const username = e.target.username.value;
-            const password = e.target.password.value;
-            if (username === 'admin' && password === 'admin') {
+            if (e.target.username.value === 'admin' && e.target.password.value === 'admin') {
                 loginModal.classList.add('hidden');
                 chatUI.classList.add('hidden');
                 adminPanel.classList.remove('hidden');
@@ -625,8 +669,6 @@
                 summaryDatePicker.value = new Date().toISOString().slice(0, 10);
                 allOrdersContainer.innerHTML = '<p class="text-gray-500">Chọn một ngày và bấm "Xem Đơn Hàng" để xem danh sách.</p>';
                 loginError.textContent = '';
-                e.target.username.value = '';
-                e.target.password.value = '';
                 adminLoginButton.disabled = true;
                 adminLoginButton.textContent = 'Đã đăng nhập';
             } else {
@@ -634,16 +676,14 @@
             }
         });
         
-        viewOrdersButton.addEventListener('click', () => {
+        viewOrdersButton.addEventListener('click', async () => {
             const selectedDate = orderDatePicker.value;
             if (selectedDate) {
                 viewOrdersButton.disabled = true;
                 viewOrdersButton.textContent = 'Đang tải...';
-                setTimeout(() => {
-                    loadOrdersForAdmin(selectedDate);
-                    viewOrdersButton.disabled = false;
-                    viewOrdersButton.textContent = 'Xem Đơn Hàng';
-                }, 50);
+                await loadOrdersForAdmin(selectedDate);
+                viewOrdersButton.disabled = false;
+                viewOrdersButton.textContent = 'Xem Đơn Hàng';
             } else {
                 allOrdersContainer.innerHTML = '<p class="text-red-500">Vui lòng chọn một ngày để xem đơn hàng.</p>';
             }
@@ -651,294 +691,392 @@
 
         excelFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
-            if (file) {
-                excelFileName.textContent = `Đã chọn file: ${file.name}`;
-            } else {
-                excelFileName.textContent = '';
-            }
+            excelFileName.textContent = file ? `Đã chọn file: ${file.name}` : '';
         });
 
-        const displayKitchenItems = (itemsJson) => {
+        const displayKitchenItems = (itemsToDisplay, isAllView = false) => {
             kitchenItemsContainer.innerHTML = '';
-            if (!itemsJson || itemsJson.length === 0) {
-                kitchenItemsContainer.innerHTML = '<p class="text-gray-500">Chưa có dữ liệu cho bếp này.</p>';
+            
+            const countHeader = document.createElement('p');
+            countHeader.className = 'text-sm text-gray-600 dark:text-gray-400 mb-2';
+            
+            if (!itemsToDisplay || itemsToDisplay.length === 0) {
+                countHeader.textContent = 'Không có mặt hàng nào để hiển thị.';
+                kitchenItemsContainer.appendChild(countHeader);
                 return;
             }
 
+            countHeader.textContent = `Hiển thị ${itemsToDisplay.length} mặt hàng.`;
+            kitchenItemsContainer.appendChild(countHeader);
+
             const table = document.createElement('table');
-            table.className = 'w-full text-left border-collapse';
-            table.innerHTML = `
-                <thead>
-                    <tr><th class="p-2 border-b-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Mặt Hàng</th></tr>
-                </thead>
-                <tbody></tbody>
-            `;
-            const tbody = table.querySelector('tbody');
+            table.className = 'w-full text-left border-collapse table-fixed';
             
-            itemsJson.forEach(row => {
+            let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/2">Tên Mặt Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/4">ĐVT</th>`;
+            if (isAllView) {
+                headers += `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/4">Bếp</th>`;
+            } else {
+                headers += `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/4">Thao tác</th>`;
+            }
+            table.innerHTML = `<thead><tr>${headers}</tr></thead><tbody></tbody>`;
+
+            const tbody = table.querySelector('tbody');
+            itemsToDisplay.forEach((row) => {
                 const itemName = row[0];
+                const itemUnit = row[1] || '';
+                const kitchenSource = row[2] || ''; // For 'All' view
                 if (itemName) {
                     const tr = document.createElement('tr');
                     tr.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
-                    tr.innerHTML = `<td class="p-2 border-b border-gray-200 dark:border-gray-700">${itemName}</td>`;
+                    tr.dataset.index = row.originalIndex; // Store original index
+
+                    let cells = `<td class="p-2 border-b dark:border-gray-700 break-words">${itemName}</td><td class="p-2 border-b dark:border-gray-700 break-words">${itemUnit}</td>`;
+                    if (isAllView) {
+                        cells += `<td class="p-2 border-b dark:border-gray-700 break-words">${kitchenSource}</td>`;
+                    } else {
+                        cells += `<td class="p-2 border-b dark:border-gray-700 flex gap-2 flex-wrap">
+                            <button class="edit-item-btn bg-blue-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-600">Sửa</button>
+                            <button class="delete-item-btn bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">Xoá</button>
+                        </td>`;
+                    }
+                    tr.innerHTML = cells;
                     tbody.appendChild(tr);
                 }
             });
             kitchenItemsContainer.appendChild(table);
         };
 
-        const loadAndDisplayKitchenItems = (kitchenId) => {
-            const key = `${KITCHEN_STORAGE_PREFIX}${kitchenId}`;
-            const storedData = localStorage.getItem(key);
-            const items = storedData ? JSON.parse(storedData) : [];
-            displayKitchenItems(items);
+        const loadAndDisplayKitchenItems = async (kitchenId) => {
+            if (!db) return;
+            kitchenSearchInput.value = '';
+            const importControls = [excelUploadLabel, importExcelButton];
+            
+            if (kitchenId === 'all') {
+                importControls.forEach(el => el.style.display = 'none');
+                const bepMaiDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'bep_mai');
+                const tasteVietnamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'taste_vietnam');
+                const [bepMaiSnap, tasteVietnamSnap] = await Promise.all([getDoc(bepMaiDocRef), getDoc(tasteVietnamDocRef)]);
+                
+                const bepMaiItems = bepMaiSnap.exists() && bepMaiSnap.data().itemsJson ? JSON.parse(bepMaiSnap.data().itemsJson).map((item, index) => [...item, 'Bếp Mai', index]) : [];
+                const tasteVietnamItems = tasteVietnamSnap.exists() && tasteVietnamSnap.data().itemsJson ? JSON.parse(tasteVietnamSnap.data().itemsJson).map((item, index) => [...item, 'TASTE VIET NAM', index]) : [];
+                
+                activeKitchenItems = [...bepMaiItems, ...tasteVietnamItems];
+                displayKitchenItems(activeKitchenItems, true);
+            } else {
+                importControls.forEach(el => el.style.display = 'block');
+                const kitchenDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', kitchenId);
+                const docSnap = await getDoc(kitchenDocRef);
+                activeKitchenItems = [];
+                if (docSnap.exists() && docSnap.data().itemsJson) {
+                    activeKitchenItems = JSON.parse(docSnap.data().itemsJson);
+                }
+                activeKitchenItems.forEach((item, index) => item.originalIndex = index);
+                displayKitchenItems(activeKitchenItems, false);
+            }
         };
 
-        kitchenSelect.addEventListener('change', () => {
-            loadAndDisplayKitchenItems(kitchenSelect.value);
-        });
+        kitchenSelect.addEventListener('change', () => loadAndDisplayKitchenItems(kitchenSelect.value));
 
-        importExcelButton.addEventListener('click', () => {
+        importExcelButton.addEventListener('click', async () => {
             const file = excelFileInput.files[0];
             const selectedKitchen = kitchenSelect.value;
-            if (!file) {
-                kitchenItemsContainer.innerHTML = '<p class="text-red-500">Vui lòng chọn một file Excel trước.</p>';
+            if (selectedKitchen === 'all') {
+                appendMessage({text: "Vui lòng chọn một bếp cụ thể để nhập file Excel.", sender: 'bot', isError: true});
                 return;
             }
-
+            if (!file || !db) {
+                kitchenItemsContainer.innerHTML = `<p class="text-red-500">${!file ? 'Vui lòng chọn một file Excel trước.' : 'Lỗi cơ sở dữ liệu.'}</p>`;
+                return;
+            }
             const reader = new FileReader();
-            reader.onload = (event) => {
+            reader.onload = async (event) => {
                 try {
                     const data = new Uint8Array(event.target.result);
                     const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheetName = workbook.SheetNames[0];
-                    const worksheet = workbook.Sheets[firstSheetName];
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
                     
-                    const key = `${KITCHEN_STORAGE_PREFIX}${selectedKitchen}`;
-                    localStorage.setItem(key, JSON.stringify(json));
-                    displayKitchenItems(json);
-                    excelFileName.textContent = `Đã nhập thành công file: ${file.name} cho bếp ${selectedKitchen === 'bep_mai' ? 'Bếp Mai' : 'TASTE VIET NAM'}.`;
-                    excelFileInput.value = ''; // Clear the input
-
+                    const kitchenDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', selectedKitchen);
+                    await setDoc(kitchenDocRef, { itemsJson: JSON.stringify(json) });
+                    
+                    await loadAndDisplayKitchenItems(selectedKitchen);
+                    excelFileName.textContent = `Đã nhập thành công file: ${file.name} cho bếp ${kitchenSelect.options[kitchenSelect.selectedIndex].text}.`;
+                    excelFileInput.value = '';
                 } catch (error) {
-                    console.error("Lỗi khi đọc file Excel:", error);
-                    kitchenItemsContainer.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi khi đọc file. Vui lòng kiểm tra định dạng file.</p>`;
+                    console.error("Lỗi khi đọc hoặc lưu file Excel:", error);
+                    kitchenItemsContainer.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi: ${error.message}.</p>`;
                 }
             };
             reader.readAsArrayBuffer(file);
         });
 
-        const getAggregatedOrderSummary = (targetDate) => {
-            const storedOrders = localStorage.getItem(LOCAL_STORAGE_KEY);
-            const allOrders = storedOrders ? JSON.parse(storedOrders) : {};
-            const ordersForDate = allOrders[targetDate];
-
-            if (!ordersForDate || ordersForDate.length === 0) {
-                return null;
+        kitchenSearchInput.addEventListener('input', (e) => {
+            const searchTerm = normalizeVnString(e.target.value);
+            if (!searchTerm) {
+                displayKitchenItems(activeKitchenItems, kitchenSelect.value === 'all');
+                return;
             }
-            
-            let allOrderedItems = [];
-            ordersForDate.forEach(orderData => {
-                allOrderedItems.push(...orderData.items.filter(item => item.quantity !== null));
+            const filteredItems = activeKitchenItems.filter(item => {
+                const itemName = item[0] || '';
+                return normalizeVnString(itemName).includes(searchTerm);
             });
+            displayKitchenItems(filteredItems, kitchenSelect.value === 'all');
+        });
+        
+        showAllKitchenItemsBtn.addEventListener('click', () => {
+            kitchenSearchInput.value = '';
+            displayKitchenItems(activeKitchenItems, kitchenSelect.value === 'all');
+        });
 
-            if (allOrderedItems.length === 0) {
-                return { bepMaiData: {}, tasteVietnamData: {}, unclassifiedData: {} };
-            }
+        const normalizeVnString = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim() : '';
 
-            const bepMaiListRaw = JSON.parse(localStorage.getItem(`${KITCHEN_STORAGE_PREFIX}bep_mai`)) || [];
-            const tasteVietnamListRaw = JSON.parse(localStorage.getItem(`${KITCHEN_STORAGE_PREFIX}taste_vietnam`)) || [];
+        const getAggregatedRawOrders = async (targetDate) => {
+            if (!db) return null;
+            const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+            const querySnapshot = await getDocs(orderCollectionRef);
+            const ordersForDate = querySnapshot.docs.map(doc => doc.data());
 
-            const normalizeVnString = (str) => {
-                if (!str) return '';
-                return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
-            };
+            if (ordersForDate.length === 0) return null;
+            
+            let allItems = [];
+            ordersForDate.forEach(orderData => allItems.push(...orderData.items));
 
-            const bepMaiSet = new Set(bepMaiListRaw.map(row => normalizeVnString(row[0])));
-            const tasteVietnamSet = new Set(tasteVietnamListRaw.map(row => normalizeVnString(row[0])));
-
-            const bepMaiAggregated = {};
-            const tasteVietnamAggregated = {};
-            const unclassifiedAggregated = {};
-
-            allOrderedItems.forEach(item => {
+            const aggregatedItems = {};
+            allItems.forEach(item => {
                 const normalizedName = normalizeVnString(item.item);
-                let targetKitchen = null;
-
-                if (bepMaiSet.has(normalizedName)) {
-                    targetKitchen = bepMaiAggregated;
-                } else if (tasteVietnamSet.has(normalizedName)) {
-                    targetKitchen = tasteVietnamAggregated;
-                } else {
-                    targetKitchen = unclassifiedAggregated;
+                if (!normalizedName) return;
+                if (!aggregatedItems[normalizedName]) {
+                    aggregatedItems[normalizedName] = { displayName: item.item, totalQuantities: {} };
                 }
-
-                if (!targetKitchen[normalizedName]) {
-                    targetKitchen[normalizedName] = { displayName: item.item, totalQuantities: {} };
+                if (item.quantity) {
+                    const quantityStr = String(item.quantity).trim();
+                    const match = quantityStr.match(/^(\d*[.,]?\d+)\s*(.*)$/);
+                    let value = 1, unit = quantityStr;
+                    if (match) {
+                        value = parseFloat(match[1].replace(',', '.'));
+                        unit = match[2].trim().toLowerCase() || 'đơn vị';
+                    }
+                    if (!aggregatedItems[normalizedName].totalQuantities[unit]) {
+                        aggregatedItems[normalizedName].totalQuantities[unit] = 0;
+                    }
+                    aggregatedItems[normalizedName].totalQuantities[unit] += value;
                 }
-                const quantityStr = String(item.quantity).trim();
-                const match = quantityStr.match(/^(\d*[.,]?\d+)\s*(.*)$/);
-                let value = 1;
-                let unit = quantityStr;
-                if (match) {
-                    value = parseFloat(match[1].replace(',', '.'));
-                    unit = match[2].trim().toLowerCase() || 'đơn vị';
-                }
-                if (!targetKitchen[normalizedName].totalQuantities[unit]) {
-                    targetKitchen[normalizedName].totalQuantities[unit] = 0;
-                }
-                targetKitchen[normalizedName].totalQuantities[unit] += value;
             });
-            
-            return { bepMaiData: bepMaiAggregated, tasteVietnamData: tasteVietnamAggregated, unclassifiedData: unclassifiedAggregated };
+            return aggregatedItems;
         };
 
-        const loadOrderSummary = (targetDate) => {
-            orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, em đang tổng hợp và phân loại đơn hàng...</p>';
+        const classifyAndStandardizeWithAI = async (itemNames, bepMaiList, tasteVietnamList) => {
+             const prompt = `
+                Bạn là trợ lý kho hàng, nhiệm vụ của bạn là đối chiếu danh sách hàng đặt với danh sách hàng chuẩn của 2 bếp.
+                **Bối cảnh:**
+                - **Danh sách hàng chuẩn Bếp Mai:** ${JSON.stringify(bepMaiList)} (đối tượng có 'name' và 'unit')
+                - **Danh sách hàng chuẩn TASTE VIET NAM:** ${JSON.stringify(tasteVietnamList)} (đối tượng có 'name' và 'unit')
+                - **Danh sách hàng đặt cần phân loại:** ${JSON.stringify(itemNames)}
+                **Nhiệm vụ:**
+                Với MỖI MẶT HÀNG trong "danh sách hàng đặt", hãy tìm ra mặt hàng TƯƠNG ỨNG NHẤT trong hai danh sách chuẩn.
+                -   Hãy linh hoạt với các lỗi chính tả, viết tắt, hoặc cách diễn đạt khác nhau (ví dụ: "mực 1 nắng" và "Mực một nắng" là một).
+                -   Nếu tìm thấy trong danh sách Bếp Mai, phân loại là "bep_mai".
+                -   Nếu tìm thấy trong danh sách TASTE VIET NAM, phân loại là "taste_vietnam".
+                -   Nếu không chắc chắn hoặc không tìm thấy ở cả hai, phân loại là "unclassified".
+                **Yêu cầu đầu ra (QUAN TRỌNG):**
+                Chỉ trả lời bằng một đối tượng JSON duy nhất. KHÔNG thêm bất kỳ văn bản nào khác.
+                Cấu trúc phải là:
+                {
+                  "tên hàng đặt 1": { "classification": "...", "standardName": "...", "standardUnit": "..." },
+                  "tên hàng đặt 2": { "classification": "...", "standardName": "...", "standardUnit": "..." }
+                }
+                Trong đó:
+                -   \`classification\`: là "bep_mai", "taste_vietnam", hoặc "unclassified".
+                -   \`standardName\`: là tên CHUẨN từ danh sách bếp. Nếu "unclassified", dùng lại tên hàng đặt.
+                -   \`standardUnit\`: là ĐVT CHUẨN từ danh sách bếp. Nếu "unclassified", để là chuỗi rỗng "".
+                **Ví dụ:**
+                Input: ["cá diêu hồng", "gà", "thịt heo"]
+                Bếp Mai List: [{name: "Cá Diêu Hồng", unit: "con"}]
+                TASTE VIET NAM List: [{name: "Gà ta", unit: "con"}]
+                Output (JSON):
+                {
+                  "cá diêu hồng": {"classification": "bep_mai", "standardName": "Cá Diêu Hồng", "standardUnit": "con"},
+                  "gà": {"classification": "taste_vietnam", "standardName": "Gà ta", "standardUnit": "con"},
+                  "thịt heo": {"classification": "unclassified", "standardName": "thịt heo", "standardUnit": ""}
+                }
+            `;
+            const responseJsonString = await getAIResponse({ prompt, isJsonMode: true });
+            return JSON.parse(responseJsonString);
+        };
+
+        const loadOrderSummary = async (targetDate) => {
+            orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, em đang lấy và lọc các đơn hàng...</p>';
             currentSummaryData = null;
             exportSummaryButton.disabled = true;
 
-            const summaryData = getAggregatedOrderSummary(targetDate);
+            try {
+                if (!db) throw new Error("Lỗi kết nối cơ sở dữ liệu.");
+                
+                const bepMaiDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'bep_mai');
+                const tasteVietnamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'taste_vietnam');
+                const [bepMaiSnap, tasteVietnamSnap, allAggregatedItems] = await Promise.all([
+                    getDoc(bepMaiDocRef),
+                    getDoc(tasteVietnamDocRef),
+                    getAggregatedRawOrders(targetDate)
+                ]);
 
-            if (summaryData === null) {
-                orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
-                return;
-            }
-            
-            currentSummaryData = summaryData; // Save data for export
-            exportSummaryButton.disabled = false;
+                if (!allAggregatedItems) {
+                    orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
+                    return;
+                }
 
-            orderSummaryContainer.innerHTML = ''; // Clear loading message
-            
-            const createKitchenTable = (title, data) => {
-                const container = document.createElement('div');
-                container.className = "bg-white dark:bg-gray-700 p-4 rounded-lg shadow";
-                const header = document.createElement('h4');
-                header.className = "text-lg font-semibold mb-4 text-center";
-                header.textContent = title;
-                container.appendChild(header);
+                const itemsToProcess = Object.values(allAggregatedItems).filter(item => Object.keys(item.totalQuantities).length > 0);
+                if (itemsToProcess.length === 0) {
+                    orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, không có mặt hàng nào được đặt trong ngày này ạ.</p>';
+                    return;
+                }
 
-                const sortedKeys = Object.keys(data).sort();
-                if (sortedKeys.length === 0) {
-                    container.innerHTML += '<p class="text-gray-500 text-center">Không có đơn hàng.</p>';
+                orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Đã lọc ${itemsToProcess.length} mặt hàng. Đang gửi AI phân loại, chị vui lòng chờ...</p>`;
+                
+                const bepMaiList = bepMaiSnap.exists() ? JSON.parse(bepMaiSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
+                const tasteVietnamList = tasteVietnamSnap.exists() ? JSON.parse(tasteVietnamSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
+                
+                const itemNames = itemsToProcess.map(item => item.displayName);
+                const classificationResult = await classifyAndStandardizeWithAI(itemNames, bepMaiList, tasteVietnamList);
+
+                const bepMaiData = {}, tasteVietnamData = {}, unclassifiedData = {};
+                const originalItemsMap = new Map(itemsToProcess.map(item => [item.displayName, item]));
+
+                for (const originalName in classificationResult) {
+                    if (!originalItemsMap.has(originalName)) continue;
+                    const result = classificationResult[originalName];
+                    const originalItem = originalItemsMap.get(originalName);
+                    const { standardName, classification, standardUnit } = result;
+                    const normalizedStandardName = normalizeVnString(standardName);
+                    
+                    let targetKitchenData;
+                    if (classification === 'bep_mai') {
+                         targetKitchenData = bepMaiData;
+                    } else if (classification === 'taste_vietnam') {
+                        targetKitchenData = tasteVietnamData;
+                    } else {
+                        targetKitchenData = unclassifiedData;
+                    }
+
+                    if (!targetKitchenData[normalizedStandardName]) {
+                        targetKitchenData[normalizedStandardName] = { 
+                            displayName: standardName, 
+                            totalQuantities: {},
+                            unit: standardUnit
+                        };
+                    }
+                    for (const unit in originalItem.totalQuantities) {
+                        const value = originalItem.totalQuantities[unit];
+                        targetKitchenData[normalizedStandardName].totalQuantities[unit] = (targetKitchenData[normalizedStandardName].totalQuantities[unit] || 0) + value;
+                    }
+                }
+
+                currentSummaryData = { bepMaiData, tasteVietnamData, unclassifiedData };
+                exportSummaryButton.disabled = false;
+                orderSummaryContainer.innerHTML = ''; 
+
+                const createKitchenTable = (title, data) => {
+                    const container = document.createElement('div');
+                    container.className = "bg-white dark:bg-gray-700 p-4 rounded-lg shadow";
+                    container.innerHTML = `<h4 class="text-lg font-semibold mb-4 text-center">${title}</h4>`;
+                    const sortedKeys = Object.keys(data).sort();
+                    if (sortedKeys.length === 0) {
+                        container.innerHTML += '<p class="text-gray-500 text-center">Không có đơn hàng.</p>';
+                        return container;
+                    }
+                    
+                    const isUnclassified = title === "Hàng Không Đúng";
+                    const table = document.createElement('table');
+                    table.className = 'w-full text-left border-collapse';
+                    
+                    let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/2">Tên Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Số Lượng</th>`;
+                    if (!isUnclassified) {
+                        headers += `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">ĐVT</th>`;
+                    }
+                    table.innerHTML = `<thead><tr>${headers}</tr></thead><tbody></tbody>`;
+
+                    const tbody = table.querySelector('tbody');
+                     for (const key of sortedKeys) {
+                        const itemData = data[key];
+                        const quantityStrings = Object.keys(itemData.totalQuantities).map(unit => {
+                            let val = itemData.totalQuantities[unit];
+                            if (val % 1 !== 0) val = val.toFixed(2);
+                            return `${val} ${unit}`;
+                        });
+                        const row = document.createElement('tr');
+                        row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
+                        
+                        let rowContent = `<td class="p-2 border-b dark:border-gray-700">${itemData.displayName}</td><td class="p-2 border-b dark:border-gray-700">${quantityStrings.join(', ')}</td>`;
+                        if (!isUnclassified) {
+                            rowContent += `<td class="p-2 border-b dark:border-gray-700">${itemData.unit || ''}</td>`;
+                        }
+                        row.innerHTML = rowContent;
+                        tbody.appendChild(row);
+                    }
+                    container.appendChild(table);
                     return container;
-                }
+                };
 
-                const table = document.createElement('table');
-                table.className = 'w-full text-left border-collapse';
-                table.innerHTML = `
-                    <thead>
-                        <tr>
-                            <th class="p-2 border-b-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Hàng</th>
-                            <th class="p-2 border-b-2 border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Số Lượng Đặt</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                `;
-                const tbody = table.querySelector('tbody');
+                orderSummaryContainer.appendChild(createKitchenTable("Bếp Mai", bepMaiData));
+                orderSummaryContainer.appendChild(createKitchenTable("TASTE VIET NAM", tasteVietnamData));
+                orderSummaryContainer.appendChild(createKitchenTable("Hàng Không Đúng", unclassifiedData));
 
-                 for (const key of sortedKeys) {
-                    const itemData = data[key];
-                    const units = itemData.totalQuantities;
-                    const quantityStrings = Object.keys(units).map(unit => {
-                        let formattedValue = units[unit];
-                        if (formattedValue % 1 !== 0) formattedValue = formattedValue.toFixed(2);
-                        return `${formattedValue} ${unit}`;
-                    });
-                    const row = document.createElement('tr');
-                    row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
-                    row.innerHTML = `
-                        <td class="p-2 border-b border-gray-200 dark:border-gray-700 capitalize">${itemData.displayName}</td>
-                        <td class="p-2 border-b border-gray-200 dark:border-gray-700">${quantityStrings.join(', ')}</td>
-                    `;
-                    tbody.appendChild(row);
-                }
-                container.appendChild(table);
-                return container;
-            };
-
-            orderSummaryContainer.appendChild(createKitchenTable("Bếp Mai", summaryData.bepMaiData));
-            orderSummaryContainer.appendChild(createKitchenTable("TASTE VIET NAM", summaryData.tasteVietnamData));
-            orderSummaryContainer.appendChild(createKitchenTable("Tên Hàng Không Chuẩn", summaryData.unclassifiedData));
+            } catch (error) {
+                console.error("Lỗi khi phân loại bằng AI:", error);
+                orderSummaryContainer.innerHTML = `<p class="text-red-500 md:col-span-3">Dạ em xin lỗi, có lỗi xảy ra: ${error.message}</p>`;
+                exportSummaryButton.disabled = true;
+            }
         };
         
         const exportOrderSummaryToExcel = () => {
-            if (!currentSummaryData) {
-                alert("Dạ, không có dữ liệu để xuất. Vui lòng xem đơn hàng trước.");
-                return;
-            }
-
+            if (!currentSummaryData) return;
             const { bepMaiData, tasteVietnamData, unclassifiedData } = currentSummaryData;
             const selectedDate = summaryDatePicker.value;
             const [year, month, day] = selectedDate.split('-');
             const formattedDate = `${day}-${month}-${year}`;
-
             const wb = XLSX.utils.book_new();
-            const excelData = [];
+            const excelData = [[`Tổng Hợp Hàng Order - Ngày ${formattedDate}`], []];
 
-            excelData.push([`Tổng Hợp Hàng Order - Ngày ${formattedDate}`]);
-            excelData.push([]); // Blank row
-
-            // Bếp Mai Data
-            excelData.push(["Bếp Mai"]);
-            excelData.push(["Tên Hàng", "Số Lượng Đặt"]);
-            Object.keys(bepMaiData).sort().forEach(key => {
-                const item = bepMaiData[key];
-                const quantityStrings = Object.keys(item.totalQuantities).map(unit => {
-                    let val = item.totalQuantities[unit];
-                    if (val % 1 !== 0) val = val.toFixed(2);
-                    return `${val} ${unit}`;
-                });
-                excelData.push([item.displayName, quantityStrings.join(', ')]);
-            });
-
-            excelData.push([]); // Blank row
-
-            // TASTE VIET NAM Data
-            excelData.push(["TASTE VIET NAM"]);
-            excelData.push(["Tên Hàng", "Số Lượng Đặt"]);
-             Object.keys(tasteVietnamData).sort().forEach(key => {
-                const item = tasteVietnamData[key];
-                const quantityStrings = Object.keys(item.totalQuantities).map(unit => {
-                    let val = item.totalQuantities[unit];
-                    if (val % 1 !== 0) val = val.toFixed(2);
-                    return `${val} ${unit}`;
-                });
-                excelData.push([item.displayName, quantityStrings.join(', ')]);
-            });
-            
-            // Unclassified Data
-            if(Object.keys(unclassifiedData).length > 0) {
-                excelData.push([]); // Blank row
-                excelData.push(["Tên Hàng Không Chuẩn"]);
-                excelData.push(["Tên Hàng", "Số Lượng Đặt"]);
-                Object.keys(unclassifiedData).sort().forEach(key => {
-                    const item = unclassifiedData[key];
+            const addSectionToSheet = (title, data) => {
+                if (Object.keys(data).length === 0) return;
+                const isUnclassified = title === "Hàng Không Đúng";
+                const headers = isUnclassified ? ["Tên Hàng", "Số Lượng Đặt"] : ["Tên Hàng", "Số Lượng Đặt", "ĐVT"];
+                excelData.push([title], headers);
+                
+                Object.keys(data).sort().forEach(key => {
+                    const item = data[key];
                     const quantityStrings = Object.keys(item.totalQuantities).map(unit => {
                         let val = item.totalQuantities[unit];
                         if (val % 1 !== 0) val = val.toFixed(2);
                         return `${val} ${unit}`;
                     });
-                    excelData.push([item.displayName, quantityStrings.join(', ')]);
+                    
+                    const rowData = [item.displayName, quantityStrings.join(', ')];
+                    if (!isUnclassified) {
+                        rowData.push(item.unit || '');
+                    }
+                    excelData.push(rowData);
                 });
-            }
+                excelData.push([]);
+            };
+
+            addSectionToSheet("Bếp Mai", bepMaiData);
+            addSectionToSheet("TASTE VIET NAM", tasteVietnamData);
+            addSectionToSheet("Hàng Không Đúng", unclassifiedData);
 
             const ws = XLSX.utils.aoa_to_sheet(excelData);
             XLSX.utils.book_append_sheet(wb, ws, "Tổng Hợp Order");
             XLSX.writeFile(wb, `Tong_Hop_Order_${formattedDate}.xlsx`);
         };
 
-        viewSummaryButton.addEventListener('click', () => {
+        viewSummaryButton.addEventListener('click', async () => {
             const selectedDate = summaryDatePicker.value;
             if (selectedDate) {
                 viewSummaryButton.disabled = true;
                 viewSummaryButton.textContent = 'Đang tải...';
-                setTimeout(() => {
-                    loadOrderSummary(selectedDate);
-                    viewSummaryButton.disabled = false;
-                    viewSummaryButton.textContent = 'Xem';
-                }, 50);
+                await loadOrderSummary(selectedDate);
+                viewSummaryButton.disabled = false;
+                viewSummaryButton.textContent = 'Xem';
             } else {
                 orderSummaryContainer.innerHTML = '<p class="text-red-500 md:col-span-3">Vui lòng chọn một ngày để xem tổng hợp.</p>';
             }
@@ -946,33 +1084,92 @@
         
         exportSummaryButton.addEventListener('click', exportOrderSummaryToExcel);
 
+        const handleDeleteItem = async (itemName) => {
+            const targetDate = orderDatePicker.value;
+            if (!targetDate || !itemName) return;
 
-        // --- Initialization ---
+            deleteConfirmText.textContent = `Chị có chắc chắn muốn xoá tất cả đơn hàng cho mặt hàng "${itemName}" trong ngày ${targetDate} không?`;
+            deleteConfirmModal.classList.remove('hidden');
+
+            const userConfirmation = new Promise((resolve) => {
+                cancelDeleteButton.onclick = () => resolve(false);
+                confirmDeleteButton.onclick = () => resolve(true);
+            });
+
+            const confirmed = await userConfirmation;
+            deleteConfirmModal.classList.add('hidden');
+
+            if (confirmed) {
+                allOrdersContainer.innerHTML = `<p class="text-gray-500">Đang xoá các mục "${itemName}"...</p>`;
+                try {
+                    const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+                    const querySnapshot = await getDocs(orderCollectionRef);
+                    const updatePromises = [];
+
+                    querySnapshot.forEach(docSnap => {
+                        const docId = docSnap.id;
+                        const orderData = docSnap.data();
+                        const originalItemCount = orderData.items.length;
+                        const updatedItems = orderData.items.filter(item => normalizeVnString(item.item) !== normalizeVnString(itemName));
+
+                        if (updatedItems.length < originalItemCount) {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries', docId);
+                            if (updatedItems.length === 0) {
+                                updatePromises.push(deleteDoc(docRef));
+                            } else {
+                                updatePromises.push(updateDoc(docRef, { items: updatedItems }));
+                            }
+                        }
+                    });
+
+                    await Promise.all(updatePromises);
+                    appendMessage({ text: `Đã xoá thành công tất cả đơn hàng cho "${itemName}".` }, 'bot');
+                } catch (error) {
+                    console.error("Lỗi khi xoá mục đơn hàng:", error);
+                    appendMessage({ text: `Lỗi khi xoá đơn hàng: ${error.message}` }, 'bot', true);
+                } finally {
+                    await loadOrdersForAdmin(targetDate);
+                }
+            }
+        };
+
+        allOrdersContainer.addEventListener('click', (e) => {
+            if (e.target && e.target.classList.contains('delete-item-btn')) {
+                const itemName = e.target.getAttribute('data-item-name');
+                handleDeleteItem(itemName);
+            }
+        });
+
+
+        // --- App Initialization ---
         const initializeAppUI = () => {
-            appendMessage({ text: "Dạ, em chào mừng chị Hằng ạ. Em sẵn sàng hỗ trợ chị." }, 'bot');
+            appendMessage({ text: "Dạ, em chào mừng chị Hằng ạ. Em đã kết nối thành công với cơ sở dữ liệu và sẵn sàng hỗ trợ chị." }, 'bot');
             if (typeof VanillaTelex !== 'undefined') {
                 new VanillaTelex(userInput);
             } else {
-                console.warn("VanillaTelex library not loaded yet. Retrying...");
-                setTimeout(() => {
-                    if (typeof VanillaTelex !== 'undefined') {
-                        new VanillaTelex(userInput);
-                    } else {
-                        console.error("VanillaTelex library failed to load. Vietnamese IME will not work.");
-                    }
-                }, 1000);
+                console.warn("VanillaTelex library not loaded.");
             }
         };
 
         // --- Helper functions ---
         function processFiles(files) { if (!files || files.length === 0) return; imageInfo.classList.remove('text-red-500'); const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/')); if (imageFiles.length === 0) return; if (uploadedImages.length + imageFiles.length > MAX_IMAGES) { imageInfo.textContent = `Chị chỉ có thể tải lên tối đa ${MAX_IMAGES} ảnh.`; imageInfo.classList.add('text-red-500'); return; } for (const file of imageFiles) { const isDuplicate = uploadedImages.some(img => img.file.name === file.name && img.file.size === file.size && img.file.lastModified === file.lastModified); if (isDuplicate) continue; const reader = new FileReader(); reader.onload = (event) => { const base64Data = event.target.result.split(',')[1]; uploadedImages.push({ data: base64Data, mimeType: file.type, file: file }); createImagePreview(event.target.result, file); updateImageCount(); }; reader.readAsDataURL(file); } }
         function createImagePreview(dataUrl, file) { const previewWrapper = document.createElement('div'); previewWrapper.className = 'relative'; const img = document.createElement('img'); img.src = dataUrl; img.className = 'h-16 w-16 object-cover rounded-md'; previewWrapper.appendChild(img); const removeBtn = document.createElement('button'); removeBtn.innerHTML = '&times;'; removeBtn.className = 'absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs leading-none'; removeBtn.onclick = () => { uploadedImages = uploadedImages.filter(img => img.file !== file); previewWrapper.remove(); updateImageCount(); }; previewWrapper.appendChild(removeBtn); imagePreviewContainer.appendChild(previewWrapper); }
-        function updateImageCount() { imageInfo.classList.remove('text-red-500'); if (uploadedImages.length > 0) { imageInfo.textContent = `Đã tải lên ${uploadedImages.length}/${MAX_IMAGES} ảnh.`; } else { imageInfo.textContent = ''; } }
+        function updateImageCount() { imageInfo.classList.remove('text-red-500'); imageInfo.textContent = uploadedImages.length > 0 ? `Đã tải lên ${uploadedImages.length}/${MAX_IMAGES} ảnh.` : ''; }
         function appendMessage(data, sender, isError = false) { const { text, images } = data; const messageWrapper = document.createElement('div'); messageWrapper.className = `flex items-start gap-3 mb-4 ${sender === 'user' ? 'justify-end' : ''}`; const messageContent = document.createElement('div'); messageContent.className = `p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-xl ${sender === 'user' ? 'bg-blue-600 text-white' : isError ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-gray-200 dark:bg-gray-700'}`; if (images && images.length > 0) { const imageGrid = document.createElement('div'); imageGrid.className = 'grid grid-cols-3 gap-1'; images.forEach(file => { const img = document.createElement('img'); img.src = URL.createObjectURL(file); img.className = 'w-full h-auto object-cover rounded'; img.onload = () => URL.revokeObjectURL(img.src); imageGrid.appendChild(img); }); messageContent.appendChild(imageGrid); } if (text) { const textElement = document.createElement('p'); textElement.className = `text-sm ${sender === 'bot' && !isError ? 'text-gray-800 dark:text-gray-200' : ''} ${(images && images.length > 0) ? 'mt-2' : ''}`; textElement.innerHTML = text.replace(/\n/g, '<br>'); messageContent.appendChild(textElement); } const avatar = document.createElement('div'); avatar.className = 'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-white'; if (sender === 'user') { avatar.className += ' bg-gray-500'; avatar.textContent = 'U'; messageWrapper.appendChild(messageContent); messageWrapper.appendChild(avatar); } else { avatar.className += isError ? ' bg-red-500' : ' bg-blue-500'; avatar.textContent = 'B'; messageWrapper.appendChild(avatar); messageWrapper.appendChild(messageContent); } const mainChatContainer = document.querySelector('.chat-container'); mainChatContainer.appendChild(messageWrapper); mainChatContainer.scrollTop = mainChatContainer.scrollHeight; }
-        function toggleLoading(isLoading) { sendButton.disabled = isLoading; userInput.disabled = isLoading; document.getElementById('image-upload-button').style.pointerEvents = isLoading ? 'none' : 'auto'; sendText.classList.toggle('hidden', isLoading); loadingSpinner.classList.toggle('hidden', !isLoading); if (!isLoading) { userInput.focus(); } }
+        function toggleLoading(isLoading) {
+            sendButton.disabled = isLoading;
+            userInput.disabled = isLoading;
+            document.getElementById('image-upload-button').style.pointerEvents = isLoading ? 'none' : 'auto';
+            sendIcon.classList.toggle('hidden', isLoading);
+            loadingSpinner.classList.toggle('hidden', !isLoading);
+            if (!isLoading) {
+                userInput.focus();
+            }
+        }
 
-        // Start the application after the DOM is fully loaded
-        document.addEventListener('DOMContentLoaded', initializeAppUI);
+        // Start the application
+        initializeFirebase();
+
     </script>
 </body>
 </html>
