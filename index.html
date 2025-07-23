@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tr? L� ?o C?a Tr?n H?ng</title>
+    <title>Trợ Lý Ảo Cửa Trần Hằng</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <!-- Vietnamese IME Library -->
-    <script src="https://cdn.jsdelivr.net/npm/vanilla-telex@1/vanilla-telex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanilla-telex@1/vanilla-telex.min.js" defer></script>
+    <!-- SheetJS Library for Excel file reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
         #image-input { display: none; }
-        .chat-container::-webkit-scrollbar { width: 8px; }
-        .chat-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
-        .chat-container::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
-        .chat-container::-webkit-scrollbar-thumb:hover { background: #555; }
+        .chat-container::-webkit-scrollbar, #admin-content::-webkit-scrollbar, #kitchen-content::-webkit-scrollbar, #order-summary-content::-webkit-scrollbar { width: 8px; }
+        .chat-container::-webkit-scrollbar-track, #admin-content::-webkit-scrollbar-track, #kitchen-content::-webkit-scrollbar-track, #order-summary-content::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar-thumb, #admin-content::-webkit-scrollbar-thumb, #kitchen-content::-webkit-scrollbar-thumb, #order-summary-content::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+        .chat-container::-webkit-scrollbar-thumb:hover, #admin-content::-webkit-scrollbar-thumb:hover, #kitchen-content::-webkit-scrollbar-thumb:hover, #order-summary-content::-webkit-scrollbar-thumb:hover { background: #555; }
         .drag-over {
             background-color: #e0f2fe !important; /* light-blue */
             border: 2px dashed #3b82f6; /* blue-500 */
@@ -28,20 +30,52 @@
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
 
-    <div class="flex h-screen">
-        <!-- Main Chat UI -->
-        <main class="flex-1 flex flex-col">
-            <!-- Header -->
-            <header class="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-blue-600 text-white">
-                <div class="flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M12 15V12c0-2 2-4 4-4s4 2 4 4v3"/><path d="M8 15V12c0-2-2-4-4-4S0 10 0 12v3"/><path d="M12 15h0a2 0 0 0-2-2h-2a2 0 0 0-2 2v3c0 1.1.9 2 2 2h4a2 0 0 0 2-2v-3c0-1.1-.9-2-2-2Z"/><path d="M18 15h0a2 0 0 1 2-2h2a2 0 0 1 2 2v3c0 1.1-.9 2-2 2h-4a2 0 0 1-2-2v-3c0-1.1.9-2 2-2Z"/></svg>
-                    <h1 class="text-lg md:text-xl font-bold">(Tr? L� ?o) Tr?n H?ng </h1>
+    <!-- Login Modal - Hidden by default -->
+    <div id="login-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm mx-4">
+            <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-6">Đăng Nhập Admin</h2>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="username" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Tên đăng nhập</label>
+                    <input type="text" id="username" name="username" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
                 </div>
-            </header>
+                <div class="mb-6">
+                    <label for="password" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Mật khẩu</label>
+                    <input type="password" id="password" name="password" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                </div>
+                <p id="login-error" class="text-red-500 text-sm text-center mb-4 h-5"></p>
+                <button type="submit" class="w-full bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Đăng Nhập</button>
+            </form>
+        </div>
+    </div>
 
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-confirm-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-xl w-full max-w-sm mx-4">
+            <h2 class="text-2xl font-bold text-center text-gray-900 dark:text-white mb-4">Xác nhận xoá</h2>
+            <p id="delete-confirm-text" class="text-center text-gray-700 dark:text-gray-300 mb-6"></p>
+            <div class="flex justify-center gap-4">
+                <button id="cancel-delete-button" class="bg-gray-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-700">Huỷ</button>
+                <button id="confirm-delete-button" class="bg-red-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-700">Xoá</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex flex-col h-screen">
+        <!-- Header -->
+        <header class="p-4 border-b dark:border-gray-700 flex items-center justify-between bg-blue-600 text-white flex-shrink-0">
+            <div class="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M12 15V12c0-2 2-4 4-4s4 2 4 4v3"/><path d="M8 15V12c0-2-2-4-4-4S0 10 0 12v3"/><path d="M12 15h0a2 0 0 0-2-2h-2a2 0 0 0-2 2v3c0 1.1.9 2 2 2h4a2 0 0 0 2-2v-3c0-1.1-.9-2-2-2Z"/><path d="M18 15h0a2 0 0 1 2-2h2a2 0 0 1 2 2v3c0 1.1-.9 2-2 2h-4a2 0 0 1-2-2v-3c0-1.1.9-2 2-2Z"/></svg>
+                <h1 class="text-lg md:text-xl font-bold">(Trợ Lý Ảo) Trần Hằng </h1>
+            </div>
+            <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
+        </header>
+
+        <!-- Chat UI -->
+        <main id="chat-ui" class="flex-1 flex flex-col overflow-hidden">
             <div class="chat-container flex-1 p-4 md:p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900"></div>
-
-            <div id="input-area" class="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg">
+            <div id="input-area" class="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg flex-shrink-0">
                 <div id="image-preview-container" class="mb-2 flex flex-wrap gap-2"></div>
                 <div id="image-info" class="text-xs text-gray-500 dark:text-gray-400 mb-2 h-4"></div>
                 <form id="chat-form" class="flex items-center gap-3">
@@ -49,246 +83,458 @@
                     <label for="image-input" id="image-upload-button" class="cursor-pointer p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </label>
-                    <input type="text" id="user-input" placeholder="Nh?p tin nh?n, d�n ho?c k�o th? ?nh..." class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
+                    <input type="text" id="user-input" placeholder="Nhập tin nhắn, dán hoặc kéo thả ảnh..." class="flex-1 p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
                     <button type="submit" id="send-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center">
-                        <span id="send-text">G?i</span>
+                        <span id="send-text">Gửi</span>
                         <svg id="loading-spinner" class="animate-spin h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                     </button>
                 </form>
             </div>
         </main>
+        
+        <!-- Admin Panel Container - Hidden by default -->
+        <div id="admin-panel" class="flex-1 flex-col overflow-hidden hidden">
+            <!-- Admin Main Menu -->
+            <div id="admin-menu-view" class="flex-1 flex flex-col">
+                <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Quản lý</h2>
+                    <button id="logout-button" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700">Đăng xuất</button>
+                </div>
+                <div class="p-6 flex flex-col sm:flex-row gap-4">
+                    <button id="go-to-orders-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">Quản Lý Đơn Hàng</button>
+                    <button id="go-to-kitchen-button" class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700">Quản Lý Bếp</button>
+                    <button id="go-to-summary-button" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">Hàng Order</button>
+                </div>
+            </div>
+
+            <!-- Order Management View - Hidden by default -->
+            <div id="order-management-view" class="flex-1 flex-col overflow-hidden hidden">
+                <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Quản Lý Đơn Hàng</h2>
+                    <button id="back-to-admin-menu-button-orders" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
+                </div>
+                <div id="admin-content" class="p-6 overflow-y-auto">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <label for="order-date-picker" class="font-semibold flex-shrink-0">Chọn ngày:</label>
+                        <input type="date" id="order-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
+                        <button id="view-orders-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem Đơn Hàng</button>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-4">Kết quả đơn hàng</h3>
+                    <div id="all-orders-container" class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                        <p class="text-gray-500">Chọn một ngày và bấm "Xem Đơn Hàng" để xem danh sách.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kitchen Management View - Hidden by default -->
+            <div id="kitchen-management-view" class="flex-1 flex-col overflow-hidden hidden">
+                <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Quản Lý Bếp</h2>
+                    <button id="back-to-admin-menu-button-kitchen" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
+                </div>
+                <div id="kitchen-content" class="p-6 overflow-y-auto">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <label for="kitchen-select" class="font-semibold flex-shrink-0">Chọn Bếp:</label>
+                        <select id="kitchen-select" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
+                            <option value="bep_mai">Bếp Mai</option>
+                            <option value="taste_vietnam">TASTE VIET NAM</option>
+                        </select>
+                        <input type="file" id="excel-file-input" class="hidden" accept=".xlsx, .xls">
+                        <label for="excel-file-input" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-teal-700 cursor-pointer text-center w-full sm:w-auto">Chọn file Excel</label>
+                        <button id="import-excel-button" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-indigo-700 w-full sm:w-auto">Nhập từ Excel</button>
+                    </div>
+                    <p id="excel-file-name" class="mb-4 text-sm text-gray-600 dark:text-gray-400"></p>
+                    <h3 class="text-lg font-semibold mb-4">Danh sách mặt hàng</h3>
+                    <div id="kitchen-items-container" class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
+                        <p class="text-gray-500">Chưa có dữ liệu. Vui lòng chọn và nhập file Excel.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Order Summary View - Hidden by default -->
+            <div id="order-summary-view" class="flex-1 flex-col overflow-hidden hidden">
+                 <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
+                    <h2 class="text-xl font-bold">Tổng Hợp Hàng Order</h2>
+                    <button id="back-to-admin-menu-button-summary" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
+                </div>
+                <div id="order-summary-content" class="p-6 overflow-y-auto">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 mb-6 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <label for="summary-date-picker" class="font-semibold flex-shrink-0">Chọn ngày xem:</label>
+                        <input type="date" id="summary-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
+                        <button id="view-summary-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem</button>
+                        <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
+                    </div>
+                    <div id="order-summary-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <p class="text-gray-500 md:col-span-3">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module">
+        // Firebase SDK Imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
         // DOM Elements
         const chatForm = document.getElementById('chat-form'), userInput = document.getElementById('user-input'),
               sendButton = document.getElementById('send-button'), sendText = document.getElementById('send-text'), 
               loadingSpinner = document.getElementById('loading-spinner'), imageInput = document.getElementById('image-input'), 
               imagePreviewContainer = document.getElementById('image-preview-container'), imageInfo = document.getElementById('image-info'),
-              inputArea = document.getElementById('input-area');
+              loginModal = document.getElementById('login-modal'),
+              loginForm = document.getElementById('login-form'),
+              loginError = document.getElementById('login-error'),
+              adminLoginButton = document.getElementById('admin-login-button'),
+              chatUI = document.getElementById('chat-ui'),
+              adminPanel = document.getElementById('admin-panel'),
+              adminMenuView = document.getElementById('admin-menu-view'),
+              orderManagementView = document.getElementById('order-management-view'),
+              kitchenManagementView = document.getElementById('kitchen-management-view'),
+              orderSummaryView = document.getElementById('order-summary-view'),
+              goToOrdersButton = document.getElementById('go-to-orders-button'),
+              goToKitchenButton = document.getElementById('go-to-kitchen-button'),
+              goToSummaryButton = document.getElementById('go-to-summary-button'),
+              backToAdminMenuButtonOrders = document.getElementById('back-to-admin-menu-button-orders'),
+              backToAdminMenuButtonKitchen = document.getElementById('back-to-admin-menu-button-kitchen'),
+              backToAdminMenuButtonSummary = document.getElementById('back-to-admin-menu-button-summary'),
+              logoutButton = document.getElementById('logout-button'),
+              allOrdersContainer = document.getElementById('all-orders-container'),
+              orderDatePicker = document.getElementById('order-date-picker'),
+              viewOrdersButton = document.getElementById('view-orders-button'),
+              kitchenSelect = document.getElementById('kitchen-select'),
+              excelFileInput = document.getElementById('excel-file-input'),
+              excelFileName = document.getElementById('excel-file-name'),
+              importExcelButton = document.getElementById('import-excel-button'),
+              kitchenItemsContainer = document.getElementById('kitchen-items-container'),
+              summaryDatePicker = document.getElementById('summary-date-picker'),
+              viewSummaryButton = document.getElementById('view-summary-button'),
+              exportSummaryButton = document.getElementById('export-summary-button'),
+              orderSummaryContainer = document.getElementById('order-summary-container'),
+              deleteConfirmModal = document.getElementById('delete-confirm-modal'),
+              deleteConfirmText = document.getElementById('delete-confirm-text'),
+              cancelDeleteButton = document.getElementById('cancel-delete-button'),
+              confirmDeleteButton = document.getElementById('confirm-delete-button');
 
-        // State
+        // App State
         const MAX_IMAGES = 50;
         let chatHistory = [], uploadedImages = [];
         let currentApiKeyIndex = 0; 
+        let currentSummaryData = null;
         
-        // ===================================================================================
-        // !!! C?U H�NH DUY NH?T T?I ��Y !!!
-        // THAY TH? C�C KEY M?U B?NG API KEY TH?T C?A B?N.
-        // C?NH B�O: KH�NG �ANG T?I FILE N�Y L�N INTERNET C�NG C?NG V� S? L�M L? KEY.
-        // ===================================================================================
+        // Firebase State
+        let db, auth, userId, app;
+        const appId = 'tranhang-assistant-app'; // Use a fixed app ID for database paths
+
+        // API Keys Configuration
         const apiKeys = [
             "AIzaSyCg4gg9GLf6SPzhYCNMvTZyIuuQZPRw04",
             "AIzaSyDOfRZnSkMqUAddDF1jZqqzCDZzn68hUyE",
             "AIzaSyDxr0SL3tbWE2kdp2oBB3Ru4UxpbuimZD0",
             "AIzaSyBR-duVUWZG-lD5usabYD3NS_-tZySMlcA",
             "AIzaSyBNagv3kn8vAJzbyMYlvLLCccNGbFa4ySc",
-            // Th�m c�c key kh�c v�o d�y, m?i key l� m?t chu?i trong m?ng.
         ];
 
-        // --- Core Functions ---
-        const getGeminiResponse = async (retryCount = 0) => {
+        // --- Firebase Initialization ---
+        function initializeFirebase() {
+            try {
+                // User-provided Firebase configuration
+                const firebaseConfig = {
+                  apiKey: "AIzaSyDJBY6U0LUtmnk4PrfNeA7UE7qq1FZ84X8",
+                  authDomain: "data-chung-a62ee.firebaseapp.com",
+                  databaseURL: "https://data-chung-a62ee-default-rtdb.asia-southeast1.firebasedatabase.app",
+                  projectId: "data-chung-a62ee",
+                  storageBucket: "data-chung-a62ee.appspot.com",
+                  messagingSenderId: "453115303161",
+                  appId: "1:453115303161:web:d40a0ec5a38ab7d4863e28",
+                  measurementId: "G-WNVH78VY1Z"
+                };
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                onAuthStateChanged(auth, async (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        console.log("Firebase Authenticated. UserID:", userId);
+                        initializeAppUI(); // Start the app now that we are authenticated
+                    } else {
+                        console.log("User not signed in. Attempting anonymous sign-in.");
+                        try {
+                            await signInAnonymously(auth);
+                        } catch (error) {
+                            console.error("Firebase anonymous sign-in failed:", error);
+                            appendMessage({ text: "Lỗi kết nối đến máy chủ. Vui lòng tải lại trang." }, 'bot', true);
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error("Could not initialize Firebase:", error);
+                appendMessage({ text: "Không thể khởi tạo cơ sở dữ liệu. Vui lòng kiểm tra cấu hình." }, 'bot', true);
+            }
+        }
+
+        // --- Core AI Function ---
+        const getAIResponse = async (options, retryCount = 0) => {
             if (apiKeys.length === 0 || apiKeys.every(k => k.startsWith("YOUR_API_KEY"))) {
-                throw new Error("Vui l�ng c?u h�nh �t nh?t m?t API key th?t trong m� ngu?n.");
+                throw new Error("Vui lòng cấu hình ít nhất một API key thật trong mã nguồn.");
             }
             if (retryCount >= apiKeys.length) {
-                throw new Error("T?t c? API key d?u kh�ng ho?t d?ng. Vui l�ng ki?m tra l?i.");
+                throw new Error("Tất cả API key đều không hoạt động. Vui lòng kiểm tra lại.");
             }
             
             const apiKey = apiKeys[currentApiKeyIndex];
             const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
             
-            const systemInstructionText = `
-                Em l� tr? l� AI c?a Tr?n Th? Thu� H?ng, du?c ph�t tri?n b?i Google, c� kh? nang tuong t? nhu Gemini.
-                Nhi?m v? c?a em l� h? tr? ch? m?t c�ch t?t nh?t c� th? trong m?i linh v?c.
+            let payload;
 
-                **Kh? nang c?a em:**
-                - Tr? l?i c�c c�u h?i ki?n th?c chung, gi?i th�ch c�c kh�i ni?m ph?c t?p.
-                - Ph�n t�ch v� m� t? n?i dung h�nh ?nh do ch? cung c?p. Em c� th? d?c van b?n trong ?nh, nh?n d?ng d?i tu?ng, v� m� t? c?nh v?t.
-                - S�ng t?o n?i dung: vi?t van, l�m tho, so?n email, v.v.
-                - H? tr? l?p tr�nh, d?ch thu?t v� nhi?u t�c v? kh�c.
-                - Lu�n lu�n tr? l?i b?ng ti?ng Vi?t m?t c�ch t? nhi�n v� th�n thi?n.
-
-                **Qu?n l� don h�ng (QUAN TR?NG):**
-                Ch? c� th? y�u c?u em luu l?i c�c m?t h�ng v� s? lu?ng theo ng�y gi? v�o b? nh? c?c b? c?a tr�nh duy?t.
-                �? luu don h�ng, ch? ch? c?n nh?p t�n m?t h�ng v� s? lu?ng.
-                V� d?:
-                - "c� com 1kg"
-                - "rau c?i 2 b�"
-                - "c� m� 3 con"
-                - "m? g� 500g"
-                
-                Khi ch? nh?p c�c m?t h�ng v� s? lu?ng nhu tr�n, em s? ph?n h?i l?i b?ng d?nh d?ng d?c bi?t sau d? h? th?ng c� th? x? l�:
-                \`ORDER_SAVE: [{"item": "T�n m?t h�ng 1", "quantity": "S? lu?ng 1"}, {"item": "T�n m?t h�ng 2", "quantity": "S? lu?ng 2"}]\`
-                V� d? c? th? cho "c� com 1kg, rau c?i 2 b�":
-                \`ORDER_SAVE: [{"item": "c� com", "quantity": "1kg"}, {"item": "rau c?i", "quantity": "2 b�"}]\`
-                �?m b?o d?nh d?ng JSON h?p l?, bao g?m d?u ngo?c vu�ng cho m?ng v� d?u ngo?c nh?n cho t?ng d?i tu?ng m?t h�ng.
-
-                Khi ch? mu?n xem l?i don h�ng, ch? c� th? n�i:
-                - "L?y don h�ng" ho?c "Xu?t don h�ng h�m nay": Em s? hi?u l� ch? mu?n l?y t?t c? don h�ng d� nh?p trong ng�y h�m nay v� ph?n h?i l?i b?ng d?nh d?ng: \`ORDER_RETRIEVE: CURRENT_DAY\`
-                - "L?y don h�ng ng�y YYYY-MM-DD" ho?c "Xu?t don h�ng ng�y YYYY-MM-DD": Em s? ph?n h?i l?i b?ng d?nh d?ng: \`ORDER_RETRIEVE: YYYY-MM-DD\` (trong d� YYYY-MM-DD l� ng�y c? th?, v� d?: 2025-07-21)
-                - "L?y don h�ng ng�y DD th�ng MM" ho?c "Xu?t don h�ng ng�y DD th�ng MM": Em s? hi?u l� ch? mu?n l?y don h�ng c?a ng�y d� trong nam hi?n t?i v� ph?n h?i l?i b?ng d?nh d?ng: \`ORDER_RETRIEVE: YYYY-MM-DD\` (v� d?: "L?y don h�ng ng�y 21 th�ng 7" s? l� \`ORDER_RETRIEVE: 2025-07-21\` n?u nam hi?n t?i l� 2025).
-
-                Sau khi h? th?ng x? l� xong, em s? th�ng b�o l?i cho ch?.
-
-                **Th�ng tin b? sung (ch? cung c?p khi du?c h?i):**
-                N?u ch? h?i v? "C�ng Ty Thi?t K? In ?n H?i An", em c� th? cung c?p th�ng tin sau:
-                - **�?a ch?:** 69 ��o Duy T?, H?i An.
-                - **Zalo / S�T:** 0935 000 442.
-                
-                **T�nh to�n gi� decal:**
-                N?u ch? cung c?p k�ch thu?c (v� d?: "0,2x0,5" ho?c "0.2x0.5") v�/ho?c s? lu?ng (v� d?: "x2" ho?c "nh�n 2") cho **decal**, em h�y th?c hi?n t�nh to�n gi�.
-                - Gi� decal tr?ng l� 85.000 VN�/m�.
-                - C�ng th?c t�nh: (chi?u d�i * chi?u r?ng * s? lu?ng) * 85000.
-                - N?u ch? kh�ng cung c?p s? lu?ng, m?c d?nh s? lu?ng l� 1.
-                - V� d?: "0,2x0,5x2 decal" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 2 decal.
-                - V� d?: "0,2x0,5 decal" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 1 decal.
-
-                **T�nh to�n gi� in decal th?:**
-                N?u ch? cung c?p k�ch thu?c v�/ho?c s? lu?ng cho **in decal th?**, em h�y th?c hi?n t�nh to�n gi�.
-                - Gi� in decal th? l� 80.000 VN�/m�.
-                - C�ng th?c t�nh: (chi?u d�i * chi?u r?ng * s? lu?ng) * 80000.
-                - V� d?: "0,2x0,5x2 in decal th?" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 2 in decal th?.
-
-                **T�nh to�n gi� decal b? (ho?c b?):**
-                N?u ch? cung c?p k�ch thu?c v�/ho?c s? lu?ng cho **decal b?** ho?c ch? **b?**, em h�y th?c hi?n t�nh to�n gi�.
-                - Gi� decal b? l� 145.000 VN�/m�.
-                - C�ng th?c t�nh: (chi?u d�i * chi?u r?ng * s? lu?ng) * 145000.
-                - N?u ch? kh�ng cung c?p s? lu?ng, m?c d?nh s? lu?ng l� 1.
-                - V� d?: "0,2x0,5x2 decal b?" ho?c "0,2x0,5x2 b?" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 2 decal b?.
-                - V� d?: "0,2x0,5 decal b?" ho?c "0,2x0,5 b?" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 1 decal b?.
-
-                **T�nh to�n gi� in b?t:**
-                N?u ch? cung c?p k�ch thu?c (v� d?: "0,2x0,5" ho?c "0.2x0.5") v�/ho?c s? lu?ng (v� d?: "x2" ho?c "nh�n 2") cho **in b?t**, em h�y th?c hi?n t�nh to�n gi�.
-                - Gi� in b?t l� 35.000 VN�/m�.
-                - C�ng th?c t�nh: (chi?u d�i * chi?u r?ng * s? lu?ng) * 35000.
-                - N?u ch? kh�ng cung c?p s? lu?ng, m?c d?nh s? lu?ng l� 1.
-                - V� d?: "0,2x0,5x2 in b?t" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 2 in b?t.
-                - V� d?: "0,2x0,5 in b?t" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 1 in b?t.
-
-                **T�nh to�n gi� in b?t th?:**
-                N?u ch? cung c?p k�ch thu?c v�/ho?c s? lu?ng cho **in b?t th?**, em h�y th?c hi?n t�nh to�n gi�.
-                - Gi� in b?t th? l� 30.000 VN�/m�.
-                - C�ng th?c t�nh: (chi?u d�i * chi?u r?ng * s? lu?ng) * 30000.
-                - V� d?: "0,2x0,5x2 in b?t th?" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 2 in b?t th?.
-
-                **T�nh to�n gi� c�n m�n:**
-                N?u ch? cung c?p k�ch thu?c (v� d?: "0,2x0,5" ho?c "0.2x0.5") v�/ho?c s? lu?ng (v� d?: "x2" ho?c "nh�n 2") cho **c�n m�n**, em h�y th?c hi?n t�nh to�n gi�.
-                - Gi� c�n m�n l� 100.000 VN�/m�.
-                - C�ng th?c t�nh: (chi?u d�i * chi?u r?ng * s? lu?ng) * 100000.
-                - N?u ch? kh�ng cung c?p s? lu?ng, m?c d?nh s? lu?ng l� 1.
-                - V� d?: "0,2x0,5x2 c�n m�n" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 2 c�n m�n.
-                - V� d?: "0,2x0,5 c�n m�n" s? du?c hi?u l� d�i 0.2m, r?ng 0.5m, s? lu?ng 1 c�n m�n.
-                
-                **T�nh th�m ph� h�a don:**
-                N?u ch? n�i "c� h�a don" ho?c "l?y h�a don" ho?c "xu?t h�a don" trong c�ng m?t y�u c?u t�nh gi�, h�y t�nh th�m 8% tr�n t?ng gi� tr? d� t�nh.
-                - C�ng th?c: T?ng gi� * 1.08.
-                - H�y th�ng b�o r� r�ng v? vi?c c?ng th�m 8% cho h�a don.
-
-                - Lu�n l�m tr�n k?t qu? d?n hai ch? s? th?p ph�n n?u c?n v� hi?n th? don v? VN�.
-                - **QUAN TR?NG:** Khi hi?n th? k?t qu? gi� ti?n, h�y d?nh d?ng s? theo ki?u "000,000,000 VN�" (v� d?: 123,456,789 VN�).
-            `;
-
-            const payload = {
-                contents: chatHistory,
-                systemInstruction: {
-                    parts: [{ text: systemInstructionText }]
-                },
-                generationConfig: { 
-                    temperature: 0.7, 
-                    topP: 1, 
-                    topK: 40,
-                    maxOutputTokens: 2048 
-                }
-            };
+            if (options.useChatHistory) {
+                const systemInstructionText = `
+                    Em là robot xử lý đơn hàng tự động.
+                    Khi nhận danh sách hàng, em CHỈ được trả lời bằng lệnh \`ORDER_SAVE: [...]\`.
+                    KHÔNG thêm bất kỳ lời nói, chào hỏi hay giải thích nào khác.
+                    Phân tích từng dòng trong **tin nhắn cuối cùng** để tìm 1 trong 3 dạng sau:
+                    1. \`[Tên hàng] [Tồn kho]\`
+                    2. \`[Tên hàng] [Tồn kho] [Số lượng đặt]\`
+                    3. \`[Tên hàng] [Số lượng đặt]\`
+                    Sau đó, trả về MỘT chuỗi lệnh DUY NHẤT: \`ORDER_SAVE: [JSON data]\`
+                    QUY TẮC JSON: Dạng 1: \`{"item": "...", "inventory": ..., "quantity": null}\`, Dạng 2: \`{"item": "...", "inventory": ..., "quantity": "..."}\`, Dạng 3: \`{"item": "...", "inventory": 0, "quantity": "..."}\`
+                    LỆNH KHÁC: "xem đơn hàng hôm nay" -> \`ORDER_RETRIEVE: CURRENT_DAY\`, "lấy danh sách bếp..." -> \`KITCHEN_LIST: ...\`
+                `;
+                payload = {
+                    contents: chatHistory,
+                    systemInstruction: { parts: [{ text: systemInstructionText }] },
+                    generationConfig: { temperature: 0.2, topP: 1, topK: 1, maxOutputTokens: 2048 }
+                };
+            } else { // For single prompts like aggregation
+                payload = {
+                    contents: [{ role: "user", parts: [{ text: options.prompt }] }],
+                    generationConfig: { 
+                        temperature: 0.1, 
+                        topP: 1, 
+                        topK: 1,
+                        maxOutputTokens: 8192,
+                        ...(options.isJsonMode && { responseMimeType: "application/json" })
+                    }
+                };
+            }
 
             try {
                 const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                 if (!response.ok) {
                     const errorBody = await response.json();
-                    throw new Error(`L?i API: ${errorBody.error.message}`);
+                    throw new Error(`Lỗi API: ${response.status} ${errorBody.error.message}`);
                 }
                 const result = await response.json();
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts) {
                     return result.candidates[0].content.parts[0].text;
                 }
                 if (result.promptFeedback && result.promptFeedback.blockReason) {
-                    return `Y�u c?u c?a ch? d� b? ch?n v�: ${result.promptFeedback.blockReason}.`;
+                    throw new Error(`Yêu cầu của chị đã bị chặn vì: ${result.promptFeedback.blockReason}.`);
                 }
-                throw new Error("Kh�ng nh?n du?c ph?n h?i h?p l? t? API.");
+                throw new Error("Dạ, em xin lỗi, em không nhận được phản hồi hợp lệ từ API ạ.");
             } catch (error) {
-                console.error(`API key t?i v? tr� ${currentApiKeyIndex} th?t b?i:`, error.message);
+                console.error(`API key tại vị trí ${currentApiKeyIndex} thất bại:`, error.message);
                 currentApiKeyIndex = (currentApiKeyIndex + 1) % apiKeys.length;
-                console.log(`Chuy?n sang API key t?i v? tr� ${currentApiKeyIndex}`);
-                return getGeminiResponse(retryCount + 1);
+                console.log(`Chuyển sang API key tại vị trí ${currentApiKeyIndex}`);
+                return getAIResponse(options, retryCount + 1);
             }
         };
 
-        // --- Local Storage Functions ---
-        const LOCAL_STORAGE_KEY = 'all_orders';
-
+        // --- Firebase Data Functions ---
         const saveOrder = async (items) => {
+            if (!db) {
+                appendMessage({ text: "Lỗi cơ sở dữ liệu. Không thể lưu đơn hàng." }, 'bot', true);
+                return;
+            }
             try {
-                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                let allOrders = storedData ? JSON.parse(storedData) : {};
-
-                const today = new Date();
-                const orderDate = today.toISOString().slice(0, 10); // YYYY-MM-DD
-
-                if (!allOrders[orderDate]) {
-                    allOrders[orderDate] = [];
-                }
-
-                allOrders[orderDate].push({
+                const orderDate = new Date().toISOString().slice(0, 10);
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', orderDate, 'entries');
+                await addDoc(orderCollectionRef, {
                     items: items,
-                    timestamp: new Date().toISOString() // Store as ISO string
+                    timestamp: new Date().toISOString(),
+                    userId: userId 
                 });
-
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(allOrders));
-                appendMessage({ text: "�on h�ng c?a ch? d� du?c luu th�nh c�ng v�o b? nh? c?c b? c?a tr�nh duy?t!" }, 'bot');
+                appendMessage({ text: `Dạ, em đã lưu thành công ${items.length} món hàng vào cơ sở dữ liệu ạ!` }, 'bot');
             } catch (error) {
-                console.error("L?i khi luu don h�ng v�o Local Storage:", error);
-                appendMessage({ text: `L?i khi luu don h�ng: ${error.message}. Vui l�ng th? l?i.` }, 'bot', true);
+                console.error("Lỗi khi lưu đơn hàng vào Firestore:", error);
+                appendMessage({ text: `Dạ, em xin lỗi, có lỗi khi lưu đơn hàng: ${error.message}.` }, 'bot', true);
             }
         };
 
         const getOrders = async (date = null) => {
+            if (!db) return;
             try {
-                const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-                const allOrders = storedData ? JSON.parse(storedData) : {};
-
                 let targetDate = date;
-                let messagePrefix = '��y l� c�c don h�ng ch? d� luu:';
-
+                let messagePrefix = 'Dạ, đây là các đơn hàng chị đã lưu ạ:';
                 if (date === 'CURRENT_DAY') {
-                    targetDate = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-                    messagePrefix = `��y l� t?t c? don h�ng ch? d� nh?p trong ng�y h�m nay (${targetDate}):`;
+                    targetDate = new Date().toISOString().slice(0, 10);
+                    messagePrefix = `Dạ, đây là tất cả đơn hàng chị đã nhập trong hôm nay (${targetDate}) ạ:`;
                 } else if (date) {
-                    messagePrefix = `��y l� c�c don h�ng ch? d� nh?p v�o ng�y ${date}:`;
+                    messagePrefix = `Dạ, đây là các đơn hàng chị đã nhập vào ngày ${date} ạ:`;
                 }
 
-                const ordersForDate = allOrders[targetDate] || [];
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+                const querySnapshot = await getDocs(orderCollectionRef);
+                const ordersForDate = querySnapshot.docs.map(doc => doc.data());
 
                 if (ordersForDate.length === 0) {
-                    appendMessage({ text: `Kh�ng t�m th?y don h�ng n�o cho ng�y ${targetDate === new Date().toISOString().slice(0, 10) ? 'h�m nay' : targetDate}.` }, 'bot');
+                    appendMessage({ text: `Dạ, em không tìm thấy đơn hàng nào cho ngày ${targetDate === new Date().toISOString().slice(0, 10) ? 'hôm nay' : targetDate} ạ.` }, 'bot');
                     return;
                 }
-
                 let orderList = [];
                 ordersForDate.forEach((orderData) => {
                     const orderTimestamp = new Date(orderData.timestamp);
                     const formattedTime = orderTimestamp.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-                    const formattedDate = orderTimestamp.toLocaleDateString('vi-VN');
-                    
-                    let itemsString = orderData.items.map(item => `${item.item} (${item.quantity})`).join(', ');
-                    orderList.push(`- �on h�ng l�c ${formattedTime} ng�y ${formattedDate}: ${itemsString}`);
+                    let itemsString = orderData.items.map(item => {
+                        let parts = [item.item];
+                        if (item.inventory > 0) parts.push(`(Tồn: ${item.inventory})`);
+                        if (item.quantity) parts.push(`(SL: ${item.quantity})`);
+                        return parts.join(' ');
+                    }).join(', ');
+                    orderList.push(`- Đơn hàng lúc ${formattedTime}: ${itemsString}`);
+                });
+                appendMessage({ text: `${messagePrefix}\n${orderList.join('\n')}` }, 'bot');
+            } catch (error) {
+                console.error("Lỗi khi lấy đơn hàng từ Firestore:", error);
+                appendMessage({ text: `Dạ, có lỗi khi lấy đơn hàng: ${error.message}.` }, 'bot', true);
+            }
+        };
+
+        const loadOrdersForAdmin = async (targetDate) => {
+            allOrdersContainer.innerHTML = '<p class="text-gray-500">Dạ, em đang tổng hợp đơn hàng từ cơ sở dữ liệu...</p>';
+            if (!db) return;
+            try {
+                const [year, month, day] = targetDate.split('-');
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+                const querySnapshot = await getDocs(orderCollectionRef);
+                const ordersForDate = querySnapshot.docs.map(doc => doc.data());
+
+                if (ordersForDate.length === 0) {
+                    allOrdersContainer.innerHTML = `<p class="text-gray-500">Không có đơn hàng nào được tìm thấy cho ngày ${day}/${month}/${year}.</p>`;
+                    return;
+                }
+                
+                let allItems = [];
+                ordersForDate.forEach(orderData => {
+                    allItems.push(...orderData.items);
                 });
 
-                appendMessage({ text: `${messagePrefix}\n${orderList.join('\n')}` }, 'bot');
+                const aggregatedItems = {};
+                allItems.forEach(item => {
+                    const normalizedName = normalizeVnString(item.item);
+                    if (!normalizedName) return;
+                    if (!aggregatedItems[normalizedName]) {
+                        aggregatedItems[normalizedName] = { displayName: item.item, totalInventory: 0, totalQuantities: {} };
+                    }
+                    aggregatedItems[normalizedName].totalInventory += item.inventory || 0;
+                    if (item.quantity) {
+                        const quantityStr = String(item.quantity).trim();
+                        const match = quantityStr.match(/^(\d*[.,]?\d+)\s*(.*)$/);
+                        let value = 1;
+                        let unit = quantityStr;
+                        if (match) {
+                            value = parseFloat(match[1].replace(',', '.'));
+                            unit = match[2].trim().toLowerCase() || 'đơn vị';
+                        }
+                        if (!aggregatedItems[normalizedName].totalQuantities[unit]) {
+                            aggregatedItems[normalizedName].totalQuantities[unit] = 0;
+                        }
+                        aggregatedItems[normalizedName].totalQuantities[unit] += value;
+                    }
+                });
 
+                allOrdersContainer.innerHTML = '';
+                const dateHeader = document.createElement('h4');
+                dateHeader.className = 'text-lg font-semibold mb-4';
+                dateHeader.textContent = `Tổng hợp đơn hàng ngày: ${day}/${month}/${year}`;
+                allOrdersContainer.appendChild(dateHeader);
+
+                const sortedItemKeys = Object.keys(aggregatedItems).sort();
+                if (sortedItemKeys.length === 0) {
+                     allOrdersContainer.innerHTML += `<p class="text-gray-500">Không có mặt hàng nào trong ngày này.</p>`;
+                     return;
+                }
+
+                const table = document.createElement('table');
+                table.className = 'w-full text-left border-collapse';
+                table.innerHTML = `
+                    <thead><tr>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Hàng</th>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tổng Tồn Kho</th>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tổng Số Lượng Đặt</th>
+                        <th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Thao tác</th>
+                    </tr></thead>
+                    <tbody></tbody>`;
+                const tbody = table.querySelector('tbody');
+                for (const key of sortedItemKeys) {
+                    const itemData = aggregatedItems[key];
+                    const quantityStrings = Object.keys(itemData.totalQuantities).map(unit => {
+                        let val = itemData.totalQuantities[unit];
+                        if (val % 1 !== 0) val = val.toFixed(2);
+                        return `${val} ${unit}`;
+                    });
+                    const row = document.createElement('tr');
+                    row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
+                    row.innerHTML = `
+                        <td class="p-2 border-b dark:border-gray-700 capitalize">${itemData.displayName}</td>
+                        <td class="p-2 border-b dark:border-gray-700">${itemData.totalInventory}</td>
+                        <td class="p-2 border-b dark:border-gray-700">${quantityStrings.join(', ') || 'N/A'}</td>
+                        <td class="p-2 border-b dark:border-gray-700">
+                            <button class="delete-item-btn bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600" data-item-name="${itemData.displayName}">Xoá</button>
+                        </td>`;
+                    tbody.appendChild(row);
+                }
+                allOrdersContainer.appendChild(table);
             } catch (error) {
-                console.error("L?i khi l?y don h�ng t? Local Storage:", error);
-                appendMessage({ text: `L?i khi l?y don h�ng: ${error.message}. Vui l�ng th? l?i.` }, 'bot', true);
+                 console.error("Lỗi khi tải đơn hàng cho admin:", error);
+                 allOrdersContainer.innerHTML = `<p class="text-red-500">Dạ, em xin lỗi, đã có lỗi xảy ra: ${error.message}.</p>`;
+            }
+        };
+        
+        const getKitchenList = async (kitchenId) => {
+            if (!db) return;
+            const kitchenNames = { bep_mai: "Bếp Mai", taste_vietnam: "TASTE VIET NAM" };
+
+            const fetchAndFormatList = async (id) => {
+                const kitchenDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', id);
+                const docSnap = await getDoc(kitchenDocRef);
+                let items = [];
+                if (docSnap.exists() && docSnap.data().itemsJson) {
+                    items = JSON.parse(docSnap.data().itemsJson);
+                }
+                let listHtml = `<b>Danh sách ${kitchenNames[id]}:</b><br>`;
+                if (items.length === 0) {
+                    listHtml += '<i>(Chưa có dữ liệu)</i><br>';
+                } else {
+                    listHtml += items.map(row => {
+                        const itemName = row[0];
+                        const itemUnit = row[1];
+                        if (itemName) {
+                            return itemUnit ? `- ${itemName} (ĐVT: ${itemUnit})` : `- ${itemName}`;
+                        }
+                        return null;
+                    }).filter(Boolean).join('<br>');
+                }
+                return listHtml;
+            };
+
+            try {
+                let message = '';
+                if (kitchenId === 'ALL') {
+                    const [maiList, vietnamList] = await Promise.all([fetchAndFormatList('bep_mai'), fetchAndFormatList('taste_vietnam')]);
+                    message = `${maiList}<br><br>${vietnamList}`;
+                } else if (kitchenNames[kitchenId]) {
+                    message = await fetchAndFormatList(kitchenId);
+                } else {
+                    message = 'Dạ, em không tìm thấy bếp chị yêu cầu ạ.';
+                }
+                appendMessage({ text: message }, 'bot');
+            } catch (error) {
+                console.error("Lỗi khi lấy danh sách bếp:", error);
+                appendMessage({ text: `Lỗi khi lấy danh sách bếp: ${error.message}` }, 'bot', true);
             }
         };
 
@@ -297,85 +543,502 @@
             e.preventDefault();
             const message = userInput.value.trim();
             if (!message && uploadedImages.length === 0) return;
-
-            if (apiKeys.length === 0 || apiKeys.every(k => k.startsWith("YOUR_API_KEY"))) { 
-                appendMessage({ text: "L?i: Vui l�ng c?u h�nh API key trong m� ngu?n c?a file HTML." }, 'bot', true); 
-                return; 
-            }
-
             const userMessageData = { text: message, images: uploadedImages.map(img => img.file) };
             appendMessage(userMessageData, 'user');
-            
             const userParts = [];
             if (message) userParts.push({ text: message });
             uploadedImages.forEach(img => userParts.push({ inlineData: { mimeType: img.mimeType, data: img.data } }));
-            chatHistory.push({ role: "user", parts: userParts });
+            
+            chatHistory = [{ role: "user", parts: userParts }];
 
             userInput.value = ''; 
             imagePreviewContainer.innerHTML = ''; 
             uploadedImages = []; 
             updateImageCount();
-            
             toggleLoading(true);
             try {
-                const botResponse = await getGeminiResponse();
-                
-                // Check for structured commands from the bot
-                if (botResponse.startsWith('ORDER_SAVE:')) {
+                const botResponse = await getAIResponse({ useChatHistory: true });
+                const orderMatch = botResponse.trim().match(/^ORDER_SAVE:\s*(\[.*\])/s);
+                const kitchenMatch = botResponse.trim().match(/^KITCHEN_LIST:\s*(.*)/);
+
+                if (orderMatch) {
                     try {
-                        const jsonString = botResponse.substring('ORDER_SAVE:'.length).trim();
-                        const itemsToSave = JSON.parse(jsonString);
-                        if (Array.isArray(itemsToSave) && itemsToSave.every(item => item.item && item.quantity)) {
+                        const itemsToSave = JSON.parse(orderMatch[1]);
+                        if (Array.isArray(itemsToSave) && itemsToSave.every(item => item.item && item.inventory !== undefined)) {
                             await saveOrder(itemsToSave);
                         } else {
-                            appendMessage({ text: "Em xin l?i, em kh�ng hi?u d?nh d?ng don h�ng ch? mu?n luu. Vui l�ng th? l?i v?i d?nh d?ng chu?n hon." }, 'bot', true);
+                            appendMessage({ text: "Dạ em xin lỗi, em không hiểu định dạng đơn hàng chị muốn lưu." }, 'bot', true);
                         }
                     } catch (parseError) {
-                        console.error("L?i ph�n t�ch JSON don h�ng:", parseError);
-                        appendMessage({ text: "Em xin l?i, em g?p l?i khi x? l� don h�ng c?a ch?. Vui l�ng th? l?i." }, 'bot', true);
+                        appendMessage({ text: `Lỗi xử lý lệnh từ AI: ${parseError.message}. Phản hồi gốc: ${botResponse}` }, 'bot', true);
                     }
-                } else if (botResponse.startsWith('ORDER_RETRIEVE:')) {
-                    const dateCommand = botResponse.substring('ORDER_RETRIEVE:'.length).trim();
-                    await getOrders(dateCommand);
+                } else if (botResponse.trim().startsWith('ORDER_RETRIEVE:')) {
+                    await getOrders(botResponse.trim().substring('ORDER_RETRIEVE:'.length).trim());
+                } else if (kitchenMatch) {
+                    await getKitchenList(kitchenMatch[1].trim());
                 } else {
-                    // Normal text response
                     appendMessage({ text: botResponse }, 'bot');
-                    chatHistory.push({ role: "model", parts: [{ text: botResponse }] });
                 }
             } catch (error) {
-                console.error('L?i cu?i c�ng khi g?i tin nh?n:', error);
+                console.error('Lỗi cuối cùng khi gửi tin nhắn:', error);
                 appendMessage({ text: error.message }, 'bot', true);
             } finally {
                 toggleLoading(false);
             }
         });
         
-        // --- Initialization ---
-        const initializeAppUI = () => {
-            appendMessage({ text: "Xin ch�o ch?! Em l� tr? l� ?o c?a Tr?n Th? Thu� H?ng. Em c� th? gi�p g� cho ch? h�m nay?" }, 'bot');
-            new VanillaTelex(userInput);
+        adminLoginButton.addEventListener('click', () => loginModal.classList.remove('hidden'));
+        backToAdminMenuButtonOrders.addEventListener('click', () => { orderManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        backToAdminMenuButtonKitchen.addEventListener('click', () => { kitchenManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        backToAdminMenuButtonSummary.addEventListener('click', () => { orderSummaryView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        goToOrdersButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderManagementView.classList.remove('hidden'); });
+        goToKitchenButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); kitchenManagementView.classList.remove('hidden'); loadAndDisplayKitchenItems(kitchenSelect.value); });
+        goToSummaryButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderSummaryView.classList.remove('hidden'); });
+        logoutButton.addEventListener('click', () => {
+            adminPanel.classList.add('hidden');
+            orderManagementView.classList.add('hidden'); 
+            kitchenManagementView.classList.add('hidden');
+            orderSummaryView.classList.add('hidden');
+            adminMenuView.classList.remove('hidden'); 
+            chatUI.classList.remove('hidden');
+            adminLoginButton.disabled = false;
+            adminLoginButton.textContent = 'Admin';
+        });
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            if (e.target.username.value === 'admin' && e.target.password.value === 'admin') {
+                loginModal.classList.add('hidden');
+                chatUI.classList.add('hidden');
+                adminPanel.classList.remove('hidden');
+                orderDatePicker.value = new Date().toISOString().slice(0, 10);
+                summaryDatePicker.value = new Date().toISOString().slice(0, 10);
+                allOrdersContainer.innerHTML = '<p class="text-gray-500">Chọn một ngày và bấm "Xem Đơn Hàng" để xem danh sách.</p>';
+                loginError.textContent = '';
+                e.target.reset();
+                adminLoginButton.disabled = true;
+                adminLoginButton.textContent = 'Đã đăng nhập';
+            } else {
+                loginError.textContent = 'Sai tên đăng nhập hoặc mật khẩu.';
+            }
+        });
+        
+        viewOrdersButton.addEventListener('click', async () => {
+            const selectedDate = orderDatePicker.value;
+            if (selectedDate) {
+                viewOrdersButton.disabled = true;
+                viewOrdersButton.textContent = 'Đang tải...';
+                await loadOrdersForAdmin(selectedDate);
+                viewOrdersButton.disabled = false;
+                viewOrdersButton.textContent = 'Xem Đơn Hàng';
+            } else {
+                allOrdersContainer.innerHTML = '<p class="text-red-500">Vui lòng chọn một ngày để xem đơn hàng.</p>';
+            }
+        });
+
+        excelFileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            excelFileName.textContent = file ? `Đã chọn file: ${file.name}` : '';
+        });
+
+        const displayKitchenItems = (itemsJson) => {
+            kitchenItemsContainer.innerHTML = '';
+            if (!itemsJson || itemsJson.length === 0) {
+                kitchenItemsContainer.innerHTML = '<p class="text-gray-500">Chưa có dữ liệu cho bếp này.</p>';
+                return;
+            }
+            const table = document.createElement('table');
+            table.className = 'w-full text-left border-collapse';
+            table.innerHTML = `<thead><tr><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-2/3">Tên Mặt Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">ĐVT</th></tr></thead><tbody></tbody>`;
+            const tbody = table.querySelector('tbody');
+            itemsJson.forEach(row => {
+                const itemName = row[0];
+                const itemUnit = row[1] || '';
+                if (itemName) {
+                    const tr = document.createElement('tr');
+                    tr.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
+                    tr.innerHTML = `<td class="p-2 border-b dark:border-gray-700">${itemName}</td><td class="p-2 border-b dark:border-gray-700">${itemUnit}</td>`;
+                    tbody.appendChild(tr);
+                }
+            });
+            kitchenItemsContainer.appendChild(table);
         };
 
-        const main = async () => {
-            initializeAppUI();
-            // No Firebase initialization needed for local storage
+        const loadAndDisplayKitchenItems = async (kitchenId) => {
+            if (!db) return;
+            const kitchenDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', kitchenId);
+            const docSnap = await getDoc(kitchenDocRef);
+            let items = [];
+            if (docSnap.exists() && docSnap.data().itemsJson) {
+                items = JSON.parse(docSnap.data().itemsJson);
+            }
+            displayKitchenItems(items);
+        };
+
+        kitchenSelect.addEventListener('change', () => loadAndDisplayKitchenItems(kitchenSelect.value));
+
+        importExcelButton.addEventListener('click', async () => {
+            const file = excelFileInput.files[0];
+            const selectedKitchen = kitchenSelect.value;
+            if (!file || !db) {
+                kitchenItemsContainer.innerHTML = `<p class="text-red-500">${!file ? 'Vui lòng chọn một file Excel trước.' : 'Lỗi cơ sở dữ liệu.'}</p>`;
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    const kitchenDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', selectedKitchen);
+                    await setDoc(kitchenDocRef, { itemsJson: JSON.stringify(json) });
+                    
+                    displayKitchenItems(json);
+                    excelFileName.textContent = `Đã nhập thành công file: ${file.name} cho bếp ${kitchenSelect.options[kitchenSelect.selectedIndex].text}.`;
+                    excelFileInput.value = '';
+                } catch (error) {
+                    console.error("Lỗi khi đọc hoặc lưu file Excel:", error);
+                    kitchenItemsContainer.innerHTML = `<p class="text-red-500">Đã xảy ra lỗi: ${error.message}.</p>`;
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        const normalizeVnString = (str) => str ? str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim() : '';
+
+        const getAggregatedRawOrders = async (targetDate) => {
+            if (!db) return null;
+            const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+            const querySnapshot = await getDocs(orderCollectionRef);
+            const ordersForDate = querySnapshot.docs.map(doc => doc.data());
+
+            if (ordersForDate.length === 0) return null;
+            
+            let allItems = [];
+            ordersForDate.forEach(orderData => allItems.push(...orderData.items));
+
+            const aggregatedItems = {};
+            allItems.forEach(item => {
+                const normalizedName = normalizeVnString(item.item);
+                if (!normalizedName) return;
+                if (!aggregatedItems[normalizedName]) {
+                    aggregatedItems[normalizedName] = { displayName: item.item, totalQuantities: {} };
+                }
+                if (item.quantity) {
+                    const quantityStr = String(item.quantity).trim();
+                    const match = quantityStr.match(/^(\d*[.,]?\d+)\s*(.*)$/);
+                    let value = 1, unit = quantityStr;
+                    if (match) {
+                        value = parseFloat(match[1].replace(',', '.'));
+                        unit = match[2].trim().toLowerCase() || 'đơn vị';
+                    }
+                    if (!aggregatedItems[normalizedName].totalQuantities[unit]) {
+                        aggregatedItems[normalizedName].totalQuantities[unit] = 0;
+                    }
+                    aggregatedItems[normalizedName].totalQuantities[unit] += value;
+                }
+            });
+            return aggregatedItems;
+        };
+
+        const classifyAndStandardizeWithAI = async (itemNames, bepMaiList, tasteVietnamList) => {
+             const prompt = `
+                Bạn là trợ lý kho hàng, nhiệm vụ của bạn là đối chiếu danh sách hàng đặt với danh sách hàng chuẩn của 2 bếp.
+                **Bối cảnh:**
+                - **Danh sách hàng chuẩn Bếp Mai:** ${JSON.stringify(bepMaiList)} (đối tượng có 'name' và 'unit')
+                - **Danh sách hàng chuẩn TASTE VIET NAM:** ${JSON.stringify(tasteVietnamList)} (đối tượng có 'name' và 'unit')
+                - **Danh sách hàng đặt cần phân loại:** ${JSON.stringify(itemNames)}
+                **Nhiệm vụ:**
+                Với MỖI MẶT HÀNG trong "danh sách hàng đặt", hãy tìm ra mặt hàng TƯƠNG ỨNG NHẤT trong hai danh sách chuẩn.
+                -   Hãy linh hoạt với các lỗi chính tả, viết tắt, hoặc cách diễn đạt khác nhau (ví dụ: "mực 1 nắng" và "Mực một nắng" là một).
+                -   Nếu tìm thấy trong danh sách Bếp Mai, phân loại là "bep_mai".
+                -   Nếu tìm thấy trong danh sách TASTE VIET NAM, phân loại là "taste_vietnam".
+                -   Nếu không chắc chắn hoặc không tìm thấy ở cả hai, phân loại là "unclassified".
+                **Yêu cầu đầu ra (QUAN TRỌNG):**
+                Chỉ trả lời bằng một đối tượng JSON duy nhất. KHÔNG thêm bất kỳ văn bản nào khác.
+                Cấu trúc phải là:
+                {
+                  "tên hàng đặt 1": { "classification": "...", "standardName": "...", "standardUnit": "..." },
+                  "tên hàng đặt 2": { "classification": "...", "standardName": "...", "standardUnit": "..." }
+                }
+                Trong đó:
+                -   \`classification\`: là "bep_mai", "taste_vietnam", hoặc "unclassified".
+                -   \`standardName\`: là tên CHUẨN từ danh sách bếp. Nếu "unclassified", dùng lại tên hàng đặt.
+                -   \`standardUnit\`: là ĐVT CHUẨN từ danh sách bếp. Nếu "unclassified", để là chuỗi rỗng "".
+                **Ví dụ:**
+                Input: ["cá diêu hồng", "gà", "thịt heo"]
+                Bếp Mai List: [{name: "Cá Diêu Hồng", unit: "con"}]
+                TASTE VIET NAM List: [{name: "Gà ta", unit: "con"}]
+                Output (JSON):
+                {
+                  "cá diêu hồng": {"classification": "bep_mai", "standardName": "Cá Diêu Hồng", "standardUnit": "con"},
+                  "gà": {"classification": "taste_vietnam", "standardName": "Gà ta", "standardUnit": "con"},
+                  "thịt heo": {"classification": "unclassified", "standardName": "thịt heo", "standardUnit": ""}
+                }
+            `;
+            const responseJsonString = await getAIResponse({ prompt, isJsonMode: true });
+            return JSON.parse(responseJsonString);
+        };
+
+        const loadOrderSummary = async (targetDate) => {
+            orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, em đang lấy và lọc các đơn hàng...</p>';
+            currentSummaryData = null;
+            exportSummaryButton.disabled = true;
+
+            try {
+                if (!db) throw new Error("Lỗi kết nối cơ sở dữ liệu.");
+                
+                const bepMaiDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'bep_mai');
+                const tasteVietnamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'taste_vietnam');
+                const [bepMaiSnap, tasteVietnamSnap, allAggregatedItems] = await Promise.all([
+                    getDoc(bepMaiDocRef),
+                    getDoc(tasteVietnamDocRef),
+                    getAggregatedRawOrders(targetDate)
+                ]);
+
+                if (!allAggregatedItems) {
+                    orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
+                    return;
+                }
+
+                const itemsToProcess = Object.values(allAggregatedItems).filter(item => Object.keys(item.totalQuantities).length > 0);
+                if (itemsToProcess.length === 0) {
+                    orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, không có mặt hàng nào được đặt trong ngày này ạ.</p>';
+                    return;
+                }
+
+                orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Đã lọc ${itemsToProcess.length} mặt hàng. Đang gửi AI phân loại, chị vui lòng chờ...</p>`;
+                
+                const bepMaiList = bepMaiSnap.exists() ? JSON.parse(bepMaiSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
+                const tasteVietnamList = tasteVietnamSnap.exists() ? JSON.parse(tasteVietnamSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
+                
+                const itemNames = itemsToProcess.map(item => item.displayName);
+                const classificationResult = await classifyAndStandardizeWithAI(itemNames, bepMaiList, tasteVietnamList);
+
+                const bepMaiData = {}, tasteVietnamData = {}, unclassifiedData = {};
+                const originalItemsMap = new Map(itemsToProcess.map(item => [item.displayName, item]));
+
+                for (const originalName in classificationResult) {
+                    if (!originalItemsMap.has(originalName)) continue;
+                    const result = classificationResult[originalName];
+                    const originalItem = originalItemsMap.get(originalName);
+                    const { standardName, classification, standardUnit } = result;
+                    const normalizedStandardName = normalizeVnString(standardName);
+                    
+                    let targetKitchenData;
+                    if (classification === 'bep_mai') {
+                         targetKitchenData = bepMaiData;
+                    } else if (classification === 'taste_vietnam') {
+                        targetKitchenData = tasteVietnamData;
+                    } else {
+                        targetKitchenData = unclassifiedData;
+                    }
+
+                    if (!targetKitchenData[normalizedStandardName]) {
+                        targetKitchenData[normalizedStandardName] = { 
+                            displayName: standardName, 
+                            totalQuantities: {},
+                            unit: standardUnit
+                        };
+                    }
+                    for (const unit in originalItem.totalQuantities) {
+                        const value = originalItem.totalQuantities[unit];
+                        targetKitchenData[normalizedStandardName].totalQuantities[unit] = (targetKitchenData[normalizedStandardName].totalQuantities[unit] || 0) + value;
+                    }
+                }
+
+                currentSummaryData = { bepMaiData, tasteVietnamData, unclassifiedData };
+                exportSummaryButton.disabled = false;
+                orderSummaryContainer.innerHTML = ''; 
+
+                const createKitchenTable = (title, data) => {
+                    const container = document.createElement('div');
+                    container.className = "bg-white dark:bg-gray-700 p-4 rounded-lg shadow";
+                    container.innerHTML = `<h4 class="text-lg font-semibold mb-4 text-center">${title}</h4>`;
+                    const sortedKeys = Object.keys(data).sort();
+                    if (sortedKeys.length === 0) {
+                        container.innerHTML += '<p class="text-gray-500 text-center">Không có đơn hàng.</p>';
+                        return container;
+                    }
+                    
+                    const isUnclassified = title === "Hàng Không Đúng";
+                    const table = document.createElement('table');
+                    table.className = 'w-full text-left border-collapse';
+                    
+                    let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/2">Tên Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Số Lượng</th>`;
+                    if (!isUnclassified) {
+                        headers += `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">ĐVT</th>`;
+                    }
+                    table.innerHTML = `<thead><tr>${headers}</tr></thead><tbody></tbody>`;
+
+                    const tbody = table.querySelector('tbody');
+                     for (const key of sortedKeys) {
+                        const itemData = data[key];
+                        const quantityStrings = Object.keys(itemData.totalQuantities).map(unit => {
+                            let val = itemData.totalQuantities[unit];
+                            if (val % 1 !== 0) val = val.toFixed(2);
+                            return `${val} ${unit}`;
+                        });
+                        const row = document.createElement('tr');
+                        row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
+                        
+                        let rowContent = `<td class="p-2 border-b dark:border-gray-700">${itemData.displayName}</td><td class="p-2 border-b dark:border-gray-700">${quantityStrings.join(', ')}</td>`;
+                        if (!isUnclassified) {
+                            rowContent += `<td class="p-2 border-b dark:border-gray-700">${itemData.unit || ''}</td>`;
+                        }
+                        row.innerHTML = rowContent;
+                        tbody.appendChild(row);
+                    }
+                    container.appendChild(table);
+                    return container;
+                };
+
+                orderSummaryContainer.appendChild(createKitchenTable("Bếp Mai", bepMaiData));
+                orderSummaryContainer.appendChild(createKitchenTable("TASTE VIET NAM", tasteVietnamData));
+                orderSummaryContainer.appendChild(createKitchenTable("Hàng Không Đúng", unclassifiedData));
+
+            } catch (error) {
+                console.error("Lỗi khi phân loại bằng AI:", error);
+                orderSummaryContainer.innerHTML = `<p class="text-red-500 md:col-span-3">Dạ em xin lỗi, có lỗi xảy ra: ${error.message}</p>`;
+                exportSummaryButton.disabled = true;
+            }
+        };
+        
+        const exportOrderSummaryToExcel = () => {
+            if (!currentSummaryData) return;
+            const { bepMaiData, tasteVietnamData, unclassifiedData } = currentSummaryData;
+            const selectedDate = summaryDatePicker.value;
+            const [year, month, day] = selectedDate.split('-');
+            const formattedDate = `${day}-${month}-${year}`;
+            const wb = XLSX.utils.book_new();
+            const excelData = [[`Tổng Hợp Hàng Order - Ngày ${formattedDate}`], []];
+
+            const addSectionToSheet = (title, data) => {
+                if (Object.keys(data).length === 0) return;
+                const isUnclassified = title === "Hàng Không Đúng";
+                const headers = isUnclassified ? ["Tên Hàng", "Số Lượng Đặt"] : ["Tên Hàng", "Số Lượng Đặt", "ĐVT"];
+                excelData.push([title], headers);
+                
+                Object.keys(data).sort().forEach(key => {
+                    const item = data[key];
+                    const quantityStrings = Object.keys(item.totalQuantities).map(unit => {
+                        let val = item.totalQuantities[unit];
+                        if (val % 1 !== 0) val = val.toFixed(2);
+                        return `${val} ${unit}`;
+                    });
+                    
+                    const rowData = [item.displayName, quantityStrings.join(', ')];
+                    if (!isUnclassified) {
+                        rowData.push(item.unit || '');
+                    }
+                    excelData.push(rowData);
+                });
+                excelData.push([]);
+            };
+
+            addSectionToSheet("Bếp Mai", bepMaiData);
+            addSectionToSheet("TASTE VIET NAM", tasteVietnamData);
+            addSectionToSheet("Hàng Không Đúng", unclassifiedData);
+
+            const ws = XLSX.utils.aoa_to_sheet(excelData);
+            XLSX.utils.book_append_sheet(wb, ws, "Tổng Hợp Order");
+            XLSX.writeFile(wb, `Tong_Hop_Order_${formattedDate}.xlsx`);
+        };
+
+        viewSummaryButton.addEventListener('click', async () => {
+            const selectedDate = summaryDatePicker.value;
+            if (selectedDate) {
+                viewSummaryButton.disabled = true;
+                viewSummaryButton.textContent = 'Đang tải...';
+                await loadOrderSummary(selectedDate);
+                viewSummaryButton.disabled = false;
+                viewSummaryButton.textContent = 'Xem';
+            } else {
+                orderSummaryContainer.innerHTML = '<p class="text-red-500 md:col-span-3">Vui lòng chọn một ngày để xem tổng hợp.</p>';
+            }
+        });
+        
+        exportSummaryButton.addEventListener('click', exportOrderSummaryToExcel);
+
+        const handleDeleteItem = async (itemName) => {
+            const targetDate = orderDatePicker.value;
+            if (!targetDate || !itemName) return;
+
+            deleteConfirmText.textContent = `Chị có chắc chắn muốn xoá tất cả đơn hàng cho mặt hàng "${itemName}" trong ngày ${targetDate} không?`;
+            deleteConfirmModal.classList.remove('hidden');
+
+            const userConfirmation = new Promise((resolve) => {
+                cancelDeleteButton.onclick = () => resolve(false);
+                confirmDeleteButton.onclick = () => resolve(true);
+            });
+
+            const confirmed = await userConfirmation;
+            deleteConfirmModal.classList.add('hidden');
+
+            if (confirmed) {
+                allOrdersContainer.innerHTML = `<p class="text-gray-500">Đang xoá các mục "${itemName}"...</p>`;
+                try {
+                    const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries');
+                    const querySnapshot = await getDocs(orderCollectionRef);
+                    const updatePromises = [];
+
+                    querySnapshot.forEach(docSnap => {
+                        const docId = docSnap.id;
+                        const orderData = docSnap.data();
+                        const originalItemCount = orderData.items.length;
+                        const updatedItems = orderData.items.filter(item => normalizeVnString(item.item) !== normalizeVnString(itemName));
+
+                        if (updatedItems.length < originalItemCount) {
+                            const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', targetDate, 'entries', docId);
+                            if (updatedItems.length === 0) {
+                                updatePromises.push(deleteDoc(docRef));
+                            } else {
+                                updatePromises.push(updateDoc(docRef, { items: updatedItems }));
+                            }
+                        }
+                    });
+
+                    await Promise.all(updatePromises);
+                    appendMessage({ text: `Đã xoá thành công tất cả đơn hàng cho "${itemName}".` }, 'bot');
+                } catch (error) {
+                    console.error("Lỗi khi xoá mục đơn hàng:", error);
+                    appendMessage({ text: `Lỗi khi xoá đơn hàng: ${error.message}` }, 'bot', true);
+                } finally {
+                    await loadOrdersForAdmin(targetDate);
+                }
+            }
+        };
+
+        allOrdersContainer.addEventListener('click', (e) => {
+            if (e.target && e.target.classList.contains('delete-item-btn')) {
+                const itemName = e.target.getAttribute('data-item-name');
+                handleDeleteItem(itemName);
+            }
+        });
+
+
+        // --- App Initialization ---
+        const initializeAppUI = () => {
+            appendMessage({ text: "Dạ, em chào mừng chị Hằng ạ. Em đã kết nối thành công với cơ sở dữ liệu và sẵn sàng hỗ trợ chị." }, 'bot');
+            if (typeof VanillaTelex !== 'undefined') {
+                new VanillaTelex(userInput);
+            } else {
+                console.warn("VanillaTelex library not loaded.");
+            }
         };
 
         // --- Helper functions ---
-        function processFiles(files) { if (!files || files.length === 0) return; imageInfo.classList.remove('text-red-500'); const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/')); if (imageFiles.length === 0) return; if (uploadedImages.length + imageFiles.length > MAX_IMAGES) { imageInfo.textContent = `Ch? ch? c� th? t?i l�n t?i da ${MAX_IMAGES} ?nh.`; imageInfo.classList.add('text-red-500'); return; } for (const file of imageFiles) { const isDuplicate = uploadedImages.some(img => img.file.name === file.name && img.file.size === file.size && img.file.lastModified === file.lastModified); if (isDuplicate) continue; const reader = new FileReader(); reader.onload = (event) => { const base64Data = event.target.result.split(',')[1]; uploadedImages.push({ data: base64Data, mimeType: file.type, file: file }); createImagePreview(event.target.result, file); updateImageCount(); }; reader.readAsDataURL(file); } }
-        imageInput.addEventListener('change', (e) => { processFiles(e.target.files); e.target.value = ''; });
-        userInput.addEventListener('paste', (e) => { const files = e.clipboardData?.files; if (files && files.length > 0) { e.preventDefault(); processFiles(files); } });
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { inputArea.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }); });
-        ['dragenter', 'dragover'].forEach(eventName => { inputArea.addEventListener(eventName, () => inputArea.classList.add('drag-over')); });
-        ['dragleave', 'drop'].forEach(eventName => { inputArea.addEventListener(eventName, () => inputArea.classList.remove('drag-over')); });
-        inputArea.addEventListener('drop', (e) => { const files = e.dataTransfer?.files; if (files) { processFiles(files); } });
+        function processFiles(files) { if (!files || files.length === 0) return; imageInfo.classList.remove('text-red-500'); const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/')); if (imageFiles.length === 0) return; if (uploadedImages.length + imageFiles.length > MAX_IMAGES) { imageInfo.textContent = `Chị chỉ có thể tải lên tối đa ${MAX_IMAGES} ảnh.`; imageInfo.classList.add('text-red-500'); return; } for (const file of imageFiles) { const isDuplicate = uploadedImages.some(img => img.file.name === file.name && img.file.size === file.size && img.file.lastModified === file.lastModified); if (isDuplicate) continue; const reader = new FileReader(); reader.onload = (event) => { const base64Data = event.target.result.split(',')[1]; uploadedImages.push({ data: base64Data, mimeType: file.type, file: file }); createImagePreview(event.target.result, file); updateImageCount(); }; reader.readAsDataURL(file); } }
         function createImagePreview(dataUrl, file) { const previewWrapper = document.createElement('div'); previewWrapper.className = 'relative'; const img = document.createElement('img'); img.src = dataUrl; img.className = 'h-16 w-16 object-cover rounded-md'; previewWrapper.appendChild(img); const removeBtn = document.createElement('button'); removeBtn.innerHTML = '&times;'; removeBtn.className = 'absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs leading-none'; removeBtn.onclick = () => { uploadedImages = uploadedImages.filter(img => img.file !== file); previewWrapper.remove(); updateImageCount(); }; previewWrapper.appendChild(removeBtn); imagePreviewContainer.appendChild(previewWrapper); }
-        function updateImageCount() { imageInfo.classList.remove('text-red-500'); if (uploadedImages.length > 0) { imageInfo.textContent = `�� t?i l�n ${uploadedImages.length}/${MAX_IMAGES} ?nh.`; } else { imageInfo.textContent = ''; } }
+        function updateImageCount() { imageInfo.classList.remove('text-red-500'); imageInfo.textContent = uploadedImages.length > 0 ? `Đã tải lên ${uploadedImages.length}/${MAX_IMAGES} ảnh.` : ''; }
         function appendMessage(data, sender, isError = false) { const { text, images } = data; const messageWrapper = document.createElement('div'); messageWrapper.className = `flex items-start gap-3 mb-4 ${sender === 'user' ? 'justify-end' : ''}`; const messageContent = document.createElement('div'); messageContent.className = `p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-xl ${sender === 'user' ? 'bg-blue-600 text-white' : isError ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-gray-200 dark:bg-gray-700'}`; if (images && images.length > 0) { const imageGrid = document.createElement('div'); imageGrid.className = 'grid grid-cols-3 gap-1'; images.forEach(file => { const img = document.createElement('img'); img.src = URL.createObjectURL(file); img.className = 'w-full h-auto object-cover rounded'; img.onload = () => URL.revokeObjectURL(img.src); imageGrid.appendChild(img); }); messageContent.appendChild(imageGrid); } if (text) { const textElement = document.createElement('p'); textElement.className = `text-sm ${sender === 'bot' && !isError ? 'text-gray-800 dark:text-gray-200' : ''} ${(images && images.length > 0) ? 'mt-2' : ''}`; textElement.innerHTML = text.replace(/\n/g, '<br>'); messageContent.appendChild(textElement); } const avatar = document.createElement('div'); avatar.className = 'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-white'; if (sender === 'user') { avatar.className += ' bg-gray-500'; avatar.textContent = 'U'; messageWrapper.appendChild(messageContent); messageWrapper.appendChild(avatar); } else { avatar.className += isError ? ' bg-red-500' : ' bg-blue-500'; avatar.textContent = 'B'; messageWrapper.appendChild(avatar); messageWrapper.appendChild(messageContent); } const mainChatContainer = document.querySelector('.chat-container'); mainChatContainer.appendChild(messageWrapper); mainChatContainer.scrollTop = mainChatContainer.scrollHeight; }
         function toggleLoading(isLoading) { sendButton.disabled = isLoading; userInput.disabled = isLoading; document.getElementById('image-upload-button').style.pointerEvents = isLoading ? 'none' : 'auto'; sendText.classList.toggle('hidden', isLoading); loadingSpinner.classList.toggle('hidden', !isLoading); if (!isLoading) { userInput.focus(); } }
 
         // Start the application
-        main();
+        initializeFirebase();
+
     </script>
 </body>
 </html>
