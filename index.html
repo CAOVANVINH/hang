@@ -47,6 +47,28 @@
         .dot-pulse {
             animation: pulse 1.4s infinite ease-in-out;
         }
+        /* Specific styles for typing indicator dots */
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background-color: #9ca3af; /* gray-400 */
+            border-radius: 50%;
+            margin: 0 2px;
+            opacity: 0;
+            animation: dot-fade 1.4s infinite ease-in-out;
+        }
+        .dark .typing-indicator span {
+            background-color: #e5e7eb; /* gray-200 */
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+        .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes dot-fade {
+            0%, 80%, 100% { opacity: 0; transform: scale(0.8); }
+            40% { opacity: 1; transform: scale(1); }
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -101,16 +123,16 @@
         <!-- Chat UI -->
         <main id="chat-ui" class="flex-1 flex flex-col overflow-hidden">
             <div class="chat-container flex-1 p-4 md:p-6 overflow-y-auto bg-gray-200 dark:bg-gray-800"></div>
-            <div id="input-area" class="p-4 border-t dark:border-gray-700 bg-white dark:bg-gray-800 rounded-b-lg flex-shrink-0">
+            <div id="input-area" class="p-4 border-t dark:border-gray-700 rounded-b-lg flex-shrink-0 shadow-2xl bg-gradient-to-t from-gray-100 to-white dark:from-gray-800 dark:to-gray-900"> <!-- Added gradient background -->
                 <div id="image-preview-container" class="mb-2 flex flex-wrap gap-2"></div>
                 <div id="image-info" class="text-xs text-gray-500 dark:text-gray-400 mb-2 h-4"></div>
                 <form id="chat-form" class="flex items-center gap-3">
                     <input type="file" id="image-input" accept="image/*" multiple>
-                    <label for="image-input" id="image-upload-button" class="cursor-pointer p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-500 dark:text-gray-400"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    <label for="image-input" id="image-upload-button" class="cursor-pointer p-3 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors text-blue-500 dark:text-blue-400">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-current"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
                     </label>
-                    <input type="text" id="user-input" placeholder="Nhập tin nhắn, dán hoặc kéo thả ảnh..." class="flex-1 p-3 border rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white" autocomplete="off">
-                    <button type="submit" id="send-button" class="bg-blue-600 text-white w-12 h-12 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0 transition-colors">
+                    <input type="text" id="user-input" placeholder="Nhập tin nhắn, dán hoặc kéo thả ảnh..." class="flex-1 p-3 border rounded-full focus:ring-2 focus:ring-blue-500 focus:outline-none bg-gray-100 dark:bg-gray-700 dark:border-gray-600 dark:text-white shadow-inner focus:border-blue-500">
+                    <button type="submit" id="send-button" class="bg-blue-600 text-white w-12 h-12 rounded-full font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center flex-shrink-0 transition-colors shadow-lg active:scale-95"> <!-- Added active:scale-95 -->
                         <span id="send-icon">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
                         </span>
@@ -119,6 +141,17 @@
                         </span>
                     </button>
                 </form>
+            </div>
+            <!-- Typing indicator for bot -->
+            <div id="typing-indicator" class="flex items-center gap-2 mb-4 p-3 ml-12 hidden">
+                <div class="flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-white bg-blue-500 shadow-md ring-2 ring-offset-2 ring-blue-600 dark:ring-blue-300 ring-offset-gray-100 dark:ring-offset-gray-900">B</div> <!-- Changed ring-blue-500 to ring-blue-600/300 -->
+                <div class="bg-gray-100 dark:bg-gray-700 p-3 rounded-xl rounded-bl-none shadow-md flex items-center">
+                    <span class="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                </div>
             </div>
         </main>
         
@@ -137,7 +170,8 @@
                     <button id="go-to-orders-button" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">Quản Lý Đơn Hàng</button>
                     <button id="go-to-kitchen-button" class="bg-purple-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-purple-700">Quản Lý Bếp</button>
                     <button id="go-to-summary-button" class="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700">Hàng Order</button>
-                    <button id="go-to-inventory-stats-button" class="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700">Thống Kê Tồn Kho Và Hàng Mai Đầy Đủ</button>
+                    <!-- Changed button text from "Thống Kê Tồn Kho Và Hàng Mai Đầy Đủ" to "Thống Kê" -->
+                    <button id="go-to-inventory-stats-button" class="bg-orange-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-orange-700">Thống Kê</button>
                 </div>
             </div>
 
@@ -153,6 +187,8 @@
                         <label for="order-date-picker" class="font-semibold flex-shrink-0">Chọn ngày:</label>
                         <input type="date" id="order-date-picker" class="p-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 w-full sm:w-auto">
                         <button id="view-orders-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem Đơn Hàng</button>
+                        <!-- New button for deleting all orders for a day -->
+                        <button id="delete-all-orders-for-day-button" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700 disabled:bg-red-400 disabled:cursor-not-allowed w-full sm:w-auto">Xoá Tất Cả Đơn Hàng Ngày</button>
                     </div>
                     <h3 class="text-lg font-semibold mb-4">Kết quả đơn hàng</h3>
                     <div id="all-orders-container" class="bg-white dark:bg-gray-700 p-4 rounded-lg shadow">
@@ -218,11 +254,15 @@
             <!-- Removed overflow-hidden from inventory-stats-view, letting inventory-stats-content handle scrolling -->
             <div id="inventory-stats-view" class="flex-1 flex-col hidden">
                 <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
-                    <h2 class="text-xl font-bold">Thống Kê Tồn Kho Và Hàng Mai Đầy Đủ</h2>
+                    <h2 class="text-xl font-bold">Thống Kê</h2> <!-- Changed title to "Thống Kê" -->
                     <button id="back-to-admin-menu-button-inventory" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
                 </div>
+                <!-- New sub-menu for inventory statistics buttons -->
+                <div id="inventory-sub-menu" class="p-4 flex flex-wrap gap-4 border-b dark:border-gray-700 bg-gray-100 dark:bg-gray-900">
+                    <!-- Buttons will be dynamically added here -->
+                </div>
                 <div id="inventory-stats-content" class="p-6 overflow-y-auto">
-                    <p class="text-gray-500">Đang tải danh sách mặt hàng từ các bếp...</p>
+                    <p class="text-gray-500">Chọn một chức năng thống kê từ menu trên.</p>
                 </div>
             </div>
         </div>
@@ -264,6 +304,7 @@
               allOrdersContainer = document.getElementById('all-orders-container'),
               orderDatePicker = document.getElementById('order-date-picker'),
               viewOrdersButton = document.getElementById('view-orders-button'),
+              deleteAlLOrdersForDayButton = document.getElementById('delete-all-orders-for-day-button'), // New button reference
               kitchenSelect = document.getElementById('kitchen-select'),
               excelFileInput = document.getElementById('excel-file-input'),
               excelUploadLabel = document.getElementById('excel-upload-label'),
@@ -277,6 +318,8 @@
               exportSummaryButton = document.getElementById('export-summary-button'),
               orderSummaryContainer = document.getElementById('order-summary-container'),
               inventoryStatsContent = document.getElementById('inventory-stats-content'), // New
+              inventorySubMenu = document.getElementById('inventory-sub-menu'), // New DOM element for sub-menu
+              typingIndicator = document.getElementById('typing-indicator'), // New typing indicator element
               deleteConfirmModal = document.getElementById('delete-confirm-modal'),
               deleteConfirmText = document.getElementById('delete-confirm-text'),
               cancelDeleteButton = document.getElementById('cancel-delete-button'),
@@ -419,23 +462,36 @@
 
                     // If JSON mode is expected, try to extract and parse JSON more robustly
                     if (options.isJsonMode) {
-                        const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                         let jsonString = responseText;
+                        const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
                         if (jsonMatch && jsonMatch[1]) {
                             jsonString = jsonMatch[1]; // Extract content inside ```json ... ```
                         } else {
-                            // Fallback to finding first { and last } if no code block
+                            // Attempt to find the outermost JSON object or array
                             const firstBrace = responseText.indexOf('{');
                             const lastBrace = responseText.lastIndexOf('}');
+                            const firstBracket = responseText.indexOf('[');
+                            const lastBracket = responseText.lastIndexOf(']');
+
                             if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
                                 jsonString = responseText.substring(firstBrace, lastBrace + 1);
+                            } else if (firstBracket !== -1 && lastBracket !== -1 && lastBracket > firstBracket) {
+                                jsonString = responseText.substring(firstBracket, lastBracket + 1);
+                            } else {
+                                // If no explicit JSON block or clear object/array, try to clean up
+                                // This is a last resort and might still fail if the response is very malformed
+                                jsonString = responseText.replace(/^[^{[]*|[}\]]\s*[^}\]]*$/g, '').trim();
+                                if (!jsonString.startsWith('{') && !jsonString.startsWith('[')) {
+                                    throw new Error("Không tìm thấy cấu trúc JSON hợp lệ trong phản hồi.");
+                                }
                             }
                         }
+                        
                         try {
                             return JSON.parse(jsonString);
                         } catch (parseError) {
                             console.error("Failed to parse JSON from AI response:", jsonString, parseError);
-                            throw new Error(`Dạ, em xin lỗi, phản hồi của AI không đúng định dạng JSON. Chi tiết: ${parseError.message}`);
+                            throw new Error(`Dạ, em xin lỗi, phản hồi của AI không đúng định dạng JSON. Chi tiết: ${parseError.message}. Phản hồi gốc: "${jsonString.substring(0, 100)}..."`);
                         }
                     }
                     return responseText; // Return raw text if not in JSON mode
@@ -669,7 +725,7 @@
             imagePreviewContainer.innerHTML = ''; 
             uploadedImages = []; 
             updateImageCount();
-            toggleLoading(true);
+            toggleLoading(true); // Show loading indicator and typing indicator
             try {
                 const botResponse = await getAIResponse({ useChatHistory: true });
                 const orderMatch = botResponse.match(/ORDER_SAVE:\s*(\[[\s\S]*\])/);
@@ -697,7 +753,7 @@
                 console.error('Lỗi cuối cùng khi gửi tin nhắn:', error);
                 appendMessage({ text: error.message }, 'bot', true);
             } finally {
-                toggleLoading(false);
+                toggleLoading(false); // Hide loading indicator and typing indicator
             }
         });
         
@@ -709,11 +765,16 @@
         goToOrdersButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderManagementView.classList.remove('hidden'); });
         goToKitchenButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); kitchenManagementView.classList.remove('hidden'); loadAndDisplayKitchenItems(kitchenSelect.value); });
         goToSummaryButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderSummaryView.classList.remove('hidden'); });
-        goToInventoryStatsButton.addEventListener('click', async () => { // New
+        
+        // Modified goToInventoryStatsButton click listener
+        goToInventoryStatsButton.addEventListener('click', async () => {
             adminMenuView.classList.add('hidden');
             inventoryStatsView.classList.remove('hidden');
-            await loadInventoryStatistics(); // Call the new function
+            // Clear previous content and display initial message
+            inventoryStatsContent.innerHTML = '<p class="text-gray-500">Chọn một chức năng thống kê từ menu trên.</p>';
+            renderInventorySubMenu(); // Render the sub-menu buttons
         });
+
         logoutButton.addEventListener('click', () => {
             adminPanel.classList.add('hidden');
             orderManagementView.classList.add('hidden'); 
@@ -755,6 +816,63 @@
                 allOrdersContainer.innerHTML = '<p class="text-red-500">Vui lòng chọn một ngày để xem đơn hàng.</p>';
             }
         });
+
+        // New event listener for Delete All Orders for Day button
+        deleteAlLOrdersForDayButton.addEventListener('click', async () => {
+            const selectedDate = orderDatePicker.value;
+            if (!selectedDate) {
+                allOrdersContainer.innerHTML = '<p class="text-red-500">Vui lòng chọn một ngày để xoá đơn hàng.</p>';
+                return;
+            }
+
+            deleteConfirmText.textContent = `Chị có chắc chắn muốn xoá TẤT CẢ đơn hàng cho ngày ${selectedDate} không? Hành động này không thể hoàn tác.`;
+            deleteConfirmModal.classList.remove('hidden');
+
+            const userConfirmed = await new Promise((resolve) => {
+                cancelDeleteButton.onclick = () => resolve(false);
+                confirmDeleteButton.onclick = () => resolve(true);
+            });
+            deleteConfirmModal.classList.add('hidden');
+
+            if (userConfirmed) {
+                deleteAlLOrdersForDayButton.disabled = true;
+                deleteAlLOrdersForDayButton.textContent = 'Đang xoá...';
+                await deleteAllOrdersForDate(selectedDate);
+                deleteAlLOrdersForDayButton.disabled = false;
+                deleteAlLOrdersForDayButton.textContent = 'Xoá Tất Cả Đơn Hàng Ngày';
+            }
+        });
+
+        // New function to delete all orders for a specific date
+        const deleteAllOrdersForDate = async (date) => {
+            if (!db) return;
+            allOrdersContainer.innerHTML = `<p class="text-gray-500">Đang xoá tất cả đơn hàng cho ngày ${date}...</p>`;
+            try {
+                const orderCollectionRef = collection(db, 'artifacts', appId, 'public', 'data', 'orders', date, 'entries');
+                const querySnapshot = await getDocs(orderCollectionRef);
+                
+                if (querySnapshot.empty) {
+                    appendMessage({ text: `Không có đơn hàng nào để xoá cho ngày ${date}.` }, 'bot');
+                    await loadOrdersForAdmin(date); // Refresh to show empty state
+                    return;
+                }
+
+                const deletePromises = [];
+                querySnapshot.forEach(docSnap => {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'orders', date, 'entries', docSnap.id);
+                    deletePromises.push(deleteDoc(docRef));
+                });
+
+                await Promise.all(deletePromises);
+                appendMessage({ text: `Đã xoá thành công tất cả ${querySnapshot.size} đơn hàng cho ngày ${date}.` }, 'bot');
+            } catch (error) {
+                console.error("Lỗi khi xoá tất cả đơn hàng cho ngày:", error);
+                appendMessage({ text: `Dạ, em xin lỗi, có lỗi khi xoá tất cả đơn hàng cho ngày ${date}: ${error.message}.` }, 'bot', true);
+            } finally {
+                await loadOrdersForAdmin(date); // Always refresh after attempt
+            }
+        };
+
 
         excelFileInput.addEventListener('change', (event) => {
             const file = event.target.files[0];
@@ -923,7 +1041,8 @@
                 if (item.quantity) {
                     const quantityStr = String(item.quantity).trim();
                     const match = quantityStr.match(/^(\d*[.,]?\d+)\s*(.*)$/);
-                    let value = 1, unit = quantityStr;
+                    let value = 1;
+                    let unit = quantityStr;
                     if (match) {
                         value = parseFloat(match[1].replace(',', '.'));
                         unit = match[2].trim().toLowerCase() || 'đơn vị';
@@ -1231,7 +1350,35 @@
             }
         });
 
-        // New function for Inventory Statistics
+        // Function to render sub-menu buttons for Inventory Statistics
+        function renderInventorySubMenu() {
+            inventorySubMenu.innerHTML = ''; // Clear existing buttons
+
+            const inventoryReportButton = document.createElement('button');
+            inventoryReportButton.id = 'inventory-report-button';
+            inventoryReportButton.className = 'bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700';
+            inventoryReportButton.textContent = 'Thống Kê Hàng Tồn';
+            inventorySubMenu.appendChild(inventoryReportButton);
+
+            inventoryReportButton.addEventListener('click', async () => {
+                inventoryReportButton.disabled = true;
+                inventoryReportButton.textContent = 'Đang tải...';
+                await loadInventoryStatistics(); // Call the actual statistics loading function
+                inventoryReportButton.disabled = false;
+                inventoryReportButton.textContent = 'Thống Kê Hàng Tồn';
+            });
+
+            // Add other future statistics buttons here if needed
+            // Example:
+            // const anotherButton = document.createElement('button');
+            // anotherButton.className = 'bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700';
+            // anotherButton.textContent = 'Báo cáo khác';
+            // inventorySubMenu.appendChild(anotherButton);
+            // anotherButton.addEventListener('click', () => { /* ... */ });
+        }
+
+
+        // Existing function for Inventory Statistics, now called by a sub-button
         const loadInventoryStatistics = async () => {
             inventoryStatsContent.innerHTML = '<p class="text-gray-500">Đang tải danh sách mặt hàng từ các bếp...</p>';
             if (!db) {
@@ -1327,13 +1474,67 @@
         function processFiles(files) { if (!files || files.length === 0) return; imageInfo.classList.remove('text-red-500'); const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/')); if (imageFiles.length === 0) return; if (uploadedImages.length + imageFiles.length > MAX_IMAGES) { imageInfo.textContent = `Chị chỉ có thể tải lên tối đa ${MAX_IMAGES} ảnh.`; imageInfo.classList.add('text-red-500'); return; } for (const file of imageFiles) { const isDuplicate = uploadedImages.some(img => img.file.name === file.name && img.file.size === file.size && img.file.lastModified === file.lastModified); if (isDuplicate) continue; const reader = new FileReader(); reader.onload = (event) => { const base64Data = event.target.result.split(',')[1]; uploadedImages.push({ data: base64Data, mimeType: file.type, file: file }); createImagePreview(event.target.result, file); updateImageCount(); }; reader.readAsDataURL(file); } }
         function createImagePreview(dataUrl, file) { const previewWrapper = document.createElement('div'); previewWrapper.className = 'relative'; const img = document.createElement('img'); img.src = dataUrl; img.className = 'h-16 w-16 object-cover rounded-md'; previewWrapper.appendChild(img); const removeBtn = document.createElement('button'); removeBtn.innerHTML = '&times;'; removeBtn.className = 'absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs leading-none'; removeBtn.onclick = () => { uploadedImages = uploadedImages.filter(img => img.file !== file); previewWrapper.remove(); updateImageCount(); }; previewWrapper.appendChild(removeBtn); imagePreviewContainer.appendChild(previewWrapper); }
         function updateImageCount() { imageInfo.classList.remove('text-red-500'); imageInfo.textContent = uploadedImages.length > 0 ? `Đã tải lên ${uploadedImages.length}/${MAX_IMAGES} ảnh.` : ''; }
-        function appendMessage(data, sender, isError = false) { const { text, images } = data; const messageWrapper = document.createElement('div'); messageWrapper.className = `flex items-start gap-3 mb-4 ${sender === 'user' ? 'justify-end' : ''}`; const messageContent = document.createElement('div'); messageContent.className = `p-3 rounded-lg max-w-xs md:max-w-md lg:max-w-xl ${sender === 'user' ? 'bg-blue-600 text-white' : isError ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200' : 'bg-gray-200 dark:bg-gray-700'}`; if (images && images.length > 0) { const imageGrid = document.createElement('div'); imageGrid.className = 'grid grid-cols-3 gap-1'; images.forEach(file => { const img = document.createElement('img'); img.src = URL.createObjectURL(file); img.className = 'w-full h-auto object-cover rounded'; img.onload = () => URL.revokeObjectURL(img.src); imageGrid.appendChild(img); }); messageContent.appendChild(imageGrid); } if (text) { const textElement = document.createElement('p'); textElement.className = `text-sm ${sender === 'bot' && !isError ? 'text-gray-800 dark:text-gray-200' : ''} ${(images && images.length > 0) ? 'mt-2' : ''}`; textElement.innerHTML = text.replace(/\n/g, '<br>'); messageContent.appendChild(textElement); } const avatar = document.createElement('div'); avatar.className = 'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-white'; if (sender === 'user') { avatar.className += ' bg-gray-500'; avatar.textContent = 'U'; messageWrapper.appendChild(messageContent); messageWrapper.appendChild(avatar); } else { avatar.className += isError ? ' bg-red-500' : ' bg-blue-500'; avatar.textContent = 'B'; messageWrapper.appendChild(avatar); messageWrapper.appendChild(messageContent); } const mainChatContainer = document.querySelector('.chat-container'); mainChatContainer.appendChild(messageWrapper); mainChatContainer.scrollTop = mainChatContainer.scrollHeight; }
+        function appendMessage(data, sender, isError = false) {
+            const { text, images } = data;
+            const messageWrapper = document.createElement('div');
+            messageWrapper.className = `flex items-start gap-3 mb-4 ${sender === 'user' ? 'justify-end' : ''} fade-in`; // Added fade-in
+            
+            const messageContent = document.createElement('div');
+            // Updated message bubble styles for better aesthetics
+            messageContent.className = `p-3 rounded-xl max-w-xs md:max-w-md lg:max-w-xl shadow-xl transition-all duration-300 ${ /* Changed shadow-lg to shadow-xl, added transition */
+                sender === 'user' 
+                    ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-br-none border border-blue-800' /* Added darker blue border */
+                    : isError 
+                        ? 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-bl-none border border-red-400 dark:border-red-600' /* Adjusted border color */
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-none border border-gray-400 dark:border-gray-600' /* Adjusted border color */
+            }`; 
+            
+            if (images && images.length > 0) {
+                const imageGrid = document.createElement('div');
+                imageGrid.className = 'grid grid-cols-3 gap-1';
+                images.forEach(file => {
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.className = 'w-full h-auto object-cover rounded';
+                    img.onload = () => URL.revokeObjectURL(img.src);
+                    imageGrid.appendChild(img);
+                });
+                messageContent.appendChild(imageGrid);
+            }
+            
+            if (text) {
+                const textElement = document.createElement('p');
+                textElement.className = `text-sm ${(images && images.length > 0) ? 'mt-2' : ''}`; // Text color is now inherited from messageContent
+                textElement.innerHTML = text.replace(/\n/g, '<br>');
+                messageContent.appendChild(textElement);
+            }
+            
+            const avatar = document.createElement('div');
+            // Updated avatar styles with ring
+            avatar.className = 'flex-shrink-0 h-10 w-10 rounded-full flex items-center justify-center font-bold text-white shadow-md ring-2 ring-offset-2 ring-blue-600 dark:ring-blue-300 ring-offset-gray-100 dark:ring-offset-gray-900'; 
+            if (sender === 'user') {
+                avatar.className += ' bg-gray-500';
+                avatar.textContent = 'U';
+                messageWrapper.appendChild(messageContent);
+                messageWrapper.appendChild(avatar);
+            } else {
+                avatar.className += isError ? ' bg-red-500' : ' bg-blue-500';
+                avatar.textContent = 'B';
+                messageWrapper.appendChild(avatar);
+                messageWrapper.appendChild(messageContent);
+            }
+            
+            const mainChatContainer = document.querySelector('.chat-container');
+            mainChatContainer.appendChild(messageWrapper);
+            mainChatContainer.scrollTop = mainChatContainer.scrollHeight;
+        }
         function toggleLoading(isLoading) {
             sendButton.disabled = isLoading;
             userInput.disabled = isLoading;
             document.getElementById('image-upload-button').style.pointerEvents = isLoading ? 'none' : 'auto';
             sendIcon.classList.toggle('hidden', isLoading);
             loadingSpinner.classList.toggle('hidden', !isLoading);
+            typingIndicator.classList.toggle('hidden', !isLoading); // Show/hide typing indicator
             if (!isLoading) {
                 userInput.focus();
             }
