@@ -87,7 +87,7 @@
             </div>
             <div class="flex items-center gap-2">
                  <button id="clear-chat-button" title="Xoá cuộc trò chuyện" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
                 <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
             </div>
@@ -947,27 +947,35 @@
                     const result = classificationResult[originalName];
                     const originalItem = originalItemsMap.get(originalName);
                     const { standardName, classification, standardUnit } = result;
-                    const normalizedStandardName = normalizeVnString(standardName);
                     
                     let targetKitchenData;
+                    let itemKey; // Variable to determine the key for the targetKitchenData
+                    let displayItemName; // Variable for the display name
+
                     if (classification === 'bep_mai') {
                          targetKitchenData = bepMaiData;
+                         itemKey = normalizeVnString(standardName); // Use normalized standard name for classified items
+                         displayItemName = standardName;
                     } else if (classification === 'taste_vietnam') {
                         targetKitchenData = tasteVietnamData;
-                    } else {
+                        itemKey = normalizeVnString(standardName); // Use normalized standard name for classified items
+                        displayItemName = standardName;
+                    } else { // This is the unclassified case
                         targetKitchenData = unclassifiedData;
+                        itemKey = originalName; // Use the original name as the key for unclassified items to preserve distinctness
+                        displayItemName = originalName; // Display the original name
                     }
 
-                    if (!targetKitchenData[normalizedStandardName]) {
-                        targetKitchenData[normalizedStandardName] = { 
-                            displayName: standardName, 
+                    if (!targetKitchenData[itemKey]) {
+                        targetKitchenData[itemKey] = { 
+                            displayName: displayItemName, 
                             totalQuantities: {},
-                            unit: standardUnit
+                            unit: standardUnit // This will be "" for unclassified, which is correct
                         };
                     }
                     for (const unit in originalItem.totalQuantities) {
                         const value = originalItem.totalQuantities[unit];
-                        targetKitchenData[normalizedStandardName].totalQuantities[unit] = (targetKitchenData[normalizedStandardName].totalQuantities[unit] || 0) + value;
+                        targetKitchenData[itemKey].totalQuantities[unit] = (targetKitchenData[itemKey].totalQuantities[unit] || 0) + value;
                     }
                 }
 
