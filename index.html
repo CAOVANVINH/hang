@@ -765,7 +765,7 @@
             kitchenItemsContainer.appendChild(countHeader);
 
             const table = document.createElement('table');
-            table.className = 'w-full text-left border-collapse'; 
+            table.className = 'w-full text-left border-collapse min-w-max'; 
             
             let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Mặt Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">ĐVT</th>`;
             if (isAllView) {
@@ -840,7 +840,7 @@
                 return;
             }
             if (!file || !db) {
-                kitchenItemsContainer.innerHTML = `<p class="text-red-500">${!file ? 'Vui lòng chọn một file Excel trước.' : 'Lỗi cơ sở dữ liệu.'}</p`;
+                kitchenItemsContainer.innerHTML = `<p class="text-red-500">${!file ? 'Vui lòng chọn một file Excel trước.' : 'Lỗi cơ sở dữ liệu.'}</p>`;
                 return;
             }
             const reader = new FileReader();
@@ -1054,7 +1054,7 @@
                     tableWrapper.className = "overflow-x-auto"; // Add horizontal scroll to this wrapper
 
                     const table = document.createElement('table');
-                    table.className = 'w-full text-left border-collapse'; 
+                    table.className = 'w-full text-left border-collapse min-w-max'; 
                     
                     let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Số Lượng</th>`;
                     if (!isUnclassified) {
