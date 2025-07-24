@@ -199,9 +199,9 @@
                         <button id="view-summary-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem</button>
                         <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
                     </div>
-                    <!-- New explanatory text for mobile users -->
+                    <!-- Updated explanatory text for mobile users -->
                     <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 sm:hidden">
-                        Trên màn hình nhỏ, các bảng sẽ hiển thị theo chiều dọc. Vui lòng cuộn xuống để xem đầy đủ các mục "TASTE VIET NAM" và "Hàng Không Đúng".
+                        Trên điện thoại, các bảng tổng hợp sẽ hiển thị theo chiều dọc để dễ đọc. Để xem giao diện đầy đủ như máy tính, vui lòng bật "Chế độ máy tính" ở trên cùng bên phải.
                     </p>
                     <div id="order-summary-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                            <p class="text-gray-500 md:col-span-3">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
@@ -791,8 +791,8 @@
                 const tasteVietnamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'taste_vietnam');
                 const [bepMaiSnap, tasteVietnamSnap] = await Promise.all([getDoc(bepMaiDocRef), getDoc(tasteVietnamDocRef)]);
                 
-                const bepMaiItems = bepMaiSnap.exists() && bepMaiSnap.data().itemsJson ? JSON.parse(bepMaiSnap.data().itemsJson).map((item, index) => [...item, 'Bếp Mai', index]) : [];
-                const tasteVietnamItems = tasteVietnamSnap.exists() && tasteVietnamSnap.data().itemsJson ? JSON.parse(tasteVietnamSnap.data().itemsJson).map((item, index) => [...item, 'TASTE VIET NAM', index]) : [];
+                const bepMaiItems = JSON.parse(bepMaiSnap.data().itemsJson).map((item, index) => [...item, 'Bếp Mai', index]) : [];
+                const tasteVietnamItems = JSON.parse(tasteVietnamSnap.data().itemsJson).map((item, index) => [...item, 'TASTE VIET NAM', index]) : [];
                 
                 activeKitchenItems = [...bepMaiItems, ...tasteVietnamItems];
                 displayKitchenItems(activeKitchenItems, true);
@@ -1041,7 +1041,7 @@
                     for (const key of sortedKeys) {
                         const itemData = data[key];
                         const quantityStrings = Object.keys(itemData.totalQuantities).map(unit => {
-                            let val = itemData.totalQuantities[unit];
+                            let val = item.totalQuantities[unit];
                             if (val % 1 !== 0) val = val.toFixed(2);
                             return `${val} ${unit}`;
                         });
