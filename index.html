@@ -2,7 +2,8 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Viewport meta tag with an ID for dynamic manipulation -->
+    <meta name="viewport" id="viewport-meta" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>Trợ Lý Ảo Cửa Trần Hằng</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -87,8 +88,10 @@
             </div>
             <div class="flex items-center gap-2">
                    <button id="clear-chat-button" title="Xoá cuộc trò chuyện" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
+                <!-- New Desktop Mode Toggle Button -->
+                <button id="desktop-mode-toggle-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Chế độ máy tính</button>
                 <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
             </div>
         </header>
@@ -271,7 +274,10 @@
               deleteConfirmModal = document.getElementById('delete-confirm-modal'),
               deleteConfirmText = document.getElementById('delete-confirm-text'),
               cancelDeleteButton = document.getElementById('cancel-delete-button'),
-              confirmDeleteButton = document.getElementById('confirm-delete-button');
+              confirmDeleteButton = document.getElementById('confirm-delete-button'),
+              viewportMeta = document.getElementById('viewport-meta'), // Get the viewport meta tag
+              desktopModeToggleBtn = document.getElementById('desktop-mode-toggle-button'); // Get the new toggle button
+
 
         // App State
         const MAX_IMAGES = 50;
@@ -1260,6 +1266,13 @@
             } else {
                 console.warn("VanillaTelex library not loaded.");
             }
+            // Apply saved desktop mode preference on load
+            const savedMode = localStorage.getItem('desktopMode');
+            if (savedMode === 'true') {
+                setDesktopMode(true);
+            } else {
+                setDesktopMode(false); // Ensure it's explicitly set to mobile mode if not saved or saved as false
+            }
         };
 
         // --- Helper functions ---
@@ -1277,6 +1290,25 @@
                 userInput.focus();
             }
         }
+
+        // Function to set desktop mode
+        function setDesktopMode(enable) {
+            if (enable) {
+                viewportMeta.setAttribute('content', 'width=1024, initial-scale=0.5, user-scalable=yes');
+                desktopModeToggleBtn.textContent = 'Chế độ di động'; // Change button text
+                localStorage.setItem('desktopMode', 'true');
+            } else {
+                viewportMeta.setAttribute('content', 'width=device-width, initial-scale=1.0, user-scalable=yes');
+                desktopModeToggleBtn.textContent = 'Chế độ máy tính'; // Change button text
+                localStorage.setItem('desktopMode', 'false');
+            }
+        }
+
+        // Event listener for the desktop mode toggle button
+        desktopModeToggleBtn.addEventListener('click', () => {
+            const isDesktopMode = localStorage.getItem('desktopMode') === 'true';
+            setDesktopMode(!isDesktopMode);
+        });
 
         // Start the application
         initializeFirebase();
