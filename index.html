@@ -88,7 +88,7 @@
             </div>
             <div class="flex items-center gap-2">
                    <button id="clear-chat-button" title="Xoá cuộc trò chuyện" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
                 <!-- Removed Desktop Mode Toggle Button -->
                 <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
@@ -199,8 +199,8 @@
                         <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
                     </div>
                     <!-- The grid class has been changed to always display 3 columns -->
-                    <div id="order-summary-container" class="grid grid-cols-3 gap-6 overflow-x-auto">
-                           <p class="text-gray-500 col-span-3">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
+                    <div id="order-summary-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto">
+                           <p class="text-gray-500 col-span-full">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
                     </div>
                 </div>
             </div>
@@ -708,7 +708,7 @@
             adminMenuView.classList.remove('hidden'); 
             chatUI.classList.remove('hidden');
             adminLoginButton.disabled = false;
-            adminLoginButton.textContent = 'Admin';
+            adminLoginButton.textContent = 'Đã đăng nhập';
         });
 
         loginForm.addEventListener('submit', (e) => {
@@ -957,7 +957,7 @@
         };
 
         const loadOrderSummary = async (targetDate) => {
-            orderSummaryContainer.innerHTML = '<p class="text-gray-500 col-span-3">Dạ, em đang lấy và lọc các đơn hàng...</p>';
+            orderSummaryContainer.innerHTML = '<p class="text-gray-500 col-span-full">Dạ, em đang lấy và lọc các đơn hàng...</p>';
             currentSummaryData = null;
             exportSummaryButton.disabled = true;
 
@@ -973,17 +973,17 @@
                 ]);
 
                 if (!allAggregatedItems) {
-                    orderSummaryContainer.innerHTML = `<p class="text-gray-500 col-span-3">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
+                    orderSummaryContainer.innerHTML = `<p class="text-gray-500 col-span-full">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
                     return;
                 }
 
                 const itemsToProcess = Object.values(allAggregatedItems).filter(item => Object.keys(item.totalQuantities).length > 0);
                 if (itemsToProcess.length === 0) {
-                    orderSummaryContainer.innerHTML = '<p class="text-gray-500 col-span-3">Dạ, không có mặt hàng nào được đặt trong ngày này ạ.</p>';
+                    orderSummaryContainer.innerHTML = '<p class="text-gray-500 col-span-full">Dạ, không có mặt hàng nào được đặt trong ngày này ạ.</p>';
                     return;
                 }
 
-                orderSummaryContainer.innerHTML = `<p class="text-gray-500 col-span-3">Đã lọc ${itemsToProcess.length} mặt hàng. Đang gửi AI phân loại, chị vui lòng chờ...</p>`;
+                orderSummaryContainer.innerHTML = `<p class="text-gray-500 col-span-full">Đã lọc ${itemsToProcess.length} mặt hàng. Đang gửi AI phân loại, chị vui lòng chờ...</p>`;
                 
                 const bepMaiList = bepMaiSnap.exists() ? JSON.parse(bepMaiSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
                 const tasteVietnamList = tasteVietnamSnap.exists() ? JSON.parse(tasteVietnamSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
@@ -1083,7 +1083,7 @@
 
             } catch (error) {
                 console.error("Lỗi khi phân loại bằng AI:", error);
-                orderSummaryContainer.innerHTML = `<p class="text-red-500 col-span-3">Dạ em xin lỗi, có lỗi xảy ra: ${error.message}</p>`;
+                orderSummaryContainer.innerHTML = `<p class="text-red-500 col-span-full">Dạ em xin lỗi, có lỗi xảy ra: ${error.message}</p>`;
                 exportSummaryButton.disabled = true;
             }
         };
@@ -1144,7 +1144,7 @@
                 viewSummaryButton.disabled = false;
                 viewSummaryButton.textContent = 'Xem';
             } else {
-                orderSummaryContainer.innerHTML = '<p class="text-red-500 col-span-3">Vui lòng chọn một ngày để xem tổng hợp.</p>';
+                orderSummaryContainer.innerHTML = '<p class="text-red-500 col-span-full">Vui lòng chọn một ngày để xem tổng hợp.</p>';
             }
         });
         
