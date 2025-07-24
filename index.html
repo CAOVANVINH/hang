@@ -199,7 +199,7 @@
                         <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
                     </div>
                     <!-- The grid class has been changed to always display 3 columns -->
-                    <div id="order-summary-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 overflow-x-auto">
+                    <div id="order-summary-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                            <p class="text-gray-500 col-span-full">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
                     </div>
                 </div>
@@ -578,9 +578,9 @@
                     const row = document.createElement('tr');
                     row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
                     row.innerHTML = `
-                        <td class="p-2 border-b dark:border-gray-700 capitalize">${itemData.displayName}</td>
-                        <td class="p-2 border-b dark:border-gray-700">${itemData.totalInventory}</td>
-                        <td class="p-2 border-b dark:border-gray-700">${quantityStrings.join(', ') || 'N/A'}</td>
+                        <td class="p-2 border-b dark:border-gray-700 capitalize break-words">${itemData.displayName}</td>
+                        <td class="p-2 border-b dark:border-gray-700 break-words">${itemData.totalInventory}</td>
+                        <td class="p-2 border-b dark:border-gray-700 break-words">${quantityStrings.join(', ') || 'N/A'}</td>
                         <td class="p-2 border-b dark:border-gray-700">
                             <button class="delete-item-btn bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600" data-item-name="${itemData.displayName}">Xoá</button>
                         </td>`;
@@ -688,7 +688,7 @@
         
         adminLoginButton.addEventListener('click', () => loginModal.classList.remove('hidden'));
         backToAdminMenuButtonOrders.addEventListener('click', () => { orderManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
-        backToAdminMenuButtonKitchen.addEventListener('click', () => { kitchenManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
+        backToAdminMenuButtonKitchen.addEventListener('click', () => { kitchenManagementView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); loadAndDisplayKitchenItems(kitchenSelect.value); });
         backToAdminMenuButtonSummary.addEventListener('click', () => { orderSummaryView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); });
         backToAdminMenuButtonInventory.addEventListener('click', () => { inventoryStatsView.classList.add('hidden'); adminMenuView.classList.remove('hidden'); }); // New
         goToOrdersButton.addEventListener('click', () => { adminMenuView.classList.add('hidden'); orderManagementView.classList.remove('hidden'); });
@@ -708,7 +708,7 @@
             adminMenuView.classList.remove('hidden'); 
             chatUI.classList.remove('hidden');
             adminLoginButton.disabled = false;
-            adminLoginButton.textContent = 'Đã đăng nhập';
+            adminLoginButton.textContent = 'Admin';
         });
 
         loginForm.addEventListener('submit', (e) => {
@@ -1046,10 +1046,13 @@
                     }
                     
                     const isUnclassified = title === "Hàng Không Đúng";
+                    const tableWrapper = document.createElement('div'); // New wrapper for table
+                    tableWrapper.className = "overflow-x-auto"; // Add horizontal scroll to this wrapper
+
                     const table = document.createElement('table');
-                    table.className = 'w-full text-left border-collapse';
+                    table.className = 'w-full text-left border-collapse'; // Removed table-fixed
                     
-                    let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 w-1/2">Tên Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Số Lượng</th>`;
+                    let headers = `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Tên Hàng</th><th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">Số Lượng</th>`;
                     if (!isUnclassified) {
                         headers += `<th class="p-2 border-b-2 dark:border-gray-600 bg-gray-100 dark:bg-gray-800">ĐVT</th>`;
                     }
@@ -1066,14 +1069,15 @@
                         const row = document.createElement('tr');
                         row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
                         
-                        let rowContent = `<td class="p-2 border-b dark:border-gray-700">${itemData.displayName}</td><td class="p-2 border-b dark:border-gray-700">${quantityStrings.join(', ')}</td>`;
+                        let rowContent = `<td class="p-2 border-b dark:border-gray-700 break-words">${itemData.displayName}</td><td class="p-2 border-b dark:border-gray-700 break-words">${quantityStrings.join(', ')}</td>`;
                         if (!isUnclassified) {
-                            rowContent += `<td class="p-2 border-b dark:border-gray-700">${itemData.unit || ''}</td>`;
+                            rowContent += `<td class="p-2 border-b dark:border-gray-700 break-words">${itemData.unit || ''}</td>`;
                         }
                         row.innerHTML = rowContent;
                         tbody.appendChild(row);
                     }
-                    container.appendChild(table);
+                    tableWrapper.appendChild(table); // Append table to wrapper
+                    container.appendChild(tableWrapper); // Append wrapper to container
                     return container;
                 };
 
@@ -1267,9 +1271,9 @@
                     const row = document.createElement('tr');
                     row.className = 'dark:hover:bg-gray-600 hover:bg-gray-50';
                     row.innerHTML = `
-                        <td class="p-2 border-b dark:border-gray-700 capitalize">${item.name}</td>
-                        <td class="p-2 border-b dark:border-gray-700">${item.unit}</td>
-                        <td class="p-2 border-b dark:border-gray-700">${item.kitchen}</td>
+                        <td class="p-2 border-b dark:border-gray-700 capitalize break-words">${item.name}</td>
+                        <td class="p-2 border-b dark:border-gray-700 break-words">${item.unit}</td>
+                        <td class="p-2 border-b dark:border-gray-700 break-words">${item.kitchen}</td>
                     `;
                     tbody.appendChild(row);
                 });
