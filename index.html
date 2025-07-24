@@ -410,7 +410,30 @@
                 }
                 const result = await response.json();
                 if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts) {
-                    return result.candidates[0].content.parts[0].text;
+                    let responseText = result.candidates[0].content.parts[0].text;
+
+                    // If JSON mode is expected, try to extract and parse JSON more robustly
+                    if (options.isJsonMode) {
+                        const jsonMatch = responseText.match(/```json\n([\s\S]*?)\n```/);
+                        let jsonString = responseText;
+                        if (jsonMatch && jsonMatch[1]) {
+                            jsonString = jsonMatch[1]; // Extract content inside ```json ... ```
+                        } else {
+                            // Fallback to finding first { and last } if no code block
+                            const firstBrace = responseText.indexOf('{');
+                            const lastBrace = responseText.lastIndexOf('}');
+                            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+                                jsonString = responseText.substring(firstBrace, lastBrace + 1);
+                            }
+                        }
+                        try {
+                            return JSON.parse(jsonString);
+                        } catch (parseError) {
+                            console.error("Failed to parse JSON from AI response:", jsonString, parseError);
+                            throw new Error(`Dạ, em xin lỗi, phản hồi của AI không đúng định dạng JSON. Chi tiết: ${parseError.message}`);
+                        }
+                    }
+                    return responseText; // Return raw text if not in JSON mode
                 }
                 if (result.promptFeedback && result.promptFeedback.blockReason) {
                     throw new Error(`Yêu cầu của chị đã bị chặn vì: ${result.promptFeedback.blockReason}.`);
@@ -791,8 +814,8 @@
                 const tasteVietnamDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'kitchens', 'taste_vietnam');
                 const [bepMaiSnap, tasteVietnamSnap] = await Promise.all([getDoc(bepMaiDocRef), getDoc(tasteVietnamDocRef)]);
                 
-                const bepMaiItems = JSON.parse(bepMaiSnap.data().itemsJson).map((item, index) => [...item, 'Bếp Mai', index]) : [];
-                const tasteVietnamItems = JSON.parse(tasteVietnamSnap.data().itemsJson).map((item, index) => [...item, 'TASTE VIET NAM', index]) : [];
+                const bepMaiItems = bepMaiSnap.exists() && bepMaiSnap.data().itemsJson ? JSON.parse(bepMaiSnap.data().itemsJson).map((item, index) => [...item, 'Bếp Mai', index]) : [];
+                const tasteVietnamItems = tasteVietnamSnap.exists() && tasteVietnamSnap.data().itemsJson ? JSON.parse(tasteVietnamSnap.data().itemsJson).map((item, index) => [...item, 'TASTE VIET NAM', index]) : [];
                 
                 activeKitchenItems = [...bepMaiItems, ...tasteVietnamItems];
                 displayKitchenItems(activeKitchenItems, true);
@@ -935,7 +958,7 @@
                 }
             `;
             const responseJsonString = await getAIResponse({ prompt, isJsonMode: true });
-            return JSON.parse(responseJsonString);
+            return responseJsonString; // This is already parsed by getAIResponse
         };
 
         const loadOrderSummary = async (targetDate) => {
@@ -1041,7 +1064,7 @@
                     for (const key of sortedKeys) {
                         const itemData = data[key];
                         const quantityStrings = Object.keys(itemData.totalQuantities).map(unit => {
-                            let val = item.totalQuantities[unit];
+                            let val = itemData.totalQuantities[unit];
                             if (val % 1 !== 0) val = val.toFixed(2);
                             return `${val} ${unit}`;
                         });
