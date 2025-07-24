@@ -198,9 +198,9 @@
                         <button id="view-summary-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem</button>
                         <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
                     </div>
-                    <!-- Removed explanatory text for mobile users as desktop mode toggle is removed -->
-                    <div id="order-summary-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                           <p class="text-gray-500 md:col-span-3">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
+                    <!-- The grid class has been changed to always display 3 columns -->
+                    <div id="order-summary-container" class="grid grid-cols-3 gap-6 overflow-x-auto">
+                           <p class="text-gray-500 col-span-3">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
                     </div>
                 </div>
             </div>
@@ -957,7 +957,7 @@
         };
 
         const loadOrderSummary = async (targetDate) => {
-            orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, em đang lấy và lọc các đơn hàng...</p>';
+            orderSummaryContainer.innerHTML = '<p class="text-gray-500 col-span-3">Dạ, em đang lấy và lọc các đơn hàng...</p>';
             currentSummaryData = null;
             exportSummaryButton.disabled = true;
 
@@ -973,17 +973,17 @@
                 ]);
 
                 if (!allAggregatedItems) {
-                    orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
+                    orderSummaryContainer.innerHTML = `<p class="text-gray-500 col-span-3">Không có đơn hàng nào được tìm thấy cho ngày đã chọn.</p>`;
                     return;
                 }
 
                 const itemsToProcess = Object.values(allAggregatedItems).filter(item => Object.keys(item.totalQuantities).length > 0);
                 if (itemsToProcess.length === 0) {
-                    orderSummaryContainer.innerHTML = '<p class="text-gray-500 md:col-span-3">Dạ, không có mặt hàng nào được đặt trong ngày này ạ.</p>';
+                    orderSummaryContainer.innerHTML = '<p class="text-gray-500 col-span-3">Dạ, không có mặt hàng nào được đặt trong ngày này ạ.</p>';
                     return;
                 }
 
-                orderSummaryContainer.innerHTML = `<p class="text-gray-500 md:col-span-3">Đã lọc ${itemsToProcess.length} mặt hàng. Đang gửi AI phân loại, chị vui lòng chờ...</p>`;
+                orderSummaryContainer.innerHTML = `<p class="text-gray-500 col-span-3">Đã lọc ${itemsToProcess.length} mặt hàng. Đang gửi AI phân loại, chị vui lòng chờ...</p>`;
                 
                 const bepMaiList = bepMaiSnap.exists() ? JSON.parse(bepMaiSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
                 const tasteVietnamList = tasteVietnamSnap.exists() ? JSON.parse(tasteVietnamSnap.data().itemsJson).map(r => ({name: r[0], unit: r[1] || ''})).filter(i => i.name) : [];
@@ -1083,7 +1083,7 @@
 
             } catch (error) {
                 console.error("Lỗi khi phân loại bằng AI:", error);
-                orderSummaryContainer.innerHTML = `<p class="text-red-500 md:col-span-3">Dạ em xin lỗi, có lỗi xảy ra: ${error.message}</p>`;
+                orderSummaryContainer.innerHTML = `<p class="text-red-500 col-span-3">Dạ em xin lỗi, có lỗi xảy ra: ${error.message}</p>`;
                 exportSummaryButton.disabled = true;
             }
         };
@@ -1144,7 +1144,7 @@
                 viewSummaryButton.disabled = false;
                 viewSummaryButton.textContent = 'Xem';
             } else {
-                orderSummaryContainer.innerHTML = '<p class="text-red-500 md:col-span-3">Vui lòng chọn một ngày để xem tổng hợp.</p>';
+                orderSummaryContainer.innerHTML = '<p class="text-red-500 col-span-3">Vui lòng chọn một ngày để xem tổng hợp.</p>';
             }
         });
         
