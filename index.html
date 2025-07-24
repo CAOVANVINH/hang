@@ -90,8 +90,8 @@
                 <h1 class="text-lg md:text-xl font-bold">(Trợ Lý Ảo) Trần Hằng </h1>
             </div>
             <div class="flex items-center gap-2">
-                   <button id="clear-chat-button" title="Xoá cuộc trò chuyện" class="p-2 rounded-full hover:bg-white/20 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                    <button id="clear-chat-button" title="Xoá cuộc trò chuyện" class="p-2 rounded-full hover:bg-white/20 transition-colors">
+                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
                 </button>
                 <!-- Removed Desktop Mode Toggle Button -->
                 <button id="admin-login-button" class="bg-white text-blue-600 px-4 py-2 rounded-lg font-semibold hover:bg-gray-200">Admin</button>
@@ -190,7 +190,7 @@
             
             <!-- Order Summary View - Hidden by default -->
             <div id="order-summary-view" class="flex-1 flex-col overflow-hidden hidden">
-                   <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
+                    <div class="p-4 bg-gray-200 dark:bg-gray-800 border-b dark:border-gray-700 flex justify-between items-center">
                     <h2 class="text-xl font-bold">Tổng Hợp Hàng Order</h2>
                     <button id="back-to-admin-menu-button-summary" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700">Quay lại</button>
                 </div>
@@ -201,9 +201,9 @@
                         <button id="view-summary-button" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-green-700 disabled:bg-green-400 disabled:cursor-not-allowed w-full sm:w-auto">Xem</button>
                         <button id="export-summary-button" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 w-full sm:w-auto" disabled>Xuất Excel</button>
                     </div>
-                    <!-- Changed to flex column on mobile, grid on larger screens -->
-                    <div id="order-summary-container" class="flex flex-col sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                           <p class="text-gray-500 col-span-full">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
+                    <!-- UPDATED: Changed to a single-column grid on mobile, and multi-column on medium screens and up -->
+                    <div id="order-summary-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <p class="text-gray-500 col-span-full">Chọn một ngày và bấm "Xem" để xem tổng hợp.</p>
                     </div>
                 </div>
             </div>
@@ -937,8 +937,8 @@
                 Chỉ trả lời bằng một đối tượng JSON duy nhất. KHÔNG thêm bất kỳ văn bản nào khác.
                 Cấu trúc phải là:
                 {
-                  "tên hàng đặt 1": { "classification": "...", "standardName": "...", "standardUnit": "..." },
-                  "tên hàng đặt 2": { "classification": "...", "standardName": "...", "standardUnit": "..." }
+                    "tên hàng đặt 1": { "classification": "...", "standardName": "...", "standardUnit": "..." },
+                    "tên hàng đặt 2": { "classification": "...", "standardName": "...", "standardUnit": "..." }
                 }
                 Trong đó:
                 -   \`classification\`: là "bep_mai", "taste_vietnam", hoặc "unclassified".
@@ -950,9 +950,9 @@
                 TASTE VIET NAM List: [{name: "Gà ta", unit: "con"}]
                 Output (JSON):
                 {
-                  "cá diêu hồng": {"classification": "bep_mai", "standardName": "Cá Diêu Hồng", "standardUnit": "con"},
-                  "gà": {"classification": "taste_vietnam", "standardName": "Gà ta", "standardUnit": "con"},
-                  "thịt heo": {"classification": "unclassified", "standardName": "thịt heo", "standardUnit": ""}
+                    "cá diêu hồng": {"classification": "bep_mai", "standardName": "Cá Diêu Hồng", "standardUnit": "con"},
+                    "gà": {"classification": "taste_vietnam", "standardName": "Gà ta", "standardUnit": "con"},
+                    "thịt heo": {"classification": "unclassified", "standardName": "thịt heo", "standardUnit": ""}
                 }
             `;
             const responseJsonString = await getAIResponse({ prompt, isJsonMode: true });
