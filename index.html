@@ -13,6 +13,9 @@
         // Set the initial timer duration (e.g., 5 minutes)
         let timeLeft = 5 * 60;
 
+        // Variable to manage "Time's up" blinking state
+        let blinking = false;
+
         // Function to format the time as MM:SS
         function formatTime(seconds) {
             const mins = Math.floor(seconds / 60);
@@ -21,7 +24,7 @@
         }
 
         // Function to update the canvas
-        function updateCanvas() {
+        function updateCanvas(showTime = true) {
             // Clear the canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -29,12 +32,18 @@
             ctx.fillStyle = '#E0F7FA';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Display the countdown time
+            // Display the countdown time or blinking "Time's up"
             ctx.fillStyle = '#000';
             ctx.font = '48px Arial';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(formatTime(timeLeft), canvas.width / 2, canvas.height / 2);
+
+            if (timeLeft > 0 || showTime) {
+                ctx.fillText(formatTime(timeLeft), canvas.width / 2, canvas.height / 2);
+            } else {
+                ctx.fillStyle = blinking ? '#FF5252' : '#E0F7FA'; // Alternate colors for blinking effect
+                ctx.fillText('Time\'s up!', canvas.width / 2, canvas.height / 2);
+            }
         }
 
         // Function for the countdown logic
@@ -44,8 +53,8 @@
                 updateCanvas(); // Update the canvas
             } else {
                 clearInterval(timer); // Stop the countdown
-                ctx.fillStyle = '#FF5252';
-                ctx.fillText('Time\'s up!', canvas.width / 2, canvas.height / 2);
+                blinking = !blinking; // Toggle blinking state
+                updateCanvas(false); // Update canvas with "Time's up" message
             }
         }
 
