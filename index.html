@@ -1,27 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Canvas Warning</title>
+    <title>Countdown Timer</title>
 </head>
 <body>
-    <canvas id="warningCanvas" width="800" height="200" style="border:1px solid #000000;"></canvas>
+    <canvas id="countdownCanvas" width="800" height="200" style="border:1px solid #000000;"></canvas>
 
     <script>
-        const canvas = document.getElementById('warningCanvas');
+        const canvas = document.getElementById('countdownCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Set background color
-        ctx.fillStyle = '#FFDDC1';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Set the initial timer duration (e.g., 5 minutes)
+        let timeLeft = 5 * 60;
 
-        // Add warning text
-        ctx.fillStyle = '#000';
-        ctx.font = '24px Arial';
-        ctx.fillText('Cảnh báo: Đây là một thông báo nhắc nhở.', 50, 100);
+        // Function to format the time as MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
 
-        // Optional: Draw border
-        ctx.strokeStyle = '#FF5733';
-        ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+        // Function to update the canvas
+        function updateCanvas() {
+            // Clear the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Set background color
+            ctx.fillStyle = '#E0F7FA';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Display the countdown time
+            ctx.fillStyle = '#000';
+            ctx.font = '48px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(formatTime(timeLeft), canvas.width / 2, canvas.height / 2);
+        }
+
+        // Function for the countdown logic
+        function countdown() {
+            if (timeLeft > 0) {
+                timeLeft--; // Decrease time by 1 second
+                updateCanvas(); // Update the canvas
+            } else {
+                clearInterval(timer); // Stop the countdown
+                ctx.fillStyle = '#FF5252';
+                ctx.fillText('Time\'s up!', canvas.width / 2, canvas.height / 2);
+            }
+        }
+
+        // Initialize the canvas and start the timer
+        updateCanvas();
+        const timer = setInterval(countdown, 1000); // Update every second
     </script>
 </body>
 </html>
