@@ -1,10 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Chuyển hướng...</title>
-    <meta http-equiv="refresh" content="0; url=https://www.google.com">
+    <title>Canvas Warning</title>
 </head>
 <body>
-    <p>Bạn đang được chuyển hướng đến trang web khác. Nếu quá trình không tự động, vui lòng nhấp vào liên kết sau: <a href="https://www.google.com">Google</a></p>
+    <canvas id="warningCanvas" width="800" height="200" style="border:1px solid #000000;"></canvas>
+
+    <script>
+        const canvas = document.getElementById('warningCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set background color
+        ctx.fillStyle = '#FFDDC1';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Add warning text
+        ctx.fillStyle = '#000';
+        ctx.font = '24px Arial';
+        ctx.fillText('Cảnh báo: Đây là một thông báo nhắc nhở.', 50, 100);
+
+        // Optional: Draw border
+        ctx.strokeStyle = '#FF5733';
+        ctx.strokeRect(10, 10, canvas.width - 20, canvas.height - 20);
+    </script>
 </body>
 </html>
