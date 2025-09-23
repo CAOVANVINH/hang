@@ -68,7 +68,6 @@
             transform: scale(1.05);
         }
 
-        /* **CẬP NHẬT**: Kiểu cho các nút ở menu */
         #menu-container {
             display: flex;
             flex-direction: column;
@@ -224,7 +223,8 @@
             function speak(text, rate = 0.9, pitch = 1.1, onEndCallback = null) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUttersance(text);
+                    // **SỬA LỖI**: Đã sửa lỗi đánh máy 'SpeechSynthesisUttersance' thành 'SpeechSynthesisUtterance'
+                    const utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = 'vi-VN';
                     utterance.rate = rate;
                     utterance.pitch = pitch;
@@ -349,3 +349,4 @@
     </script>
 </body>
 </html>
+
