@@ -212,8 +212,26 @@
                     startGameBtn.disabled = true; reviewModeBtn.disabled = true;
                     return;
                 };
+                
+                // **CẬP NHẬT**: Ưu tiên các giọng đọc chuẩn, chất lượng cao
+                const priorityVoices = ['Google Tiếng Việt', 'Microsoft An', 'Linh'];
+                for (const name of priorityVoices) {
+                    const foundVoice = vietnameseVoices.find(voice => voice.name.includes(name));
+                    if (foundVoice) {
+                        vietnameseVoice = foundVoice;
+                        return; // Đã tìm thấy giọng ưu tiên, thoát khỏi hàm
+                    }
+                }
+
+                // Nếu không có, tìm giọng nữ bất kỳ
                 let femaleVoice = vietnameseVoices.find(voice => /nữ|female/i.test(voice.name));
-                vietnameseVoice = femaleVoice || vietnameseVoices[0];
+                if (femaleVoice) {
+                    vietnameseVoice = femaleVoice;
+                    return;
+                }
+
+                // Cuối cùng, chọn giọng mặc định đầu tiên
+                vietnameseVoice = vietnameseVoices[0];
             }
             loadAndSetVoice();
             if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -223,7 +241,6 @@
             function speak(text, rate = 0.9, pitch = 1.1, onEndCallback = null) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
-                    // **SỬA LỖI**: Đã sửa lỗi đánh máy 'SpeechSynthesisUttersance' thành 'SpeechSynthesisUtterance'
                     const utterance = new SpeechSynthesisUtterance(text);
                     utterance.lang = 'vi-VN';
                     utterance.rate = rate;
