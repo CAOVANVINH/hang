@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trò Chơi Tìm Chữ Cái (Offline)</title>
     <style>
-        /* * **THAY ĐỔI**: Toàn bộ CSS đã được viết lại để không cần tải từ Internet.
-         * Font chữ được đổi thành loại phổ thông, có sẵn trên mọi máy tính.
-        */
         @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@500;700&display=swap');
         
         body {
@@ -37,22 +34,18 @@
 
         #game-controls {
             margin-bottom: 1.5rem;
-            height: 4rem;
+            min-height: 4rem;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
         }
 
-        /* **CẬP NHẬT**: Kiểu cho khu vực câu hỏi và nút đọc lại */
         #prompt-container {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 0.75rem;
-        }
-        #prompt-container.hidden {
-            display: none;
         }
 
         #game-prompt {
@@ -62,7 +55,6 @@
         }
 
         button {
-            margin-top: 1rem;
             padding: 0.75rem 2rem;
             color: white;
             font-weight: 700;
@@ -76,13 +68,27 @@
             transform: scale(1.05);
         }
 
+        /* **CẬP NHẬT**: Kiểu cho các nút ở menu */
+        #menu-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            align-items: center;
+        }
+        .menu-btn {
+            font-size: 1.125rem;
+            padding: 1rem 2.5rem;
+        }
+
         #start-game-btn { background-color: #f97316; } /* bg-orange-500 */
         #start-game-btn:hover { background-color: #ea580c; } /* hover:bg-orange-600 */
 
-        #play-again-btn { background-color: #3b82f6; } /* bg-blue-500 */
-        #play-again-btn:hover { background-color: #2563eb; } /* hover:bg-blue-600 */
-        
-        /* **CẬP NHẬT**: Kiểu cho nút đọc lại */
+        #review-mode-btn { background-color: #16a34a; } /* bg-green-600 */
+        #review-mode-btn:hover { background-color: #15803d; } /* hover:bg-green-700 */
+
+        #play-again-btn, #back-to-menu-win-btn { background-color: #3b82f6; margin-top: 1rem; }
+        #play-again-btn:hover, #back-to-menu-win-btn:hover { background-color: #2563eb; }
+
         #repeat-question-btn {
             background-color: #9ca3af; /* bg-gray-400 */
             padding: 0.5rem;
@@ -93,10 +99,14 @@
             justify-content: center;
             align-items: center;
         }
-        #repeat-question-btn:hover {
-            background-color: #6b7280; /* bg-gray-500 */
-        }
+        #repeat-question-btn:hover { background-color: #6b7280; /* bg-gray-500 */ }
         
+        #back-btn {
+            background-color: #6b7280;
+            margin-top: 1.5rem;
+        }
+        #back-btn:hover { background-color: #4b5563; }
+
         #alphabet-grid {
             display: grid;
             gap: 1rem;
@@ -129,63 +139,42 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .bg-red { background-color: #ef4444; }
-        .bg-blue { background-color: #3b82f6; }
-        .bg-green { background-color: #22c55e; }
-        .bg-yellow { background-color: #eab308; }
-        .bg-purple { background-color: #8b5cf6; }
-        .bg-pink { background-color: #ec4899; }
-        .bg-indigo { background-color: #6366f1; }
-        .bg-teal { background-color: #14b8a6; }
-        .bg-orange { background-color: #f97316; }
+        .bg-red { background-color: #ef4444; } .bg-blue { background-color: #3b82f6; } .bg-green { background-color: #22c55e; } .bg-yellow { background-color: #eab308; } .bg-purple { background-color: #8b5cf6; } .bg-pink { background-color: #ec4899; } .bg-indigo { background-color: #6366f1; } .bg-teal { background-color: #14b8a6; } .bg-orange { background-color: #f97316; }
 
-        #win-screen.hidden, #alphabet-grid.hidden { display: none; }
+        .hidden { display: none !important; }
 
-        #win-screen p {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: #16a34a;
-        }
-        
-        .footer-text {
-            font-size: 0.75rem;
-            color: #9ca3af;
-            margin-top: 2rem;
-        }
+        #win-screen p { font-size: 1.875rem; font-weight: 700; color: #16a34a; }
+        .footer-text { font-size: 0.75rem; color: #9ca3af; margin-top: 2rem; }
 
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); }
-        }
+        @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
         .shake { animation: shake 0.3s ease-in-out; }
 
-        @keyframes celebrate {
-            0% { transform: scale(1); } 50% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1); }
-        }
-        .celebrate {
-            animation: celebrate 0.5s ease-in-out;
-            background-color: #15803d !important;
-        }
+        @keyframes celebrate { 0% { transform: scale(1); } 50% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1); } }
+        .celebrate { animation: celebrate 0.5s ease-in-out; background-color: #15803d !important; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Trò Chơi Tìm Chữ Cái</h1>
         <div id="game-controls">
-             <div id="prompt-container" class="hidden">
+            <div id="menu-container">
+                <button id="start-game-btn" class="menu-btn">Chơi Theo Thử Thách</button>
+                <button id="review-mode-btn" class="menu-btn">Tự Do Ôn Tập</button>
+            </div>
+            <div id="prompt-container" class="hidden">
                 <p id="game-prompt"></p>
                 <button id="repeat-question-btn" title="Đọc lại câu hỏi">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white">
-                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-                    </svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
                 </button>
-             </div>
-             <button id="start-game-btn">Bắt đầu chơi!</button>
+            </div>
         </div>
-        <div id="alphabet-grid"></div>
+        <div id="alphabet-grid" class="hidden"></div>
         <div id="win-screen" class="hidden">
             <p>Chúc mừng con đã hoàn thành!</p>
             <button id="play-again-btn">Chơi lại</button>
+            <button id="back-to-menu-win-btn">Về Menu Chính</button>
         </div>
+        <button id="back-btn" class="hidden">Quay Lại Menu</button>
         <p class="footer-text">Đọc bởi Gemini AI</p>
     </div>
 
@@ -193,16 +182,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             const alphabet = ['A', 'Ă', 'Â', 'B', 'C', 'D', 'Đ', 'E', 'Ê', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'O', 'Ô', 'Ơ', 'P', 'Q', 'R', 'S', 'T', 'U', 'Ư', 'V', 'X', 'Y'];
             const colors = ['bg-red', 'bg-blue', 'bg-green', 'bg-yellow', 'bg-purple', 'bg-pink', 'bg-indigo', 'bg-teal', 'bg-orange'];
-            
-            // **CẬP NHẬT**: Phân biệt cách đọc "i ngắn" và "i dài"
             const phoneticMap = { 'A': 'a', 'Ă': 'ă', 'Â': 'â', 'B': 'bờ', 'C': 'cờ', 'D': 'dờ', 'Đ': 'đờ', 'E': 'e', 'Ê': 'ê', 'G': 'gờ', 'H': 'hờ', 'I': 'i ngắn', 'K': 'ca', 'L': 'lờ', 'M': 'mờ', 'N': 'nờ', 'O': 'o', 'Ô': 'ô', 'Ơ': 'ơ', 'P': 'pờ', 'Q': 'quờ', 'R': 'rờ', 'S': 'sờ', 'T': 'tờ', 'U': 'u', 'Ư': 'ư', 'V': 'vờ', 'X': 'xờ', 'Y': 'i dài' };
-            
-            const exampleWordMap = {
-                'A': 'Cái Ca', 'Ă': 'Cái Khăn', 'Â': 'Cái Cân', 'B': 'Bé Bò', 'C': 'Con Cá', 'D': 'Con Dê', 'Đ': 'Đà Điểu',
-                'E': 'Em Bé', 'Ê': 'Con Ếch', 'G': 'Con Gà', 'H': 'Hoa Hồng', 'I': 'Viên Bi', 'K': 'Cái Kéo', 'L': 'Lọ Lem',
-                'M': 'Con Mèo', 'N': 'Cái Nơ', 'O': 'Con Bò', 'Ô': 'Cái Ô', 'Ơ': 'Lá Cờ', 'P': 'Đèn Pin', 'Q': 'Quyển Vở',
-                'R': 'Con Rùa', 'S': 'Con Sóc', 'T': 'Con Tôm', 'U': 'Củ Su', 'Ư': 'Hộp Thư', 'V': 'Con Voi', 'X': 'Xe Đạp', 'Y': 'Y Tá'
-            };
+            const exampleWordMap = { 'A': 'Cái Ca', 'Ă': 'Cái Khăn', 'Â': 'Cái Cân', 'B': 'Bé Bò', 'C': 'Con Cá', 'D': 'Con Dê', 'Đ': 'Đà Điểu', 'E': 'Em Bé', 'Ê': 'Con Ếch', 'G': 'Con Gà', 'H': 'Hoa Hồng', 'I': 'Viên Bi', 'K': 'Cái Kéo', 'L': 'Lọ Lem', 'M': 'Con Mèo', 'N': 'Cái Nơ', 'O': 'Con Bò', 'Ô': 'Cái Ô', 'Ơ': 'Lá Cờ', 'P': 'Đèn Pin', 'Q': 'Quyển Vở', 'R': 'Con Rùa', 'S': 'Con Sóc', 'T': 'Con Tôm', 'U': 'Củ Su', 'Ư': 'Hộp Thư', 'V': 'Con Voi', 'X': 'Xe Đạp', 'Y': 'Y Tá' };
 
             const grid = document.getElementById('alphabet-grid');
             const gamePrompt = document.getElementById('game-prompt');
@@ -211,7 +192,12 @@
             const playAgainBtn = document.getElementById('play-again-btn');
             const promptContainer = document.getElementById('prompt-container');
             const repeatQuestionBtn = document.getElementById('repeat-question-btn');
+            const menuContainer = document.getElementById('menu-container');
+            const reviewModeBtn = document.getElementById('review-mode-btn');
+            const backBtn = document.getElementById('back-btn');
+            const backToMenuWinBtn = document.getElementById('back-to-menu-win-btn');
 
+            let currentMode = 'menu'; // 'menu', 'game', 'review'
             let vietnameseVoice = null;
             let shuffledAlphabet = [];
             let currentLetterIndex = 0;
@@ -224,7 +210,7 @@
                 const vietnameseVoices = voices.filter(voice => voice.lang === 'vi-VN');
                 if (!vietnameseVoices.length) {
                     gamePrompt.textContent = "Lỗi: Không tìm thấy giọng đọc Tiếng Việt trên máy tính.";
-                    startGameBtn.disabled = true;
+                    startGameBtn.disabled = true; reviewModeBtn.disabled = true;
                     return;
                 };
                 let femaleVoice = vietnameseVoices.find(voice => /nữ|female/i.test(voice.name));
@@ -238,7 +224,7 @@
             function speak(text, rate = 0.9, pitch = 1.1, onEndCallback = null) {
                 if ('speechSynthesis' in window) {
                     window.speechSynthesis.cancel();
-                    const utterance = new SpeechSynthesisUtterance(text);
+                    const utterance = new SpeechSynthesisUttersance(text);
                     utterance.lang = 'vi-VN';
                     utterance.rate = rate;
                     utterance.pitch = pitch;
@@ -249,7 +235,7 @@
                     window.speechSynthesis.speak(utterance);
                 }
             }
-
+            
             alphabet.forEach(letter => {
                 const letterDiv = document.createElement('div');
                 const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -258,7 +244,24 @@
                 letterDiv.setAttribute('data-letter', letter);
                 grid.appendChild(letterDiv);
             });
+            
+            function showMenu() {
+                currentMode = 'menu';
+                window.speechSynthesis.cancel();
+                menuContainer.classList.remove('hidden');
+                grid.classList.add('hidden');
+                promptContainer.classList.add('hidden');
+                winScreen.classList.add('hidden');
+                backBtn.classList.add('hidden');
+            }
 
+            function setupReviewMode() {
+                currentMode = 'review';
+                menuContainer.classList.add('hidden');
+                grid.classList.remove('hidden');
+                backBtn.classList.remove('hidden');
+            }
+            
             function askForNextLetter() {
                 if (currentLetterIndex >= shuffledAlphabet.length) {
                     endGame();
@@ -272,13 +275,15 @@
             }
 
             function startGame() {
+                currentMode = 'game';
                 gameActive = true;
                 currentLetterIndex = 0;
                 shuffledAlphabet = [...alphabet].sort(() => 0.5 - Math.random());
-                startGameBtn.style.display = 'none';
+                menuContainer.classList.add('hidden');
                 promptContainer.classList.remove('hidden');
                 winScreen.classList.add('hidden');
                 grid.classList.remove('hidden');
+                backBtn.classList.remove('hidden');
                 askForNextLetter();
             }
 
@@ -287,51 +292,60 @@
                 grid.classList.add('hidden');
                 winScreen.classList.remove('hidden');
                 promptContainer.classList.add('hidden');
+                backBtn.classList.add('hidden');
                 speak("Con giỏi quá! Chúc mừng con đã hoàn thành trò chơi!");
             }
 
             grid.addEventListener('click', (event) => {
-                if (!gameActive || !event.target.classList.contains('letter-box')) return;
-                
-                const clickedBox = event.target;
-                const clickedLetter = clickedBox.getAttribute('data-letter');
-                const correctLetter = shuffledAlphabet[currentLetterIndex];
+                const clickedBox = event.target.closest('.letter-box');
+                if (!clickedBox) return;
 
-                if (clickedLetter === correctLetter) {
-                    gameActive = false; // Tạm khóa không cho bấm khi đang đọc
+                if (currentMode === 'review') {
+                    const clickedLetter = clickedBox.getAttribute('data-letter');
+                    const phonetic = phoneticMap[clickedLetter];
+                    const example = exampleWordMap[clickedLetter];
+                    const sentence = `${phonetic}, có trong từ ${example}`;
+                    speak(sentence);
                     clickedBox.classList.add('celebrate');
+                    setTimeout(() => clickedBox.classList.remove('celebrate'), 500);
+                } 
+                else if (currentMode === 'game') {
+                    if (!gameActive) return;
+                    const clickedLetter = clickedBox.getAttribute('data-letter');
+                    const correctLetter = shuffledAlphabet[currentLetterIndex];
 
-                    speak("Đúng rồi!", 0.9, 1.1, () => {
-                        const phonetic = phoneticMap[correctLetter];
-                        const example = exampleWordMap[correctLetter];
-                        const exampleSentence = `${phonetic}, có trong từ ${example}`;
-                        
-                        speak(exampleSentence, 0.9, 1.1, () => {
-                            clickedBox.classList.remove('celebrate');
-                            currentLetterIndex++;
-                            askForNextLetter();
-                            gameActive = true; // Mở khóa cho câu hỏi tiếp theo
+                    if (clickedLetter === correctLetter) {
+                        gameActive = false;
+                        clickedBox.classList.add('celebrate');
+                        speak("Đúng rồi!", 0.9, 1.1, () => {
+                            const phonetic = phoneticMap[correctLetter];
+                            const example = exampleWordMap[correctLetter];
+                            const exampleSentence = `${phonetic}, có trong từ ${example}`;
+                            speak(exampleSentence, 0.9, 1.1, () => {
+                                clickedBox.classList.remove('celebrate');
+                                currentLetterIndex++;
+                                askForNextLetter();
+                                gameActive = true;
+                            });
                         });
-                    });
-                } else {
-                    clickedBox.classList.add('shake');
-                    speak("Sai rồi, thử lại nhé!");
-                    setTimeout(() => {
-                        clickedBox.classList.remove('shake');
-                    }, 500);
+                    } else {
+                        clickedBox.classList.add('shake');
+                        speak("Sai rồi, thử lại nhé!");
+                        setTimeout(() => clickedBox.classList.remove('shake'), 500);
+                    }
                 }
             });
             
             repeatQuestionBtn.addEventListener('click', () => {
-                if (gameActive && currentQuestionText) {
-                    speak(currentQuestionText);
-                }
+                if (gameActive && currentQuestionText) speak(currentQuestionText);
             });
             
             startGameBtn.addEventListener('click', startGame);
+            reviewModeBtn.addEventListener('click', setupReviewMode);
+            backBtn.addEventListener('click', showMenu);
             playAgainBtn.addEventListener('click', startGame);
+            backToMenuWinBtn.addEventListener('click', showMenu);
         });
     </script>
 </body>
 </html>
-
