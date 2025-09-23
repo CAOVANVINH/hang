@@ -150,6 +150,39 @@
 
         @keyframes celebrate { 0% { transform: scale(1); } 50% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1); } }
         .celebrate { animation: celebrate 0.5s ease-in-out; background-color: #15803d !important; }
+
+        /* Styles for Case Selector */
+        #case-selector-container {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 0.75rem;
+        }
+        #case-selector-container p {
+            color: #4b5563; /* text-gray-600 */
+            font-weight: 600;
+            margin-top: 0;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+        }
+        #case-selector {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .case-btn {
+            padding: 0.5rem 1.5rem;
+            font-size: 1.125rem;
+            background-color: #d1d5db; /* bg-gray-300 */
+            color: #4b5563; /* text-gray-600 */
+            border: 2px solid transparent;
+        }
+        .case-btn.active {
+            background-color: #60a5fa; /* bg-blue-400 */
+            color: white;
+            border-color: #2563eb; /* border-blue-600 */
+            transform: scale(1.05);
+        }
     </style>
 </head>
 <body>
@@ -157,6 +190,13 @@
         <h1>Trò Chơi Tìm Chữ Cái</h1>
         <div id="game-controls">
             <div id="menu-container">
+                <div id="case-selector-container">
+                    <p>Chọn kiểu chữ để học:</p>
+                    <div id="case-selector">
+                        <button id="case-upper-btn" class="case-btn active">A B C</button>
+                        <button id="case-lower-btn" class="case-btn">a b c</button>
+                    </div>
+                </div>
                 <button id="start-game-btn" class="menu-btn">Chơi Theo Thử Thách</button>
                 <button id="review-mode-btn" class="menu-btn">Tự Do Ôn Tập</button>
             </div>
@@ -195,7 +235,10 @@
             const reviewModeBtn = document.getElementById('review-mode-btn');
             const backBtn = document.getElementById('back-btn');
             const backToMenuWinBtn = document.getElementById('back-to-menu-win-btn');
+            const caseUpperBtn = document.getElementById('case-upper-btn');
+            const caseLowerBtn = document.getElementById('case-lower-btn');
 
+            let letterCase = 'upper'; // 'upper' or 'lower'
             let currentMode = 'menu'; // 'menu', 'game', 'review'
             let vietnameseVoice = null;
             let shuffledAlphabet = [];
@@ -213,24 +256,21 @@
                     return;
                 };
                 
-                // **CẬP NHẬT**: Ưu tiên các giọng đọc chuẩn, chất lượng cao
                 const priorityVoices = ['Google Tiếng Việt', 'Microsoft An', 'Linh'];
                 for (const name of priorityVoices) {
                     const foundVoice = vietnameseVoices.find(voice => voice.name.includes(name));
                     if (foundVoice) {
                         vietnameseVoice = foundVoice;
-                        return; // Đã tìm thấy giọng ưu tiên, thoát khỏi hàm
+                        return;
                     }
                 }
 
-                // Nếu không có, tìm giọng nữ bất kỳ
                 let femaleVoice = vietnameseVoices.find(voice => /nữ|female/i.test(voice.name));
                 if (femaleVoice) {
                     vietnameseVoice = femaleVoice;
                     return;
                 }
 
-                // Cuối cùng, chọn giọng mặc định đầu tiên
                 vietnameseVoice = vietnameseVoices[0];
             }
             loadAndSetVoice();
@@ -246,21 +286,22 @@
                     utterance.rate = rate;
                     utterance.pitch = pitch;
                     if (vietnameseVoice) utterance.voice = vietnameseVoice;
-                    if (onEndCallback) {
-                        utterance.onend = onEndCallback;
-                    }
+                    if (onEndCallback) utterance.onend = onEndCallback;
                     window.speechSynthesis.speak(utterance);
                 }
             }
             
-            alphabet.forEach(letter => {
-                const letterDiv = document.createElement('div');
-                const randomColor = colors[Math.floor(Math.random() * colors.length)];
-                letterDiv.className = `letter-box ${randomColor}`;
-                letterDiv.textContent = letter;
-                letterDiv.setAttribute('data-letter', letter);
-                grid.appendChild(letterDiv);
-            });
+            function renderAlphabetGrid() {
+                grid.innerHTML = ''; // Clear previous letters before rendering
+                alphabet.forEach(letter => {
+                    const letterDiv = document.createElement('div');
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    letterDiv.className = `letter-box ${randomColor}`;
+                    letterDiv.textContent = letterCase === 'upper' ? letter : letter.toLowerCase();
+                    letterDiv.setAttribute('data-letter', letter); // Data attribute is always uppercase for game logic
+                    grid.appendChild(letterDiv);
+                });
+            }
             
             function showMenu() {
                 currentMode = 'menu';
@@ -357,12 +398,31 @@
                 if (gameActive && currentQuestionText) speak(currentQuestionText);
             });
             
+            // --- New Event Listeners for Case Selection ---
+            caseUpperBtn.addEventListener('click', () => {
+                letterCase = 'upper';
+                caseUpperBtn.classList.add('active');
+                caseLowerBtn.classList.remove('active');
+                renderAlphabetGrid();
+            });
+
+            caseLowerBtn.addEventListener('click', () => {
+                letterCase = 'lower';
+                caseLowerBtn.classList.add('active');
+                caseUpperBtn.classList.remove('active');
+                renderAlphabetGrid();
+            });
+            
             startGameBtn.addEventListener('click', startGame);
             reviewModeBtn.addEventListener('click', setupReviewMode);
             backBtn.addEventListener('click', showMenu);
             playAgainBtn.addEventListener('click', startGame);
             backToMenuWinBtn.addEventListener('click', showMenu);
+
+            // Initial render of the grid when the page loads
+            renderAlphabetGrid();
         });
     </script>
 </body>
 </html>
+
