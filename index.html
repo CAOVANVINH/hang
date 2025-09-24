@@ -199,7 +199,11 @@
 
         <div id="intro-screen" class="flex flex-col items-center">
             <p class="text-xl sm:text-2xl mb-8 font-bold">Chào mừng bé đến với trò chơi! Hãy chọn cấp độ để bắt đầu.</p>
-            <div id="level-select" class="flex flex-col sm:flex-row gap-4">
+            <div id="letter-case-select" class="flex flex-col sm:flex-row gap-4 mb-8">
+                <button class="button intro-button" onclick="setLetterCase('uppercase')">Học chữ in hoa</button>
+                <button class="button intro-button" onclick="setLetterCase('lowercase')">Học chữ in thường</button>
+            </div>
+            <div id="level-select" class="hidden flex-col sm:flex-row gap-4">
                 <button class="button intro-button" onclick="startGame('letters')">Học Chữ Cái</button>
                 <button class="button intro-button" onclick="startGame('vowels')">Học Vần</button>
                 <button class="button intro-button" onclick="startGame('words')">Học Từ Vựng</button>
@@ -213,7 +217,6 @@
             <div id="challenge-box" class="card mb-8 cursor-pointer" onclick="speakText(this.textContent)"></div>
             <div id="message-box" class="message-box text-xl sm:text-2xl font-bold mb-6"></div>
             <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
-            <button id="next-button" class="button next-button mt-8 hidden" onclick="nextRound()">Tiếp Tục</button>
         </div>
         
         <div id="practice-screen" class="hidden">
@@ -267,10 +270,12 @@
         let currentOptions = [];
         let correctAnswer = '';
         let correctDisplay = '';
-        let isUpperCaseMode = false;
         let score = 0;
+        let letterCaseMode = 'lowercase';
 
         const introScreen = document.getElementById('intro-screen');
+        const levelSelect = document.getElementById('level-select');
+        const letterCaseSelect = document.getElementById('letter-case-select');
         const gameScreen = document.getElementById('game-screen');
         const practiceScreen = document.getElementById('practice-screen');
         const scoreBox = document.getElementById('score-box');
@@ -278,13 +283,12 @@
         const currentTaskEl = document.getElementById('current-task');
         const challengeBox = document.getElementById('challenge-box');
         const optionsGrid = document.getElementById('options-grid');
-        const messageBox = document.getElementById('message-box');
-        const nextButton = document.getElementById('next-button');
+        const messageBox = document = document.getElementById('message-box');
         const lettersPracticeGrid = document.getElementById('letters-practice-grid');
         const vowelsPracticeGrid = document.getElementById('vowels-practice-grid');
         const wordsPracticeGrid = document.getElementById('words-practice-grid');
         const fireworksCanvas = document.getElementById('fireworks-canvas');
-
+        
         const synth = window.speechSynthesis;
         let vietnameseVoice;
 
@@ -321,6 +325,12 @@
             }
         }
 
+        function setLetterCase(mode) {
+            letterCaseMode = mode;
+            letterCaseSelect.classList.add('hidden');
+            levelSelect.classList.remove('hidden');
+        }
+
         function startGame(level) {
             currentLevel = level;
             introScreen.classList.add('hidden');
@@ -347,7 +357,7 @@
             // Luyện chữ cái
             letters.forEach(item => {
                 const button = document.createElement('button');
-                button.textContent = item.toUpperCase();
+                button.textContent = letterCaseMode === 'uppercase' ? item.toUpperCase() : item;
                 button.classList.add('practice-button');
                 button.addEventListener('click', () => {
                     speakText(item);
@@ -358,7 +368,7 @@
             // Luyện vần
             vowels.forEach(item => {
                 const button = document.createElement('button');
-                button.textContent = item.toUpperCase();
+                button.textContent = letterCaseMode === 'uppercase' ? item.toUpperCase() : item;
                 button.classList.add('practice-button');
                 button.addEventListener('click', () => {
                     speakText(item);
@@ -380,7 +390,7 @@
                 img.classList.add('w-full', 'h-28', 'object-contain', 'rounded-lg');
                 
                 const text = document.createElement('span');
-                text.textContent = word.question;
+                text.textContent = letterCaseMode === 'uppercase' ? word.question.toUpperCase() : word.question;
                 text.classList.add('practice-word-text');
                 
                 itemContainer.appendChild(img);
@@ -391,6 +401,8 @@
         
         function backToMenu() {
             introScreen.classList.remove('hidden');
+            letterCaseSelect.classList.remove('hidden');
+            levelSelect.classList.add('hidden');
             gameScreen.classList.add('hidden');
             practiceScreen.classList.add('hidden');
             scoreBox.classList.add('hidden');
@@ -398,16 +410,15 @@
 
         function nextRound() {
             messageBox.textContent = '';
-            nextButton.classList.add('hidden');
             challengeBox.classList.remove('correct', 'incorrect');
             optionsGrid.innerHTML = '';
             
-            isUpperCaseMode = Math.random() < 0.5;
+            const toCase = (text) => letterCaseMode === 'uppercase' ? text.toUpperCase() : text;
 
             if (currentLevel === 'letters') {
                 shuffleArray(letters);
                 correctAnswer = letters[0];
-                correctDisplay = isUpperCaseMode ? correctAnswer.toUpperCase() : correctAnswer;
+                correctDisplay = toCase(correctAnswer);
                 
                 currentOptions = [correctAnswer];
                 const otherLetters = [...letters].filter(l => l !== correctAnswer);
@@ -418,12 +429,12 @@
                 currentTaskEl.textContent = 'Tìm chữ cái:';
                 challengeBox.textContent = correctDisplay;
                 speakText(correctAnswer);
-                createOptions(currentOptions.map(opt => isUpperCaseMode ? opt.toUpperCase() : opt));
+                createOptions(currentOptions.map(toCase));
 
             } else if (currentLevel === 'vowels') {
                 shuffleArray(vowels);
                 correctAnswer = vowels[0];
-                correctDisplay = isUpperCaseMode ? correctAnswer.toUpperCase() : correctAnswer;
+                correctDisplay = toCase(correctAnswer);
                 
                 currentOptions = [correctAnswer];
                 const otherVowels = [...vowels].filter(v => v !== correctAnswer);
@@ -434,7 +445,7 @@
                 currentTaskEl.textContent = 'Tìm vần:';
                 challengeBox.textContent = correctDisplay;
                 speakText(correctAnswer);
-                createOptions(currentOptions.map(opt => isUpperCaseMode ? opt.toUpperCase() : opt));
+                createOptions(currentOptions.map(toCase));
             } else if (currentLevel === 'words') {
                 shuffleArray(words);
                 const currentWord = words[0];
@@ -450,12 +461,12 @@
                 challengeBox.innerHTML = `<img src="${currentWord.image}" alt="${currentWord.question}" class="w-full h-full object-contain rounded-lg">`;
                 challengeBox.style.fontSize = '2rem';
                 challengeBox.onclick = () => speakText(currentWord.question);
-                createOptions(currentOptions);
+                createOptions(currentOptions.map(toCase));
             } else if (currentLevel === 'vowel-match') {
                 shuffleArray(vowelMatchWords);
                 const currentMatch = vowelMatchWords[0];
                 correctAnswer = currentMatch.question;
-                const vowelToFind = currentMatch.vowel;
+                const vowelToFind = toCase(currentMatch.vowel);
 
                 currentOptions = [currentMatch.question];
                 const otherWords = [...vowelMatchWords].filter(w => w.question !== correctAnswer);
@@ -464,9 +475,9 @@
                 shuffleArray(currentOptions);
 
                 currentTaskEl.textContent = `Tìm từ có chứa vần "${vowelToFind}"`;
-                challengeBox.textContent = vowelToFind.toUpperCase();
+                challengeBox.textContent = vowelToFind;
                 speakText(vowelToFind);
-                createOptions(currentOptions);
+                createOptions(currentOptions.map(toCase));
             }
         }
 
@@ -490,13 +501,20 @@
             if (normalizedSelected === normalizedCorrect) {
                 messageBox.textContent = 'Đúng rồi!';
                 button.classList.add('correct');
-                nextButton.classList.remove('hidden');
-                speakText('Đúng rồi!');
+                speakText('Con giỏi lắm!');
                 updateScore(1);
+                setTimeout(nextRound, 2000);
             } else {
-                messageBox.textContent = 'Sai rồi. Hãy thử lại!';
+                messageBox.textContent = '';
                 button.classList.add('incorrect');
-                speakText('Sai rồi. Hãy thử lại!');
+                
+                const correctText = currentLevel === 'letters' || currentLevel === 'vowels' ? `chữ ${correctAnswer}` : `từ ${correctAnswer}`;
+                const selectedText = currentLevel === 'letters' || currentLevel === 'vowels' ? `chữ ${selected.toLowerCase()}` : `từ ${selected}`;
+
+                const errorMessage = `Chúng ta đang tìm ${correctText}, không phải ${selectedText}. Cố lên con nhé!`;
+
+                speakText(errorMessage);
+
                 setTimeout(() => {
                     button.classList.remove('incorrect');
                     allButtons.forEach(btn => btn.disabled = false);
