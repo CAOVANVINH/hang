@@ -167,6 +167,33 @@
             background: #f7f3e9;
             border-radius: 15px;
         }
+        .word-challenge-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .word-challenge-text {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        .read-aloud-button {
+            padding: 8px 16px;
+            background: #4d90fe;
+            color: white;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .read-aloud-button:hover {
+            transform: scale(1.05);
+        }
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -195,7 +222,7 @@
 
     <div id="game-container" class="container">
         <div id="score-box" class="score-box hidden">Điểm: <span id="score-value">0</span></div>
-        <h1 class="text-4xl sm:text-5xl font-bold mb-6 text-pink-500 animate-pulse">Trò Chơi Tiếng Việt</h1>
+        <h1 class="text-4xl sm:text-5xl font-bold mb-6 text-pink-500 animate-pulse">Trò Chơi Học Tiếng Việt</h1>
 
         <div id="intro-screen" class="flex flex-col items-center">
             <p class="text-xl sm:text-2xl mb-8 font-bold">Chào mừng bé đến với trò chơi! Hãy chọn cấp độ để bắt đầu.</p>
@@ -214,7 +241,7 @@
 
         <div id="game-screen" class="hidden flex flex-col items-center">
             <div id="current-task" class="text-2xl sm:text-3xl font-bold mb-8 text-blue-500"></div>
-            <div id="challenge-box" class="card mb-8 cursor-pointer" onclick="speakText(this.textContent)"></div>
+            <div id="challenge-box" class="card mb-8"></div>
             <div id="message-box" class="message-box text-xl sm:text-2xl font-bold mb-6"></div>
             <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
         </div>
@@ -247,16 +274,9 @@
         const letters = ['a', 'b', 'c', 'd', 'đ', 'e', 'ê', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'ô', 'ơ', 'p', 'q', 'r', 's', 't', 'u', 'ư', 'v', 'x', 'y'];
         const vowels = ['ai', 'ay', 'ao', 'au', 'eo', 'eu', 'ia', 'iu', 'oa', 'oe', 'oi', 'ua', 'ue', 'ui', 'uo', 'ưu'];
         const words = [
-            { question: 'con cá', image: 'https://placehold.co/150x150/8a2be2/ffffff?text=Cá' },
-            { question: 'con bò', image: 'https://placehold.co/150x150/a52a2a/ffffff?text=Bò' },
-            { question: 'máy bay', image: 'https://placehold.co/150x150/008080/ffffff?text=Máy+Bay' },
-            { question: 'cái ô', image: 'https://placehold.co/150x150/d2691e/ffffff?text=Ô' },
-            { question: 'cái nhà', image: 'https://placehold.co/150x150/228b22/ffffff?text=Nhà' },
-            { question: 'quả táo', image: 'https://placehold.co/150x150/ff4500/ffffff?text=Táo' },
-            { question: 'quả cam', image: 'https://placehold.co/150x150/ffa500/ffffff?text=Cam' },
-            { question: 'quả dứa', image: 'https://placehold.co/150x150/ffd700/ffffff?text=Dứa' },
-            { question: 'mèo', image: 'https://placehold.co/150x150/deb887/ffffff?text=Mèo' },
-            { question: 'sách', image: 'https://placehold.co/150x150/4682b4/ffffff?text=Sách' }
+            'con cá', 'con bò', 'máy bay', 'cái ô', 'cái nhà', 'quả táo', 'quả cam', 'quả dứa', 'con mèo', 'quyển sách',
+            'cái quạt', 'cái bàn', 'cái ghế', 'cái tủ', 'cái giường', 'cây bút', 'cái thước', 'cái cặp', 'bánh mì', 'quả chanh',
+            'mặt trời', 'mặt trăng', 'ngôi sao', 'con chim', 'bông hoa', 'cây xanh', 'cánh cửa', 'bức tranh', 'quả bóng', 'cái chén'
         ];
         const vowelMatchWords = [
             { question: 'cái ca', vowel: 'a' },
@@ -283,7 +303,7 @@
         const currentTaskEl = document.getElementById('current-task');
         const challengeBox = document.getElementById('challenge-box');
         const optionsGrid = document.getElementById('options-grid');
-        const messageBox = document = document.getElementById('message-box');
+        const messageBox = document.getElementById('message-box');
         const lettersPracticeGrid = document.getElementById('letters-practice-grid');
         const vowelsPracticeGrid = document.getElementById('vowels-practice-grid');
         const wordsPracticeGrid = document.getElementById('words-practice-grid');
@@ -381,19 +401,13 @@
                 const itemContainer = document.createElement('div');
                 itemContainer.classList.add('practice-item');
                 itemContainer.addEventListener('click', () => {
-                    speakText(word.question);
+                    speakText(word);
                 });
                 
-                const img = document.createElement('img');
-                img.src = word.image;
-                img.alt = word.question;
-                img.classList.add('w-full', 'h-28', 'object-contain', 'rounded-lg');
-                
                 const text = document.createElement('span');
-                text.textContent = letterCaseMode === 'uppercase' ? word.question.toUpperCase() : word.question;
+                text.textContent = letterCaseMode === 'uppercase' ? word.toUpperCase() : word;
                 text.classList.add('practice-word-text');
                 
-                itemContainer.appendChild(img);
                 itemContainer.appendChild(text);
                 wordsPracticeGrid.appendChild(itemContainer);
             });
@@ -449,18 +463,25 @@
             } else if (currentLevel === 'words') {
                 shuffleArray(words);
                 const currentWord = words[0];
-                correctAnswer = currentWord.question;
+                correctAnswer = currentWord;
                 
-                currentOptions = [currentWord.question];
-                const otherWords = words.filter(w => w.question !== correctAnswer);
+                currentOptions = [currentWord];
+                const otherWords = words.filter(w => w !== correctAnswer);
                 shuffleArray(otherWords);
-                currentOptions.push(...otherWords.slice(0, 3).map(w => w.question));
+                currentOptions.push(...otherWords.slice(0, 3));
                 shuffleArray(currentOptions);
 
-                currentTaskEl.textContent = 'Từ nào phù hợp với hình ảnh?';
-                challengeBox.innerHTML = `<img src="${currentWord.image}" alt="${currentWord.question}" class="w-full h-full object-contain rounded-lg">`;
-                challengeBox.style.fontSize = '2rem';
-                challengeBox.onclick = () => speakText(currentWord.question);
+                // Update challenge box to display word and a "Read Aloud" button
+                challengeBox.innerHTML = `
+                    <div class="word-challenge-box">
+                        <span class="word-challenge-text">${toCase(currentWord)}</span>
+                        <button class="read-aloud-button" onclick="speakText('${currentWord}')">Đọc lại</button>
+                    </div>
+                `;
+                challengeBox.classList.remove('cursor-pointer');
+                
+                currentTaskEl.textContent = 'Tìm từ:';
+                speakText(currentWord);
                 createOptions(currentOptions.map(toCase));
             } else if (currentLevel === 'vowel-match') {
                 shuffleArray(vowelMatchWords);
