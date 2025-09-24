@@ -226,11 +226,7 @@
 
         <div id="intro-screen" class="flex flex-col items-center">
             <p class="text-xl sm:text-2xl mb-8 font-bold">Chào mừng bé đến với trò chơi! Hãy chọn cấp độ để bắt đầu.</p>
-            <div id="letter-case-select" class="flex flex-col sm:flex-row gap-4 mb-8">
-                <button class="button intro-button" onclick="setLetterCase('uppercase')">Học chữ in hoa</button>
-                <button class="button intro-button" onclick="setLetterCase('lowercase')">Học chữ in thường</button>
-            </div>
-            <div id="level-select" class="hidden flex-col sm:flex-row gap-4">
+            <div id="level-select" class="flex flex-col sm:flex-row gap-4">
                 <button class="button intro-button" onclick="startGame('letters')">Học Chữ Cái</button>
                 <button class="button intro-button" onclick="startGame('vowels')">Học Vần</button>
                 <button class="button intro-button" onclick="startGame('words')">Học Từ Vựng</button>
@@ -272,7 +268,7 @@
 
     <script>
         const letters = ['a', 'b', 'c', 'd', 'đ', 'e', 'ê', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'ô', 'ơ', 'p', 'q', 'r', 's', 't', 'u', 'ư', 'v', 'x', 'y'];
-        const vowels = ['ai', 'ay', 'ao', 'au', 'eo', 'eu', 'ia', 'iu', 'oa', 'oe', 'oi', 'ua', 'ue', 'ui', 'uo', 'ưu'];
+        const vowels = ['ai', 'ay', 'ao', 'au', 'eo', 'ia', 'iu', 'oa', 'oe', 'oi', 'ua', 'ui', 'uo', 'ưu'];
         const words = [
             'con cá', 'con bò', 'máy bay', 'cái ô', 'cái nhà', 'quả táo', 'quả cam', 'quả dứa', 'con mèo', 'quyển sách',
             'cái quạt', 'cái bàn', 'cái ghế', 'cái tủ', 'cái giường', 'cây bút', 'cái thước', 'cái cặp', 'bánh mì', 'quả chanh',
@@ -291,11 +287,11 @@
         let correctAnswer = '';
         let correctDisplay = '';
         let score = 0;
-        let letterCaseMode = 'lowercase';
+        const letterCaseMode = 'lowercase'; // Mặc định là chữ thường
 
         const introScreen = document.getElementById('intro-screen');
         const levelSelect = document.getElementById('level-select');
-        const letterCaseSelect = document.getElementById('letter-case-select');
+        const letterCaseSelect = document.getElementById('letter-case-select'); // Không sử dụng nhưng vẫn để đây để tránh lỗi
         const gameScreen = document.getElementById('game-screen');
         const practiceScreen = document.getElementById('practice-screen');
         const scoreBox = document.getElementById('score-box');
@@ -314,7 +310,10 @@
 
         function findVietnameseVoice() {
             const voices = synth.getVoices();
-            vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-'));
+            vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-') && voice.name.includes('Google'));
+            if (!vietnameseVoice) {
+                vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-'));
+            }
         }
 
         if (synth.onvoiceschanged !== undefined) {
@@ -330,6 +329,8 @@
             }
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = 'vi-VN';
+            utterance.rate = 1.0;
+            utterance.pitch = 1.0;
             if (vietnameseVoice) {
                 utterance.voice = vietnameseVoice;
             } else {
@@ -344,13 +345,7 @@
                 [array[i], array[j]] = [array[j], array[i]];
             }
         }
-
-        function setLetterCase(mode) {
-            letterCaseMode = mode;
-            letterCaseSelect.classList.add('hidden');
-            levelSelect.classList.remove('hidden');
-        }
-
+        
         function startGame(level) {
             currentLevel = level;
             introScreen.classList.add('hidden');
@@ -377,7 +372,7 @@
             // Luyện chữ cái
             letters.forEach(item => {
                 const button = document.createElement('button');
-                button.textContent = letterCaseMode === 'uppercase' ? item.toUpperCase() : item;
+                button.textContent = item;
                 button.classList.add('practice-button');
                 button.addEventListener('click', () => {
                     speakText(item);
@@ -388,10 +383,16 @@
             // Luyện vần
             vowels.forEach(item => {
                 const button = document.createElement('button');
-                button.textContent = letterCaseMode === 'uppercase' ? item.toUpperCase() : item;
+                button.textContent = item;
                 button.classList.add('practice-button');
                 button.addEventListener('click', () => {
-                    speakText(item);
+                     if (item === 'ai') {
+                        speakText('ai');
+                    } else if (item === 'ay') {
+                        speakText('ay');
+                    } else {
+                        speakText(item);
+                    }
                 });
                 vowelsPracticeGrid.appendChild(button);
             });
@@ -405,7 +406,7 @@
                 });
                 
                 const text = document.createElement('span');
-                text.textContent = letterCaseMode === 'uppercase' ? word.toUpperCase() : word;
+                text.textContent = word;
                 text.classList.add('practice-word-text');
                 
                 itemContainer.appendChild(text);
@@ -415,8 +416,7 @@
         
         function backToMenu() {
             introScreen.classList.remove('hidden');
-            letterCaseSelect.classList.remove('hidden');
-            levelSelect.classList.add('hidden');
+            levelSelect.classList.remove('hidden');
             gameScreen.classList.add('hidden');
             practiceScreen.classList.add('hidden');
             scoreBox.classList.add('hidden');
@@ -427,12 +427,11 @@
             challengeBox.classList.remove('correct', 'incorrect');
             optionsGrid.innerHTML = '';
             
-            const toCase = (text) => letterCaseMode === 'uppercase' ? text.toUpperCase() : text;
+            const toCase = (text) => text.toLowerCase();
 
             if (currentLevel === 'letters') {
                 shuffleArray(letters);
                 correctAnswer = letters[0];
-                correctDisplay = toCase(correctAnswer);
                 
                 currentOptions = [correctAnswer];
                 const otherLetters = [...letters].filter(l => l !== correctAnswer);
@@ -440,25 +439,31 @@
                 currentOptions.push(...otherLetters.slice(0, 3));
                 shuffleArray(currentOptions);
                 
-                currentTaskEl.textContent = 'Tìm chữ cái:';
-                challengeBox.textContent = correctDisplay;
+                currentTaskEl.textContent = 'Bé hãy lắng nghe và tìm chữ cái!';
+                challengeBox.innerHTML = `<button class="read-aloud-button" onclick="speakText('${correctAnswer}')">Đọc lại</button>`;
                 speakText(correctAnswer);
                 createOptions(currentOptions.map(toCase));
 
             } else if (currentLevel === 'vowels') {
                 shuffleArray(vowels);
                 correctAnswer = vowels[0];
-                correctDisplay = toCase(correctAnswer);
                 
                 currentOptions = [correctAnswer];
                 const otherVowels = [...vowels].filter(v => v !== correctAnswer);
                 shuffleArray(otherVowels);
-                currentOptions.push(...otherVowels.slice(0, 3));
+                const uniqueVowels = otherVowels.filter(v => !v.includes(correctAnswer.charAt(0)) && !correctAnswer.includes(v.charAt(0)));
+                currentOptions.push(...uniqueVowels.slice(0, 3));
                 shuffleArray(currentOptions);
 
-                currentTaskEl.textContent = 'Tìm vần:';
-                challengeBox.textContent = correctDisplay;
-                speakText(correctAnswer);
+                currentTaskEl.textContent = 'Bé hãy lắng nghe và tìm vần!';
+                challengeBox.innerHTML = `<button class="read-aloud-button" onclick="speakText('${correctAnswer}')">Đọc lại</button>`;
+                if (correctAnswer === 'ai') {
+                    speakText('ai');
+                } else if (correctAnswer === 'ay') {
+                    speakText('ay');
+                } else {
+                    speakText(correctAnswer);
+                }
                 createOptions(currentOptions.map(toCase));
             } else if (currentLevel === 'words') {
                 shuffleArray(words);
@@ -471,23 +476,23 @@
                 currentOptions.push(...otherWords.slice(0, 3));
                 shuffleArray(currentOptions);
 
-                // Update challenge box to display word and a "Read Aloud" button
                 challengeBox.innerHTML = `
                     <div class="word-challenge-box">
-                        <span class="word-challenge-text">${toCase(currentWord)}</span>
+                        <p class="text-xl sm:text-2xl font-bold mb-2">Bé hãy lắng nghe và tìm từ nhé!</p>
                         <button class="read-aloud-button" onclick="speakText('${currentWord}')">Đọc lại</button>
                     </div>
                 `;
                 challengeBox.classList.remove('cursor-pointer');
+                challengeBox.classList.add('p-8');
                 
                 currentTaskEl.textContent = 'Tìm từ:';
-                speakText(currentWord);
+                speakText(`Em hãy tìm từ: ${currentWord}`);
                 createOptions(currentOptions.map(toCase));
             } else if (currentLevel === 'vowel-match') {
                 shuffleArray(vowelMatchWords);
                 const currentMatch = vowelMatchWords[0];
                 correctAnswer = currentMatch.question;
-                const vowelToFind = toCase(currentMatch.vowel);
+                const vowelToFind = currentMatch.vowel;
 
                 currentOptions = [currentMatch.question];
                 const otherWords = [...vowelMatchWords].filter(w => w.question !== correctAnswer);
@@ -495,8 +500,13 @@
                 currentOptions.push(...otherWords.slice(0, 3).map(w => w.question));
                 shuffleArray(currentOptions);
 
-                currentTaskEl.textContent = `Tìm từ có chứa vần "${vowelToFind}"`;
-                challengeBox.textContent = vowelToFind;
+                currentTaskEl.textContent = `Bé hãy lắng nghe và tìm từ có vần!`;
+                challengeBox.innerHTML = `
+                    <div class="word-challenge-box">
+                        <p class="text-xl sm:text-2xl font-bold mb-2">Từ có chứa vần "${toCase(vowelToFind)}"</p>
+                        <button class="read-aloud-button" onclick="speakText('${vowelToFind}')">Đọc lại</button>
+                    </div>
+                `;
                 speakText(vowelToFind);
                 createOptions(currentOptions.map(toCase));
             }
@@ -526,15 +536,28 @@
                 updateScore(1);
                 setTimeout(nextRound, 2000);
             } else {
-                messageBox.textContent = '';
+                messageBox.textContent = 'Sai rồi, bé hãy cố gắng hơn nhé!';
                 button.classList.add('incorrect');
                 
-                const correctText = currentLevel === 'letters' || currentLevel === 'vowels' ? `chữ ${correctAnswer}` : `từ ${correctAnswer}`;
-                const selectedText = currentLevel === 'letters' || currentLevel === 'vowels' ? `chữ ${selected.toLowerCase()}` : `từ ${selected}`;
+                let selectedPronunciation = normalizedSelected;
+                let correctPronunciation = normalizedCorrect;
 
-                const errorMessage = `Chúng ta đang tìm ${correctText}, không phải ${selectedText}. Cố lên con nhé!`;
+                if (currentLevel === 'letters' || currentLevel === 'vowels') {
+                    if (normalizedSelected === 'ay') {
+                        selectedPronunciation = 'ay';
+                    } else if (normalizedSelected === 'ai') {
+                        selectedPronunciation = 'ai';
+                    }
+                     if (normalizedCorrect === 'ay') {
+                        correctPronunciation = 'ay';
+                    } else if (normalizedCorrect === 'ai') {
+                        correctPronunciation = 'ai';
+                    }
+                    speakText(`Đây là ${selectedPronunciation}, không phải ${correctPronunciation}. Sai rồi, cố lên con nhé!`);
 
-                speakText(errorMessage);
+                } else {
+                    speakText(`Đây là từ ${selectedPronunciation}, chúng ta đang tìm từ ${correctPronunciation}. Sai rồi, cố lên con nhé!`);
+                }
 
                 setTimeout(() => {
                     button.classList.remove('incorrect');
