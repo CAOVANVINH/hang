@@ -194,6 +194,29 @@
         .read-aloud-button:hover {
             transform: scale(1.05);
         }
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 12px;
+            z-index: 100;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -215,6 +238,10 @@
             0% { transform: scale(0.9); opacity: 0; }
             50% { transform: scale(1.05); opacity: 1; }
             100% { transform: scale(1); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -265,6 +292,10 @@
     </div>
     
     <canvas id="fireworks-canvas" class="fireworks hidden"></canvas>
+    <div id="loading-indicator" class="loading-indicator hidden">
+        <div class="spinner"></div>
+        <span>Đang tải âm thanh...</span>
+    </div>
 
     <script>
         const letters = ['a', 'b', 'c', 'd', 'đ', 'e', 'ê', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'ô', 'ơ', 'p', 'q', 'r', 's', 't', 'u', 'ư', 'v', 'x', 'y'];
@@ -279,7 +310,32 @@
             { question: 'cá mè', vowel: 'e' },
             { question: 'lá đa', vowel: 'a' },
             { question: 'con bò', vowel: 'o' },
-            { question: 'tủ tivi', vowel: 'i' }
+            { question: 'tủ tivi', vowel: 'i' },
+            { question: 'củ khoai', vowel: 'ai'},
+            { question: 'mâm cơm', vowel: 'ơm'},
+            { question: 'cái rổ', vowel: 'ô'},
+            { question: 'cây cau', vowel: 'au'},
+            { question: 'cây mía', vowel: 'ia'},
+            { question: 'xe hơi', vowel: 'ơi'},
+            { question: 'cái bát', vowel: 'át'},
+            { question: 'đôi dép', vowel: 'ép'},
+            { question: 'chim sẻ', vowel: 'e'},
+            { question: 'cánh buồm', vowel: 'uồm'},
+            { question: 'con voi', vowel: 'oi'},
+            { question: 'con chó', vowel: 'o'},
+            { question: 'máy giặt', vowel: 'ặt'},
+            { question: 'máy tính', vowel: 'ính'},
+            { question: 'bông sen', vowel: 'en'},
+            { question: 'con lợn', vowel: 'ợn'},
+            { question: 'cây tre', vowel: 'e'},
+            { question: 'cánh diều', vowel: 'iều'},
+            { question: 'đèn pin', vowel: 'in'},
+            { question: 'con ong', vowel: 'ong'},
+            { question: 'cái thìa', vowel: 'ia'},
+            { question: 'tủ lạnh', vowel: 'ạnh'},
+            { question: 'cái nồi', vowel: 'ồi'},
+            { question: 'cái chổi', vowel: 'ổi'},
+            { question: 'cái ghế', vowel: 'ế'}
         ];
 
         let currentLevel = '';
@@ -287,11 +343,12 @@
         let correctAnswer = '';
         let correctDisplay = '';
         let score = 0;
-        const letterCaseMode = 'lowercase'; // Mặc định là chữ thường
+        let isSpeaking = false;
+        let isLoading = false;
+        let vietnameseVoice = null;
+        let vietnameseVoiceAvailable = false;
 
         const introScreen = document.getElementById('intro-screen');
-        const levelSelect = document.getElementById('level-select');
-        const letterCaseSelect = document.getElementById('letter-case-select'); // Không sử dụng nhưng vẫn để đây để tránh lỗi
         const gameScreen = document.getElementById('game-screen');
         const practiceScreen = document.getElementById('practice-screen');
         const scoreBox = document.getElementById('score-box');
@@ -304,41 +361,182 @@
         const vowelsPracticeGrid = document.getElementById('vowels-practice-grid');
         const wordsPracticeGrid = document.getElementById('words-practice-grid');
         const fireworksCanvas = document.getElementById('fireworks-canvas');
+        const loadingIndicator = document.getElementById('loading-indicator');
         
-        const synth = window.speechSynthesis;
-        let vietnameseVoice;
+        // --- TTS API integration ---
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+        const voiceName = "Kore";
 
+        // Check for built-in Vietnamese voice
         function findVietnameseVoice() {
-            const voices = synth.getVoices();
+            const voices = window.speechSynthesis.getVoices();
             vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-') && voice.name.includes('Google'));
             if (!vietnameseVoice) {
                 vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-'));
             }
-        }
-
-        if (synth.onvoiceschanged !== undefined) {
-            synth.onvoiceschanged = findVietnameseVoice;
+            if (vietnameseVoice) {
+                vietnameseVoiceAvailable = true;
+                console.log("Found built-in Vietnamese voice:", vietnameseVoice.name);
+            } else {
+                vietnameseVoiceAvailable = false;
+                console.log("Built-in Vietnamese voice not found, will use API.");
+            }
         }
         
-        findVietnameseVoice();
-
-
-        function speakText(text) {
-            if (synth.speaking) {
-                synth.cancel();
-            }
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'vi-VN';
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-            if (vietnameseVoice) {
-                utterance.voice = vietnameseVoice;
-            } else {
-                console.warn("Vietnamese voice not found, using default.");
-            }
-            synth.speak(utterance);
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = findVietnameseVoice;
+            findVietnameseVoice();
         }
 
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmData, sampleRate = 16000, numChannels = 1, bitDepth = 16) {
+            const dataLength = pcmData.length * 2;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+            let offset = 0;
+
+            const writeString = (str) => {
+                for (let i = 0; i < str.length; i++) {
+                    view.setUint8(offset++, str.charCodeAt(i));
+                }
+            };
+            
+            const writeUint32 = (val) => {
+                view.setUint32(offset, val, true);
+                offset += 4;
+            };
+
+            const writeUint16 = (val) => {
+                view.setUint16(offset, val, true);
+                offset += 2;
+            };
+
+            writeString('RIFF');
+            writeUint32(36 + dataLength);
+            writeString('WAVE');
+            writeString('fmt ');
+            writeUint32(16);
+            writeUint16(1);
+            writeUint16(numChannels);
+            writeUint32(sampleRate);
+            writeUint32(sampleRate * numChannels * bitDepth / 8);
+            writeUint16(numChannels * bitDepth / 8);
+            writeUint16(bitDepth);
+            writeString('data');
+            writeUint32(dataLength);
+
+            const pcm16 = new Int16Array(pcmData);
+            for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(offset, pcm16[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        async function speakText(text) {
+            if (isSpeaking) return;
+            isSpeaking = true;
+            disableAllButtons();
+
+            if (vietnameseVoiceAvailable) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'vi-VN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.voice = vietnameseVoice;
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    enableAllButtons();
+                };
+                utterance.onerror = (event) => {
+                    console.error("Error with built-in TTS:", event.error);
+                    isSpeaking = false;
+                    enableAllButtons();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                isLoading = true;
+                loadingIndicator.classList.remove('hidden');
+                
+                try {
+                    const payload = {
+                        contents: [{ parts: [{ text: text }] }],
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } }
+                        },
+                        model: "gemini-2.5-flash-preview-tts"
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const part = result?.candidates?.[0]?.content?.parts?.[0];
+                    const audioData = part?.inlineData?.data;
+                    const mimeType = part?.inlineData?.mimeType;
+
+                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                        const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
+                        const pcmData = base64ToArrayBuffer(audioData);
+                        const wavBlob = pcmToWav(new Int16Array(pcmData), sampleRate);
+                        const audioUrl = URL.createObjectURL(wavBlob);
+                        
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                        
+                        audio.onended = () => {
+                            isSpeaking = false;
+                            URL.revokeObjectURL(audioUrl);
+                            enableAllButtons();
+                        };
+                    } else {
+                        console.error("No audio data found in API response.");
+                        isSpeaking = false;
+                        enableAllButtons();
+                    }
+                } catch (error) {
+                    console.error("Error speaking text:", error);
+                    isSpeaking = false;
+                    enableAllButtons();
+                } finally {
+                    isLoading = false;
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+        }
+
+        function disableAllButtons() {
+            const buttons = document.querySelectorAll('button:not(.practice-button)');
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        function enableAllButtons() {
+            const buttons = document.querySelectorAll('button:not(.practice-button)');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+        
         function shuffleArray(array) {
             for (let i = array.length - 1; i > 0; i--) {
                 const j = Math.floor(Math.random() * (i + 1));
@@ -369,7 +567,6 @@
             vowelsPracticeGrid.innerHTML = '';
             wordsPracticeGrid.innerHTML = '';
 
-            // Luyện chữ cái
             letters.forEach(item => {
                 const button = document.createElement('button');
                 button.textContent = item;
@@ -380,7 +577,6 @@
                 lettersPracticeGrid.appendChild(button);
             });
 
-            // Luyện vần
             vowels.forEach(item => {
                 const button = document.createElement('button');
                 button.textContent = item;
@@ -397,7 +593,6 @@
                 vowelsPracticeGrid.appendChild(button);
             });
 
-            // Luyện từ vựng
             words.forEach(word => {
                 const itemContainer = document.createElement('div');
                 itemContainer.classList.add('practice-item');
@@ -416,7 +611,6 @@
         
         function backToMenu() {
             introScreen.classList.remove('hidden');
-            levelSelect.classList.remove('hidden');
             gameScreen.classList.add('hidden');
             practiceScreen.classList.add('hidden');
             scoreBox.classList.add('hidden');
@@ -494,10 +688,20 @@
                 correctAnswer = currentMatch.question;
                 const vowelToFind = currentMatch.vowel;
 
-                currentOptions = [currentMatch.question];
-                const otherWords = [...vowelMatchWords].filter(w => w.question !== correctAnswer);
-                shuffleArray(otherWords);
-                currentOptions.push(...otherWords.slice(0, 3).map(w => w.question));
+                // Filter words that do NOT contain the vowel
+                const incorrectWords = vowelMatchWords.filter(w => !w.question.includes(vowelToFind) && w.question !== correctAnswer);
+                
+                // If there are not enough incorrect words, fill with other random words
+                if (incorrectWords.length < 3) {
+                    const allOtherWords = words.filter(w => !w.includes(vowelToFind) && w !== correctAnswer);
+                    shuffleArray(allOtherWords);
+                    incorrectWords.push(...allOtherWords);
+                }
+                
+                shuffleArray(incorrectWords);
+                const incorrectOptions = incorrectWords.slice(0, 3).map(w => w.question);
+                
+                currentOptions = [correctAnswer, ...incorrectOptions];
                 shuffleArray(currentOptions);
 
                 currentTaskEl.textContent = `Bé hãy lắng nghe và tìm từ có vần!`;
@@ -575,7 +779,6 @@
             }
         }
         
-        // Hiệu ứng pháo hoa
         const c = fireworksCanvas.getContext('2d');
         let particles = [];
         let tick = 0;
@@ -692,7 +895,6 @@
                 return this.alpha <= 0;
             };
         }
-        
     </script>
 </body>
 </html>
