@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò Chơi Học Tiếng Việt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto Slab', serif;
+            background: linear-gradient(135deg, #a7c0f1, #d4a7f1);
+            color: #4a5568;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+            max-width: 800px;
+            width: 100%;
+            border: 5px solid #fff;
+            animation: bounceIn 1s ease-in-out;
+            position: relative;
+        }
+        .message-box {
+            min-height: 80px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4a5568;
+            animation: fadeIn 1s;
+        }
+        .score-box {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #ffe53b;
+            background-image: linear-gradient(147deg, #ffe53b 0%, #ff2525 74%);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .card {
+            background: linear-gradient(45deg, #fce38a, #f38181);
+            border-radius: 12px;
+            padding: 20px;
+            font-size: 5rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+            border: 3px solid #fce38a;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .card:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #f38181, #fce38a);
+        }
+        .correct {
+            background: linear-gradient(45deg, #a8ff78, #78ffd6);
+            border-color: #78ffd6;
+            animation: pulse 0.5s;
+        }
+        .incorrect {
+            background: linear-gradient(45deg, #ff416c, #ff4b2b);
+            border-color: #ff416c;
+            animation: shake 0.5s;
+        }
+        .button {
+            padding: 15px 30px;
+            margin: 10px;
+            border-radius: 50px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
+        }
+        .intro-button {
+            background-color: #6a11cb;
+            color: #fff;
+            background-image: linear-gradient(to right, #2575fc 0%, #6a11cb 100%);
+        }
+        .next-button {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .next-button:hover {
+            background-color: #45a049;
+        }
+        .fireworks {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .practice-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            font-size: 2rem;
+            font-weight: bold;
+            background: linear-gradient(147deg, #4d90fe 0%, #00d2ff 100%);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            cursor: pointer;
+            user-select: none;
+            min-height: 80px;
+            min-width: 80px;
+        }
+        .practice-button:hover {
+            transform: scale(1.05) translateY(-5px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
+        }
+        .practice-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            cursor: pointer;
+            background-color: #fce38a;
+            border-radius: 12px;
+            transition: transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .practice-item:hover {
+            transform: translateY(-5px);
+        }
+        .practice-word-text {
+            font-size: 1.25rem;
+            margin-top: 8px;
+            font-weight: bold;
+            color: #4a5568;
+        }
+        .practice-category {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #f7f3e9;
+            border-radius: 15px;
+        }
+        .word-challenge-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        .word-challenge-text {
+            font-size: 3rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            margin-bottom: 10px;
+        }
+        .read-aloud-button {
+            padding: 8px 16px;
+            background: #4d90fe;
+            color: white;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .read-aloud-button:hover {
+            transform: scale(1.05);
+        }
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 16px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 12px;
+            z-index: 100;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-10px); }
+            80% { transform: translateX(10px); }
+            100% { transform: translateX(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen">
+
+    <div id="game-container" class="container">
+        <div id="score-box" class="score-box hidden">Điểm: <span id="score-value">0</span></div>
+        <h1 class="text-4xl sm:text-5xl font-bold mb-6 text-pink-500 animate-pulse">Trò Chơi Học Tiếng Việt</h1>
+
+        <div id="intro-screen" class="flex flex-col items-center">
+            <p class="text-xl sm:text-2xl mb-8 font-bold">Chào mừng bé đến với trò chơi! Hãy chọn cấp độ để bắt đầu.</p>
+            <div id="level-select" class="flex flex-col sm:flex-row gap-4">
+                <button class="button intro-button" onclick="showLessons('letters')">Học Chữ Cái</button>
+                <button class="button intro-button" onclick="showLessons('vowels')">Học Vần</button>
+                <button class="button intro-button" onclick="showLessons('words')">Học Từ Vựng</button>
+                <button class="button intro-button" onclick="showLessons('vowel-match')">Nối Vần</button>
+            </div>
+            <button class="button next-button mt-8" onclick="startGame('practice')">Chế Độ Luyện Tập</button>
+        </div>
+
+        <div id="lesson-screen" class="hidden flex flex-col items-center">
+            <h2 class="text-3xl font-bold mb-6 text-blue-500">Chọn Bài Học</h2>
+            <div id="lessons-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
+            <button class="button next-button mt-8" onclick="backToMenu()">Quay Lại</button>
+        </div>
+
+        <div id="game-screen" class="hidden flex flex-col items-center">
+            <div id="current-task" class="text-2xl sm:text-3xl font-bold mb-8 text-blue-500"></div>
+            <div id="challenge-box" class="card mb-8"></div>
+            <div id="message-box" class="message-box text-xl sm:text-2xl font-bold mb-6"></div>
+            <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
+        </div>
+        
+        <div id="practice-screen" class="hidden">
+            <h2 class="text-3xl font-bold mb-6 text-blue-500">Chế độ Luyện Tập</h2>
+            
+            <div class="practice-category">
+                <h3 class="text-2xl font-bold mt-4 mb-2 text-purple-600">Luyện Chữ Cái</h3>
+                <div id="letters-practice-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-4 w-full"></div>
+            </div>
+            
+            <div class="practice-category">
+                <h3 class="text-2xl font-bold mt-8 mb-2 text-purple-600">Luyện Vần</h3>
+                <div id="vowels-practice-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-4 w-full"></div>
+            </div>
+            
+            <div class="practice-category">
+                <h3 class="text-2xl font-bold mt-8 mb-2 text-purple-600">Luyện Từ Vựng</h3>
+                <div id="words-practice-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
+            </div>
+            
+            <button class="button next-button mt-8" onclick="backToMenu()">Quay Lại</button>
+        </div>
+    </div>
+    
+    <canvas id="fireworks-canvas" class="fireworks hidden"></canvas>
+    <div id="loading-indicator" class="loading-indicator hidden">
+        <div class="spinner"></div>
+        <span>Đang tải âm thanh...</span>
+    </div>
+
+    <script>
+        const lessons = {
+            letters: [
+                ['a', 'b', 'c', 'd'],
+                ['đ', 'e', 'ê', 'g'],
+                ['h', 'i', 'k', 'l'],
+                ['m', 'n', 'o', 'ô'],
+                ['ơ', 'p', 'q', 'r'],
+                ['s', 't', 'u', 'ư'],
+                ['v', 'x', 'y']
+            ],
+            vowels: [
+                ['ai', 'ay', 'ao', 'au'],
+                ['eo', 'ia', 'iu', 'oa'],
+                ['oe', 'oi', 'ua', 'ui'],
+                ['uo', 'ưu']
+            ],
+            words: [
+                ['con cá', 'con bò', 'máy bay', 'cái ô'],
+                ['cái nhà', 'quả táo', 'quả cam', 'quả dứa'],
+                ['con mèo', 'quyển sách', 'cái quạt', 'cái bàn'],
+                ['cái ghế', 'cái tủ', 'cái giường', 'cây bút'],
+                ['cái thước', 'cái cặp', 'bánh mì', 'quả chanh'],
+                ['mặt trời', 'mặt trăng', 'ngôi sao', 'con chim'],
+                ['bông hoa', 'cây xanh', 'cánh cửa', 'bức tranh'],
+                ['quả bóng', 'cái chén']
+            ],
+            vowelMatch: [
+                [{ question: 'cái ca', vowel: 'a' }, { question: 'cá mè', vowel: 'e' }, { question: 'lá đa', vowel: 'a' }, { question: 'con bò', vowel: 'o' }],
+                [{ question: 'tủ tivi', vowel: 'i' }, { question: 'củ khoai', vowel: 'ai'}, { question: 'mâm cơm', vowel: 'ơm'}, { question: 'cái rổ', vowel: 'ô'}],
+                [{ question: 'cây cau', vowel: 'au'}, { question: 'cây mía', vowel: 'ia'}, { question: 'xe hơi', vowel: 'ơi'}, { question: 'cái bát', vowel: 'át'}],
+                [{ question: 'đôi dép', vowel: 'ép'}, { question: 'chim sẻ', vowel: 'e'}, { question: 'cánh buồm', vowel: 'uồm'}, { question: 'con voi', vowel: 'oi'}],
+                [{ question: 'con chó', vowel: 'o'}, { question: 'máy giặt', vowel: 'ặt'}, { question: 'máy tính', vowel: 'ính'}, { question: 'bông sen', vowel: 'en'}],
+                [{ question: 'con lợn', vowel: 'ợn'}, { question: 'cây tre', vowel: 'e'}, { question: 'cánh diều', vowel: 'iều'}, { question: 'đèn pin', vowel: 'in'}],
+                [{ question: 'con ong', vowel: 'ong'}, { question: 'cái thìa', vowel: 'ia'}, { question: 'tủ lạnh', vowel: 'ạnh'}, { question: 'cái nồi', vowel: 'ồi'}],
+                [{ question: 'cái chổi', vowel: 'ổi'}, { question: 'cái ghế', vowel: 'ế'}]
+            ]
+        };
+        const allLetters = letters.flat();
+        const allVowels = vowels.flat();
+        const allWords = words.flat();
+        const allVowelMatchWords = vowelMatchWords.flat();
+
+        let currentLevel = '';
+        let currentLessonData = [];
+        let currentOptions = [];
+        let correctAnswer = '';
+        let score = 0;
+        let isSpeaking = false;
+        let isLoading = false;
+        let vietnameseVoice = null;
+        let vietnameseVoiceAvailable = false;
+
+        const introScreen = document.getElementById('intro-screen');
+        const lessonScreen = document.getElementById('lesson-screen');
+        const lessonsGrid = document.getElementById('lessons-grid');
+        const gameScreen = document.getElementById('game-screen');
+        const practiceScreen = document.getElementById('practice-screen');
+        const scoreBox = document.getElementById('score-box');
+        const scoreValue = document.getElementById('score-value');
+        const currentTaskEl = document.getElementById('current-task');
+        const challengeBox = document.getElementById('challenge-box');
+        const optionsGrid = document.getElementById('options-grid');
+        const messageBox = document.getElementById('message-box');
+        const lettersPracticeGrid = document.getElementById('letters-practice-grid');
+        const vowelsPracticeGrid = document.getElementById('vowels-practice-grid');
+        const wordsPracticeGrid = document.getElementById('words-practice-grid');
+        const fireworksCanvas = document.getElementById('fireworks-canvas');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        // --- TTS API integration ---
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+        const voiceName = "Kore";
+
+        // Check for built-in Vietnamese voice
+        function findVietnameseVoice() {
+            const voices = window.speechSynthesis.getVoices();
+            vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-') && voice.name.includes('Google'));
+            if (!vietnameseVoice) {
+                vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-'));
+            }
+            if (vietnameseVoice) {
+                vietnameseVoiceAvailable = true;
+                console.log("Found built-in Vietnamese voice:", vietnameseVoice.name);
+            } else {
+                vietnameseVoiceAvailable = false;
+                console.log("Built-in Vietnamese voice not found, will use API.");
+            }
+        }
+        
+        if (window.speechSynthesis) {
+            window.speechSynthesis.onvoiceschanged = findVietnameseVoice;
+            findVietnameseVoice();
+        }
+
+        function base64ToArrayBuffer(base64) {
+            const binaryString = atob(base64);
+            const len = binaryString.length;
+            const bytes = new Uint8Array(len);
+            for (let i = 0; i < len; i++) {
+                bytes[i] = binaryString.charCodeAt(i);
+            }
+            return bytes.buffer;
+        }
+
+        function pcmToWav(pcmData, sampleRate = 16000, numChannels = 1, bitDepth = 16) {
+            const dataLength = pcmData.length * 2;
+            const buffer = new ArrayBuffer(44 + dataLength);
+            const view = new DataView(buffer);
+            let offset = 0;
+
+            const writeString = (str) => {
+                for (let i = 0; i < str.length; i++) {
+                    view.setUint8(offset++, str.charCodeAt(i));
+                }
+            };
+            
+            const writeUint32 = (val) => {
+                view.setUint32(offset, val, true);
+                offset += 4;
+            };
+
+            const writeUint16 = (val) => {
+                view.setUint16(offset, val, true);
+                offset += 2;
+            };
+
+            writeString('RIFF');
+            writeUint32(36 + dataLength);
+            writeString('WAVE');
+            writeString('fmt ');
+            writeUint32(16);
+            writeUint16(1);
+            writeUint16(numChannels);
+            writeUint32(sampleRate);
+            writeUint32(sampleRate * numChannels * bitDepth / 8);
+            writeUint16(numChannels * bitDepth / 8);
+            writeUint16(bitDepth);
+            writeString('data');
+            writeUint32(dataLength);
+
+            const pcm16 = new Int16Array(pcmData);
+            for (let i = 0; i < pcm16.length; i++) {
+                view.setInt16(offset, pcm16[i], true);
+                offset += 2;
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        async function speakText(text) {
+            if (isSpeaking) return;
+            isSpeaking = true;
+            disableAllButtons();
+
+            if (vietnameseVoiceAvailable) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'vi-VN';
+                utterance.rate = 1.0;
+                utterance.pitch = 1.0;
+                utterance.voice = vietnameseVoice;
+                
+                utterance.onend = () => {
+                    isSpeaking = false;
+                    enableAllButtons();
+                };
+                utterance.onerror = (event) => {
+                    console.error("Error with built-in TTS:", event.error);
+                    isSpeaking = false;
+                    enableAllButtons();
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } else {
+                isLoading = true;
+                loadingIndicator.classList.remove('hidden');
+                
+                try {
+                    const payload = {
+                        contents: [{ parts: [{ text: text }] }],
+                        generationConfig: {
+                            responseModalities: ["AUDIO"],
+                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } }
+                        },
+                        model: "gemini-2.5-flash-preview-tts"
+                    };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`API error: ${response.status} ${response.statusText}`);
+                    }
+
+                    const result = await response.json();
+                    const part = result?.candidates?.[0]?.content?.parts?.[0];
+                    const audioData = part?.inlineData?.data;
+                    const mimeType = part?.inlineData?.mimeType;
+
+                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
+                        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
+                        const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
+                        const pcmData = base64ToArrayBuffer(audioData);
+                        const wavBlob = pcmToWav(new Int16Array(pcmData), sampleRate);
+                        const audioUrl = URL.createObjectURL(wavBlob);
+                        
+                        const audio = new Audio(audioUrl);
+                        audio.play();
+                        
+                        audio.onended = () => {
+                            isSpeaking = false;
+                            URL.revokeObjectURL(audioUrl);
+                            enableAllButtons();
+                        };
+                    } else {
+                        console.error("No audio data found in API response.");
+                        isSpeaking = false;
+                        enableAllButtons();
+                    }
+                } catch (error) {
+                    console.error("Error speaking text:", error);
+                    isSpeaking = false;
+                    enableAllButtons();
+                } finally {
+                    isLoading = false;
+                    loadingIndicator.classList.add('hidden');
+                }
+            }
+        }
+
+        function disableAllButtons() {
+            const buttons = document.querySelectorAll('button:not(.practice-button)');
+            buttons.forEach(btn => btn.disabled = true);
+        }
+
+        function enableAllButtons() {
+            const buttons = document.querySelectorAll('button:not(.practice-button)');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+        
+        function showLessons(level) {
+            currentLevel = level;
+            introScreen.classList.add('hidden');
+            lessonScreen.classList.remove('hidden');
+            lessonsGrid.innerHTML = '';
+            
+            const lessonData = lessons[level];
+            lessonData.forEach((lesson, index) => {
+                const button = document.createElement('button');
+                button.textContent = `Bài ${index + 1}`;
+                button.classList.add('button', 'intro-button');
+                button.addEventListener('click', () => {
+                    startGame(level, index);
+                });
+                lessonsGrid.appendChild(button);
+            });
+        }
+
+        function startGame(level, lessonIndex = -1) {
+            currentLevel = level;
+            score = 0;
+            
+            if (level === 'practice') {
+                introScreen.classList.add('hidden');
+                lessonScreen.classList.add('hidden');
+                gameScreen.classList.add('hidden');
+                scoreBox.classList.add('hidden');
+                practiceScreen.classList.remove('hidden');
+                setupPracticeMode();
+                return;
+            }
+
+            currentLessonData = lessons[level][lessonIndex];
+            
+            lessonScreen.classList.add('hidden');
+            introScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            scoreBox.classList.remove('hidden');
+            scoreValue.textContent = score;
+            
+            nextRound();
+        }
+        
+        function setupPracticeMode() {
+            lettersPracticeGrid.innerHTML = '';
+            vowelsPracticeGrid.innerHTML = '';
+            wordsPracticeGrid.innerHTML = '';
+
+            lessons['letters'].flat().forEach(item => {
+                const button = document.createElement('button');
+                button.textContent = item;
+                button.classList.add('practice-button');
+                button.addEventListener('click', () => {
+                    speakText(item);
+                });
+                lettersPracticeGrid.appendChild(button);
+            });
+
+            lessons['vowels'].flat().forEach(item => {
+                const button = document.createElement('button');
+                button.textContent = item;
+                button.classList.add('practice-button');
+                button.addEventListener('click', () => {
+                     if (item === 'ai') {
+                        speakText('ai');
+                    } else if (item === 'ay') {
+                        speakText('ay');
+                    } else {
+                        speakText(item);
+                    }
+                });
+                vowelsPracticeGrid.appendChild(button);
+            });
+
+            lessons['words'].flat().forEach(word => {
+                const itemContainer = document.createElement('div');
+                itemContainer.classList.add('practice-item');
+                itemContainer.addEventListener('click', () => {
+                    speakText(word);
+                });
+                
+                const text = document.createElement('span');
+                text.textContent = word;
+                text.classList.add('practice-word-text');
+                
+                itemContainer.appendChild(text);
+                wordsPracticeGrid.appendChild(itemContainer);
+            });
+        }
+        
+        function backToMenu() {
+            introScreen.classList.remove('hidden');
+            lessonScreen.classList.add('hidden');
+            gameScreen.classList.add('hidden');
+            practiceScreen.classList.add('hidden');
+            scoreBox.classList.add('hidden');
+        }
+
+        function nextRound() {
+            messageBox.textContent = '';
+            challengeBox.classList.remove('correct', 'incorrect');
+            optionsGrid.innerHTML = '';
+            
+            const toCase = (text) => text.toLowerCase();
+            let allItems = [];
+            let currentItem;
+
+            if (currentLevel === 'letters') {
+                shuffleArray(currentLessonData);
+                currentItem = currentLessonData[0];
+                allItems = lessons['letters'].flat();
+                
+                correctAnswer = currentItem;
+                currentOptions = [currentItem];
+                const otherItems = allItems.filter(l => !currentLessonData.includes(l));
+                shuffleArray(otherItems);
+                currentOptions.push(...otherItems.slice(0, 3));
+                shuffleArray(currentOptions);
+                
+                currentTaskEl.textContent = 'Bé hãy lắng nghe và tìm chữ cái!';
+                challengeBox.innerHTML = `<button class="read-aloud-button" onclick="speakText('${currentItem}')">Đọc lại</button>`;
+                speakText(currentItem);
+                createOptions(currentOptions.map(toCase));
+
+            } else if (currentLevel === 'vowels') {
+                shuffleArray(currentLessonData);
+                currentItem = currentLessonData[0];
+                allItems = lessons['vowels'].flat();
+                
+                correctAnswer = currentItem;
+                currentOptions = [currentItem];
+                const otherItems = allItems.filter(v => !currentLessonData.includes(v));
+                shuffleArray(otherItems);
+                currentOptions.push(...otherItems.slice(0, 3));
+                shuffleArray(currentOptions);
+
+                currentTaskEl.textContent = 'Bé hãy lắng nghe và tìm vần!';
+                challengeBox.innerHTML = `<button class="read-aloud-button" onclick="speakText('${currentItem}')">Đọc lại</button>`;
+                if (currentItem === 'ai') {
+                    speakText('ai');
+                } else if (currentItem === 'ay') {
+                    speakText('ay');
+                } else {
+                    speakText(currentItem);
+                }
+                createOptions(currentOptions.map(toCase));
+            } else if (currentLevel === 'words') {
+                shuffleArray(currentLessonData);
+                currentItem = currentLessonData[0];
+                allItems = lessons['words'].flat();
+
+                correctAnswer = currentItem;
+                currentOptions = [currentItem];
+                const otherWords = allItems.filter(w => !currentLessonData.includes(w));
+                shuffleArray(otherWords);
+                currentOptions.push(...otherWords.slice(0, 3));
+                shuffleArray(currentOptions);
+
+                challengeBox.innerHTML = `
+                    <div class="word-challenge-box">
+                        <p class="text-xl sm:text-2xl font-bold mb-2">Bé hãy lắng nghe và tìm từ nhé!</p>
+                        <button class="read-aloud-button" onclick="speakText('${currentItem}')">Đọc lại</button>
+                    </div>
+                `;
+                challengeBox.classList.remove('cursor-pointer');
+                challengeBox.classList.add('p-8');
+                
+                currentTaskEl.textContent = 'Tìm từ:';
+                speakText(`Em hãy tìm từ: ${currentItem}`);
+                createOptions(currentOptions.map(toCase));
+            } else if (currentLevel === 'vowel-match') {
+                shuffleArray(currentLessonData);
+                currentItem = currentLessonData[0];
+                allItems = lessons['vowelMatch'].flat();
+
+                correctAnswer = currentItem.question;
+                const vowelToFind = currentItem.vowel;
+
+                // Filter words that do NOT contain the vowel
+                const incorrectWords = allItems.filter(w => !w.question.includes(vowelToFind) && w.question !== correctAnswer);
+                
+                // If there are not enough incorrect words, fill with other random words
+                if (incorrectWords.length < 3) {
+                    const allOtherWords = lessons['words'].flat().filter(w => !w.includes(vowelToFind) && w !== correctAnswer);
+                    shuffleArray(allOtherWords);
+                    incorrectWords.push(...allOtherWords.map(word => ({question: word, vowel: ''})));
+                }
+                
+                shuffleArray(incorrectWords);
+                const incorrectOptions = incorrectWords.slice(0, 3).map(w => w.question);
+                
+                currentOptions = [correctAnswer, ...incorrectOptions];
+                shuffleArray(currentOptions);
+
+                currentTaskEl.textContent = `Bé hãy lắng nghe và tìm từ có vần!`;
+                challengeBox.innerHTML = `
+                    <div class="word-challenge-box">
+                        <p class="text-xl sm:text-2xl font-bold mb-2">Từ có chứa vần "${toCase(vowelToFind)}"</p>
+                        <button class="read-aloud-button" onclick="speakText('${vowelToFind}')">Đọc lại</button>
+                    </div>
+                `;
+                speakText(vowelToFind);
+                createOptions(currentOptions.map(toCase));
+            }
+        }
+
+        function createOptions(options) {
+            options.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.classList.add('card', 'text-2xl', 'p-4');
+                button.style.fontSize = '2rem';
+                button.addEventListener('click', () => checkAnswer(option, button));
+                optionsGrid.appendChild(button);
+            });
+        }
+
+        function checkAnswer(selected, button) {
+            const normalizedSelected = selected.toLowerCase();
+            const normalizedCorrect = correctAnswer.toLowerCase();
+            const allButtons = optionsGrid.querySelectorAll('button');
+            allButtons.forEach(btn => btn.disabled = true);
+
+            if (normalizedSelected === normalizedCorrect) {
+                messageBox.textContent = 'Đúng rồi!';
+                button.classList.add('correct');
+                speakText('Con giỏi lắm!');
+                updateScore(1);
+                setTimeout(nextRound, 2000);
+            } else {
+                messageBox.textContent = 'Sai rồi, bé hãy cố gắng hơn nhé!';
+                button.classList.add('incorrect');
+                
+                let selectedPronunciation = normalizedSelected;
+                let correctPronunciation = normalizedCorrect;
+
+                if (currentLevel === 'letters' || currentLevel === 'vowels') {
+                    if (normalizedSelected === 'ay') {
+                        selectedPronunciation = 'ay';
+                    } else if (normalizedSelected === 'ai') {
+                        selectedPronunciation = 'ai';
+                    }
+                     if (normalizedCorrect === 'ay') {
+                        correctPronunciation = 'ay';
+                    } else if (normalizedCorrect === 'ai') {
+                        correctPronunciation = 'ai';
+                    }
+                    speakText(`Đây là ${selectedPronunciation}, không phải ${correctPronunciation}. Sai rồi, cố lên con nhé!`);
+
+                } else {
+                    speakText(`Đây là từ ${selectedPronunciation}, chúng ta đang tìm từ ${correctPronunciation}. Sai rồi, cố lên con nhé!`);
+                }
+
+                setTimeout(() => {
+                    button.classList.remove('incorrect');
+                    allButtons.forEach(btn => btn.disabled = false);
+                }, 500);
+            }
+        }
+        
+        function updateScore(points) {
+            score += points;
+            scoreValue.textContent = score;
+            if (score === 5 || score === 10 || score === 15) {
+                showFireworks();
+                speakText(`Chúc mừng! Bạn đã đạt ${score} điểm!`);
+            }
+        }
+        
+        const c = fireworksCanvas.getContext('2d');
+        let particles = [];
+        let tick = 0;
+        
+        function showFireworks() {
+            fireworksCanvas.classList.remove('hidden');
+            fireworksCanvas.width = window.innerWidth;
+            fireworksCanvas.height = window.innerHeight;
+            particles = [];
+            tick = 0;
+            requestAnimationFrame(animateFireworks);
+        }
+        
+        function animateFireworks() {
+            tick++;
+            c.fillStyle = 'rgba(255, 255, 255, 0.2)';
+            c.fillRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+            c.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
+            
+            if (tick % 20 === 0) {
+                particles.push(new Firework(Math.random() * fireworksCanvas.width, fireworksCanvas.height, Math.random() * fireworksCanvas.width, Math.random() * fireworksCanvas.height / 2));
+            }
+            
+            particles.forEach((p, i) => {
+                p.update();
+                p.draw();
+                if (p.isExploded) {
+                    particles.splice(i, 1);
+                }
+            });
+            
+            if (tick < 150) {
+                requestAnimationFrame(animateFireworks);
+            } else {
+                fireworksCanvas.classList.add('hidden');
+            }
+        }
+        
+        function Firework(x, y, targetX, targetY) {
+            this.x = x;
+            this.y = y;
+            this.targetX = targetX;
+            this.targetY = targetY;
+            this.isExploded = false;
+            this.trail = [];
+            this.hue = Math.random() * 360;
+            this.speedX = (this.targetX - this.x) / 50;
+            this.speedY = (this.targetY - this.y) / 50;
+            
+            this.update = function() {
+                if (this.isExploded) {
+                    this.trail.forEach(p => p.update());
+                    this.trail = this.trail.filter(p => !p.isDead());
+                    if (this.trail.length === 0) {
+                        this.isExploded = true;
+                    }
+                    return;
+                }
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.trail.push({ x: this.x, y: this.y, alpha: 1 });
+                if (this.trail.length > 5) {
+                    this.trail.shift();
+                }
+                if (Math.abs(this.x - this.targetX) < 5 && Math.abs(this.y - this.targetY) < 5) {
+                    this.explode();
+                }
+            };
+            
+            this.draw = function() {
+                if (this.isExploded) {
+                    this.trail.forEach(p => p.draw());
+                    return;
+                }
+                c.beginPath();
+                c.arc(this.x, this.y, 3, 0, Math.PI * 2);
+                c.fillStyle = `hsl(${this.hue}, 100%, 50%)`;
+                c.fill();
+            };
+            
+            this.explode = function() {
+                this.isExploded = true;
+                for (let i = 0; i < 50; i++) {
+                    this.trail.push(new Particle(this.x, this.y, this.hue));
+                }
+            };
+        }
+        
+        function Particle(x, y, hue) {
+            this.x = x;
+            this.y = y;
+            this.speedX = (Math.random() - 0.5) * 5;
+            this.speedY = (Math.random() - 0.5) * 5;
+            this.gravity = 0.1;
+            this.alpha = 1;
+            this.decay = 0.01;
+            this.hue = hue;
+            
+            this.update = function() {
+                this.speedY += this.gravity;
+                this.x += this.speedX;
+                this.y += this.speedY;
+                this.alpha -= this.decay;
+            };
+            
+            this.draw = function() {
+                c.beginPath();
+                c.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                c.fillStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
+                c.fill();
+            };
+            
+            this.isDead = function() {
+                return this.alpha <= 0;
+            };
+        }
+    </script>
+</body>
+</html>
+
