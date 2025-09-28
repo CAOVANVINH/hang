@@ -314,6 +314,7 @@
                 </div>
                 
                 <textarea id="ai-prompt" rows="3" placeholder="Ví dụ: Tạo 30 phép trừ có nhớ trong phạm vi 100. Hoặc: Tạo 30 câu chính tả phân biệt s/x." class="admin-input w-full p-2 border-2 rounded-lg"></textarea>
+                
                 <button onclick="generateAndSaveQuestions()" class="admin-nav-btn w-full p-3 text-white font-bold rounded-xl flex items-center justify-center disabled:bg-gray-400" id="ai-generate-btn">
                     <span id="ai-generate-text">✨ Tạo & Lưu 30 Câu Hỏi Mới</span>
                     <svg id="ai-loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -321,7 +322,9 @@
                         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                 </button>
-                <p id="ai-result-preview" class="text-xs text-gray-600 whitespace-pre-wrap"></p>
+                <!-- NEW: Thông báo trạng thái AI ngay dưới nút -->
+                <p id="ai-status-message" class="text-sm font-semibold text-center mt-2"></p>
+                <p id="ai-result-preview" class="text-xs text-gray-600 whitespace-pre-wrap mt-2"></p>
             </div>
             
             <!-- 3. QUẢN LÝ NỘI DUNG HIỆN CÓ -->
@@ -360,6 +363,15 @@
                         <button onclick="updateLessonName()" class="admin-nav-btn text-white p-2 rounded-lg text-sm font-bold">Lưu Tên</button>
                     </div>
                 </div>
+
+                <!-- NEW: Giới hạn Bài Học Tối Đa cho học sinh -->
+                <div id="max-lesson-control" class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Giới hạn Bài Học cho Học sinh (Max):</label>
+                    <div class="flex gap-2">
+                        <input type="number" id="admin-max-lesson" min="1" class="admin-input flex-grow p-2 border-2 rounded-lg" placeholder="VD: 5">
+                        <button onclick="updateMaxLesson()" class="admin-nav-btn text-white p-2 rounded-lg text-sm font-bold">Lưu Max</button>
+                    </div>
+                </div>
                 
                 <p id="lesson-preview" class="text-sm font-medium text-gray-700">Tổng số câu trong bài này: 0</p>
                 <button onclick="confirmDeleteLesson()" class="danger-btn w-full p-3 text-white font-bold rounded-xl mt-4">
@@ -371,23 +383,32 @@
             <!-- 4. LỊCH SỬ LÀM BÀI -->
             <div id="history-management" class="p-4 border border-green-400 rounded-xl space-y-3 bg-green-50">
                 <h3 class="admin-section-header text-green-700 border-green-300">4. Lịch Sử Làm Bài Của Học Sinh</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Lọc theo Tên HS:</label>
-                        <select id="history-filter-name" class="admin-input w-full p-2 border-2 rounded-lg" onchange="displayHistory()"></select>
+                
+                <!-- NEW: Nút ẩn/hiện Lịch sử -->
+                <button id="history-toggle-btn" onclick="toggleHistoryContent()" class="w-full p-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-150">
+                    ▶️ Hiển thị Lịch Sử
+                </button>
+
+                <!-- NEW: Nội dung Lịch sử được ẩn ban đầu -->
+                <div id="history-content" class="hidden space-y-3 pt-3">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Lọc theo Tên HS:</label>
+                            <select id="history-filter-name" class="admin-input w-full p-2 border-2 rounded-lg" onchange="displayHistory()"></select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Lọc theo Môn:</label>
+                            <select id="history-filter-subject" class="admin-input w-full p-2 border-2 rounded-lg" onchange="displayHistory()">
+                                <option value="ALL">Tất cả</option>
+                                <option value="TOAN">Toán Học</option>
+                                <option value="SPELL">Chính Tả</option>
+                                <option value="READ">Luyện Đọc</option>
+                            </select>
+                        </div>
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Lọc theo Môn:</label>
-                        <select id="history-filter-subject" class="admin-input w-full p-2 border-2 rounded-lg" onchange="displayHistory()">
-                            <option value="ALL">Tất cả</option>
-                            <option value="TOAN">Toán Học</option>
-                            <option value="SPELL">Chính Tả</option>
-                            <option value="READ">Luyện Đọc</option>
-                        </select>
+                    <div id="history-list" class="space-y-4 pt-4 text-center">
+                        <p class="text-sm text-gray-600">Lịch sử sẽ hiển thị ở đây sau khi học sinh làm bài.</p>
                     </div>
-                </div>
-                <div id="history-list" class="space-y-4 pt-4 text-center">
-                    <p class="text-sm text-gray-600">Lịch sử sẽ hiển thị ở đây sau khi học sinh làm bài.</p>
                 </div>
             </div>
 
@@ -421,8 +442,8 @@
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1emJ6amlldXFnaG5laXBrcHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNTUwMDIsImV4cCI6MjA3NDYzMTAwMn0.xsPbKPJK74RM6MmqOBjjnyon6z4vVo8vrWmzFFvx4xc'; // Đã dán Public Key của bạn
 
         const supabase = SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase
-                            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) // Sửa lỗi: Truy cập qua window.supabase
-                            : null;
+                                ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) // Sửa lỗi: Truy cập qua window.supabase
+                                : null;
 
         if (!supabase) {
              console.error("Vui lòng cấu hình SUPABASE_URL và SUPABASE_ANON_KEY.");
@@ -454,6 +475,8 @@
         // BIẾN MỚI CHO GEMINI
         let geminiKeys = [];
         let currentKeyIndex = 0;
+        // NEW: Max Lesson Limits for Player mode, stored in config table
+        let maxLessonLimits = { 1: { TOAN: 5, SPELL: 5, READ: 5 }, 2: { TOAN: 5, SPELL: 5, READ: 5 } };
         
         // --- ELEMENTS ---
         const scoreEl = document.getElementById('score');
@@ -494,6 +517,7 @@
         const lessonNameControlEl = document.getElementById('lesson-name-control');
         const lessonPreviewEl = document.getElementById('lesson-preview');
         const adminStatusEl = document.getElementById('admin-status');
+        const adminMaxLessonEl = document.getElementById('admin-max-lesson'); // NEW element reference
         
         const aiPromptEl = document.getElementById('ai-prompt');
         const aiGenerateBtn = document.getElementById('ai-generate-btn');
@@ -501,6 +525,8 @@
         const aiLoadingSpinnerEl = document.getElementById('ai-loading-spinner');
         const aiResultPreviewEl = document.getElementById('ai-result-preview');
         const aiTargetInfoEl = document.getElementById('ai-target-info');
+        // NEW AI Status Message
+        const aiStatusMessageEl = document.getElementById('ai-status-message');
 
         const newLessonGradeEl = document.getElementById('new-lesson-grade');
         const newLessonSubjectEl = document.getElementById('new-lesson-subject');
@@ -510,6 +536,9 @@
         const historyFilterNameEl = document.getElementById('history-filter-name');
         const historyFilterSubjectEl = document.getElementById('history-filter-subject');
         const historyListEl = document.getElementById('history-list');
+        // NEW History Toggle Elements
+        const historyContentEl = document.getElementById('history-content');
+        const historyToggleButton = document.getElementById('history-toggle-btn');
         
         // NEW GEMINI ADMIN ELEMENTS
         const geminiKeyInputEl = document.getElementById('gemini-key-input');
@@ -517,34 +546,34 @@
         
         // NEW: Hardcoded questions for ALPHABET mode (24 letters for practice)
         const ALPHABET_QUESTIONS = [
-            { q: "a", a: "a", options: ["a"], text: "a", type: "ALPHABET" },
-            { q: "b", a: "b", options: ["b"], text: "bờ", type: "ALPHABET" },
-            { q: "c", a: "c", options: ["c"], text: "cờ", type: "ALPHABET" },
-            { q: "d", a: "d", options: ["d"], text: "dờ", type: "ALPHABET" },
-            { q: "đ", a: "đ", options: ["đ"], text: "đờ", type: "ALPHABET" },
-            { q: "e", a: "e", options: ["e"], text: "e", type: "ALPHABET" },
-            { q: "ê", a: "ê", options: ["ê"], text: "ê", type: "ALPHABET" },
-            { q: "g", a: "g", options: ["g"], text: "gờ", type: "ALPHABET" },
-            { q: "h", a: "h", options: ["h"], text: "hờ", type: "ALPHABET" },
-            { q: "i", a: "i", options: ["i"], text: "i", type: "ALPHABET" },
-            { q: "k", a: "k", options: ["k"], text: "ca", type: "ALPHABET" },
-            { q: "l", a: "l", options: ["l"], text: "lờ", type: "ALPHABET" },
-            { q: "m", a: "m", options: ["m"], text: "mờ", type: "ALPHABET" },
-            { q: "n", a: "n", options: ["n"], text: "nờ", type: "ALPHABET" },
-            { q: "o", a: "o", options: ["o"], text: "o", type: "ALPHABET" },
-            { q: "p", a: "p", options: ["p"], text: "pờ", type: "ALPHABET" },
-            { q: "q", a: "q", options: ["q"], text: "cu", type: "ALPHABET" },
-            { q: "r", a: "r", options: ["r"], text: "rờ", type: "ALPHABET" },
-            { q: "s", a: "s", options: ["s"], text: "sờ", type: "ALPHABET" },
-            { q: "t", a: "t", options: ["t"], text: "tờ", type: "ALPHABET" },
-            { q: "u", a: "u", options: ["u"], text: "u", type: "ALPHABET" },
-            { q: "ư", a: "ư", options: ["ư"], text: "ư", type: "ALPHABET" }, // Thêm ư
-            { q: "v", a: "v", options: ["v"], text: "vê", type: "ALPHABET" },
-            { q: "x", a: "x", options: ["x"], text: "xờ", type: "ALPHABET" },
-            { q: "y", a: "y", options: ["y"], text: "i dài", type: "ALPHABET" },
-            { q: "ô", a: "ô", options: ["ô"], text: "ô", type: "ALPHABET" }, // Thêm ô
-            { q: "ơ", a: "ơ", options: ["ơ"], text: "ơ", type: "ALPHABET" }, // Thêm ơ
-            // Tổng cộng 29 chữ (24 chữ cái + thêm 5 chữ phụ âm/nguyên âm) để học
+            // CẬP NHẬT: Phát âm chuẩn 27 chữ cái Tiếng Việt (bao gồm cả chữ có dấu)
+            { q: "A", a: "A", options: ["A"], text: "a", type: "ALPHABET" },
+            { q: "B", a: "B", options: ["B"], text: "bờ", type: "ALPHABET" },
+            { q: "C", a: "C", options: ["C"], text: "cờ", type: "ALPHABET" },
+            { q: "D", a: "D", options: ["D"], text: "dờ", type: "ALPHABET" },
+            { q: "Đ", a: "Đ", options: ["Đ"], text: "đờ", type: "ALPHABET" },
+            { q: "E", a: "E", options: ["E"], text: "e", type: "ALPHABET" },
+            { q: "Ê", a: "Ê", options: ["Ê"], text: "ê", type: "ALPHABET" },
+            { q: "G", a: "G", options: ["G"], text: "gờ", type: "ALPHABET" },
+            { q: "H", a: "H", options: ["H"], text: "hờ", type: "ALPHABET" },
+            { q: "I", a: "I", options: ["I"], text: "i", type: "ALPHABET" },
+            { q: "K", a: "K", options: ["K"], text: "ca", type: "ALPHABET" },
+            { q: "L", a: "L", options: ["L"], text: "lờ", type: "ALPHABET" },
+            { q: "M", a: "M", options: ["M"], text: "mờ", type: "ALPHABET" },
+            { q: "N", a: "N", options: ["N"], text: "nờ", type: "ALPHABET" },
+            { q: "O", a: "O", options: ["O"], text: "o", type: "ALPHABET" },
+            { q: "Ô", a: "Ô", options: ["Ô"], text: "ô", type: "ALPHABET" }, 
+            { q: "Ơ", a: "Ơ", options: ["Ơ"], text: "ơ", type: "ALPHABET" }, 
+            { q: "P", a: "P", options: ["P"], text: "phờ", type: "ALPHABET" }, // Phờ (theo yêu cầu)
+            { q: "Q", a: "Q", options: ["Q"], text: "quờ", type: "ALPHABET" }, // Quờ (theo yêu cầu)
+            { q: "R", a: "R", options: ["R"], text: "rờ", type: "ALPHABET" },
+            { q: "S", a: "S", options: ["S"], text: "sờ", type: "ALPHABET" },
+            { q: "T", a: "T", options: ["T"], text: "tờ", type: "ALPHABET" },
+            { q: "U", a: "U", options: ["U"], text: "u", type: "ALPHABET" },
+            { q: "Ư", a: "Ư", options: ["Ư"], text: "ư", type: "ALPHABET" }, 
+            { q: "V", a: "V", options: ["V"], text: "vê", type: "ALPHABET" }, // Vê
+            { q: "X", a: "X", options: ["X"], text: "xờ", type: "ALPHABET" }, // Xờ
+            { q: "Y", a: "Y", options: ["Y"], text: "i dài", type: "ALPHABET" }, // I dài
         ];
         const ALPHABET_LETTERS = ALPHABET_QUESTIONS.map(q => q.q); // Lấy danh sách chữ cái
 
@@ -600,7 +629,9 @@
             // NEW: Load history and Gemini keys on Admin Panel entry
             if (screenId === 'admin-panel') {
                 loadGeminiKeys(); // Tải API keys
-                loadHistoryNames(); // Tải lịch sử & hiển thị
+                loadMaxLessonLimits(); // NEW: Tải giới hạn bài học
+                // Không tự động hiển thị lịch sử, chỉ tải dữ liệu
+                loadHistoryNames(); 
             }
         }
         
@@ -721,11 +752,12 @@
 
             ALPHABET_LETTERS.forEach(letter => {
                 const button = document.createElement('button');
-                button.textContent = letter.toUpperCase();
+                // ĐÃ SỬA: Hiển thị chữ IN HOA
+                button.textContent = letter.toUpperCase(); 
                 button.className = 'alphabet-btn text-white rounded-xl shadow-lg';
                 
                 // Tìm âm phát âm chuẩn (ví dụ: 'A' -> 'a', 'B' -> 'bờ')
-                const phonemeData = ALPHABET_QUESTIONS.find(q => q.q === letter.toLowerCase());
+                const phonemeData = ALPHABET_QUESTIONS.find(q => q.q === letter.toUpperCase()); // Dùng q in hoa để tìm
                 const textToSpeak = phonemeData ? phonemeData.text : letter.toLowerCase();
 
                 button.onclick = () => {
@@ -749,19 +781,23 @@
              const grade = currentGrade;
              const subject = currentSubject;
              
-             let maxLesson = 0;
+             let maxLessonFromDB = 0; // Số bài học lớn nhất thực tế có trong DB
+             let maxLessonLimit = maxLessonLimits[grade] ? maxLessonLimits[grade][subject] : 5; // Giới hạn Admin đặt
+             
              await fetchLessonsFromSupabase(); 
              
              if (lessonsAvailable[grade] && lessonsAvailable[grade][subject]) {
                  if (lessonsAvailable[grade][subject].length > 0) {
-                     maxLesson = Math.max(...lessonsAvailable[grade][subject].map(l => l.lessonNumber));
+                     maxLessonFromDB = Math.max(...lessonsAvailable[grade][subject].map(l => l.lessonNumber));
                  }
              }
 
-             // FIX 1: Cập nhật dropdown select với các số bài học
+             // Sử dụng giá trị nhỏ hơn giữa DB Max và Admin Limit
+             const actualMaxLesson = Math.min(maxLessonFromDB, maxLessonLimit);
+             
              startLessonEl.innerHTML = '';
              endLessonEl.innerHTML = '';
-             let maxNumber = maxLesson > 0 ? maxLesson : 1;
+             let maxNumber = actualMaxLesson > 0 ? actualMaxLesson : 1;
              
              for (let i = 1; i <= maxNumber; i++) {
                  const startOption = document.createElement('option');
@@ -775,14 +811,14 @@
                  endLessonEl.appendChild(endOption);
              }
              
-             if (maxLesson > 0) {
+             if (maxLessonFromDB > 0) {
                  // Đặt giá trị mặc định cho dropdown
                  startLessonEl.value = 1;
-                 endLessonEl.value = maxLesson;
+                 endLessonEl.value = maxNumber; // Sử dụng maxNumber đã được giới hạn
                  
                  if (showFeedback) {
                      lessonErrorEl.className = "text-xs text-green-600 mt-2";
-                     lessonErrorEl.textContent = `✅ Đã tìm thấy tối đa Bài ${maxLesson}.`;
+                     lessonErrorEl.textContent = `✅ Đã tìm thấy Bài 1 đến Bài ${maxLessonFromDB}. Giới hạn hiện tại cho bé là Bài ${maxNumber}.`;
                  }
              } else {
                  lessonErrorEl.className = "text-xs text-red-500 mt-2";
@@ -841,11 +877,11 @@
             }
             
             if (allQuestions.length === 0) {
-                 questionTextEl.textContent = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
-                 currentTextToRead = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
-                 selectionControlsEl.innerHTML = '';
-                 currentAnswer = null;
-                 return;
+                questionTextEl.textContent = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
+                currentTextToRead = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
+                selectionControlsEl.innerHTML = '';
+                currentAnswer = null;
+                return;
             }
 
             allQuestions.sort(() => Math.random() - 0.5);
@@ -882,7 +918,7 @@
                     subject: currentSubject,
                     score: score,
                     missed: missed,
-                    total: total,
+                                        total: total,
                     incorrect_questions: incorrectQuestions, // Sử dụng incorrect_questions cho Supabase
                     lesson_range: `${lessonStart} - ${lessonEnd}`
                 };
@@ -908,19 +944,6 @@
             readingControlsEl.classList.add('hidden');
             selectionControlsEl.classList.add('hidden');
             
-            // Save minimal history record (Chỉ lưu khi bé hoàn thành, không áp dụng cho chế độ khám phá)
-            // const historyRecord = {
-            //     student_name: studentName,
-            //     grade: currentGrade, // 0
-            //     subject: currentSubject, // ALPHABET
-            //     score: score,
-            //     missed: missed,
-            //     total: total,
-            //     incorrect_questions: [], 
-            //     lesson_range: 'Mẫu Giáo - 29 Chữ Cái'
-            // };
-            // await saveHistoryRecord(historyRecord);
-
             isLessonSetMode = false;
             
             setTimeout(() => {
@@ -1110,6 +1133,74 @@
         
         // --- SUPABASE & ADMIN LOGIC ---
         
+        // NEW: Load Max Lesson Limits from Supabase config table
+        async function loadMaxLessonLimits() {
+            if (!supabase) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('config')
+                    .select('max_lesson_limits')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (error && error.code !== 'PGRST116') throw error; // PGRST116: no rows found
+
+                if (data && data.max_lesson_limits) {
+                    // Cập nhật cấu trúc maxLessonLimits từ DB
+                    maxLessonLimits = data.max_lesson_limits;
+                }
+                
+                // Đảm bảo admin-max-lesson luôn hiển thị giá trị hiện tại khi load
+                const grade = parseInt(adminGradeEl.value);
+                const subject = adminSubjectEl.value;
+                if (maxLessonLimits[grade] && maxLessonLimits[grade][subject]) {
+                     adminMaxLessonEl.value = maxLessonLimits[grade][subject];
+                } else {
+                     adminMaxLessonEl.value = 5; // Mặc định là 5
+                }
+
+
+            } catch (e) {
+                console.error("Lỗi tải giới hạn bài học:", e);
+            }
+        }
+        
+        // NEW: Update Max Lesson Limits in Supabase config table
+        async function updateMaxLesson() {
+            if (!supabase) return;
+            const grade = parseInt(adminGradeEl.value);
+            const subject = adminSubjectEl.value;
+            const newMax = parseInt(adminMaxLessonEl.value);
+            
+            adminStatusEl.textContent = '';
+
+            if (isNaN(newMax) || newMax < 1) {
+                adminStatusEl.textContent = "⚠️ Giới hạn tối đa phải là một số nguyên dương.";
+                return;
+            }
+            
+            // Cập nhật biến cục bộ
+            if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
+            maxLessonLimits[grade][subject] = newMax;
+            
+            try {
+                const { error } = await supabase
+                    .from('config')
+                    // Sử dụng upsert để đảm bảo row id=1 tồn tại và cập nhật
+                    .upsert({ id: 1, max_lesson_limits: maxLessonLimits }, { onConflict: 'id' });
+
+                if (error) throw error;
+                
+                adminStatusEl.textContent = `✅ Đã lưu giới hạn Bài Tối Đa cho Lớp ${grade} - Môn ${subject}: Bài ${newMax}.`;
+
+            } catch (e) {
+                console.error("Lỗi lưu giới hạn bài học:", e);
+                adminStatusEl.textContent = `LỖI SUPABASE: Không lưu được giới hạn bài học (${e.message}).`;
+            }
+        }
+
+
         // NEW: Gemini Key Management Functions
         async function loadGeminiKeys() {
             if (!supabase) return;
@@ -1208,7 +1299,8 @@
              
              if (error) {
                  console.error('Lỗi tải bài học từ Supabase:', error);
-                 adminStatusEl.textContent = `LỖI SUPABASE: Không tải được bài học (${error.message})`;
+                 // Giữ nguyên adminStatusEl cho các lỗi DB lớn
+                 adminStatusEl.textContent = `LỖI SUPABASE: Không tải được bài học (${error.message})`; 
                  return;
              }
              
@@ -1254,7 +1346,6 @@
              
              if (error) {
                  console.error('Lỗi lưu lịch sử lên Supabase:', error);
-                 // Tùy chọn: Ghi vào console/status cho Admin biết
              }
         }
         
@@ -1287,9 +1378,12 @@
 
         // FIX BUG 1: Make loadHistoryNames async and ensure data is loaded before processing
         async function loadHistoryNames() {
-            // Await data fetch to ensure learningHistory is populated
-            await fetchHistoryFromSupabase(); 
-            
+            loadHistorySetup();
+        }
+
+        async function loadHistorySetup() { // Tên hàm mới để làm rõ nó là async
+            await fetchHistoryFromSupabase(); // Await data load
+
             const names = [...new Set(learningHistory.map(r => r.studentName))].sort();
 
             historyFilterNameEl.innerHTML = '<option value="ALL">Tất cả học sinh</option>';
@@ -1300,8 +1394,109 @@
                 historyFilterNameEl.appendChild(option);
             });
             
-            // Call displayHistory to show initial results with loaded data
-            displayHistory(); 
+            // Initial display with fresh data if content is visible
+            if (!historyContentEl.classList.contains('hidden')) {
+                displayHistory();
+            }
+        }
+
+        // NEW function to toggle history visibility
+        function toggleHistoryContent() {
+            const isHidden = historyContentEl.classList.contains('hidden');
+            if (isHidden) {
+                historyContentEl.classList.remove('hidden');
+                historyToggleButton.innerHTML = '▼ Ẩn Lịch Sử';
+                historyToggleButton.classList.remove('bg-green-600');
+                historyToggleButton.classList.add('bg-green-700');
+                loadHistorySetup(); // Tải data nếu chưa có
+            } else {
+                historyContentEl.classList.add('hidden');
+                historyToggleButton.innerHTML = '▶️ Hiển thị Lịch Sử';
+                historyToggleButton.classList.remove('bg-green-700');
+                historyToggleButton.classList.add('bg-green-600');
+            }
+        }
+        
+        // FIX BUG 2: Change dynamic ID generation inside displayHistory
+        function displayHistory() {
+            const filterName = historyFilterNameEl.value;
+            const filterSubject = historyFilterSubjectEl.value;
+            historyListEl.innerHTML = '';
+
+            const filteredHistory = learningHistory.filter(record => {
+                const nameMatch = filterName === 'ALL' || record.studentName === filterName;
+                const subjectMatch = filterSubject === 'ALL' || record.subject === filterSubject;
+                return nameMatch && subjectMatch;
+            });
+
+            if (filteredHistory.length === 0) {
+                historyListEl.innerHTML = '<p class="text-sm text-gray-600 text-center p-4 border rounded-lg bg-white">Chưa có lịch sử làm bài nào được ghi lại.</p>';
+                return;
+            }
+
+            filteredHistory.forEach((record, index) => { // Lấy index
+                // Supabase returns standard ISO format
+                const date = new Date(record.timestamp).toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                let subjectName = record.subject;
+                if (record.subject === 'TOAN') subjectName = 'Toán';
+                else if (record.subject === 'SPELL') subjectName = 'Chính Tả';
+                else if (record.subject === 'READ') subjectName = 'Luyện Đọc';
+                else if (record.subject === 'ALPHABET') subjectName = 'Mẫu Giáo'; // NEW Subject Name
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-xl shadow-md border-t-4 border-indigo-500 space-y-2';
+                
+                const incorrectCount = record.incorrectQuestions ? record.incorrectQuestions.length : 0;
+                const detailId = `details-${index}`; // ID an toàn, dựa trên index
+
+                card.innerHTML = `
+                    <p class="text-sm font-bold text-indigo-700">👤 ${record.studentName} | Lớp ${record.grade === 0 ? 'Mẫu Giáo' : record.grade} - ${subjectName}</p>
+                    <p class="text-xs text-gray-500">🕒 ${date} | Phạm vi Bài: ${record.lessonRange}</p>
+                    <div class="flex justify-between items-center text-lg font-extrabold pt-2">
+                        <span class="text-green-600">✅ ${record.score}</span>
+                        <span class="text-red-600">❌ ${record.missed}</span>
+                        <span class="text-gray-700">Tổng: ${record.total}</span>
+                    </div>
+                    ${incorrectCount > 0 ? `<button class="details-btn w-full mt-2 p-2 bg-yellow-400 text-yellow-900 text-sm font-bold rounded-lg hover:bg-yellow-500" data-target="#${detailId}">
+                        Chi tiết ${incorrectCount} câu sai
+                    </button>` : `<p class="text-sm text-green-500 font-semibold mt-2 text-center">Hoàn hảo! ${record.subject === 'ALPHABET' ? 'Đã hoàn thành.' : 'Không có câu sai.'}</p>`}
+                    
+                    <div id="${detailId}" class="hidden space-y-3 pt-3 border-t mt-3 text-sm">
+                        <p class="font-bold text-red-700">CÁC CÂU LÀM SAI:</p>
+                        ${record.incorrectQuestions ? record.incorrectQuestions.map((q, qIndex) => `
+                            <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                                <p class="font-semibold text-gray-800">Câu ${qIndex + 1} (Bài ${q.lesson}): ${q.q}</p>
+                                <p class="text-red-600">Bé chọn: <strong>${q.user_answer}</strong></p>
+                                <p class="text-green-600">Đáp án: <strong>${q.a}</strong></p>
+                            </div>
+                        `).join('') : ''}
+                    </div>
+                `;
+                historyListEl.appendChild(card);
+            });
+            
+            document.querySelectorAll('.details-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const targetId = e.target.getAttribute('data-target');
+                    const targetEl = document.querySelector(targetId);
+                    if (targetEl.classList.contains('hidden')) {
+                        targetEl.classList.remove('hidden');
+                        e.target.textContent = 'Ẩn chi tiết câu sai';
+                    } else {
+                        targetEl.classList.add('hidden');
+                        // Use innerHTML count as the button text, which is already set
+                        const incorrectCountInDetails = targetEl.querySelectorAll('.bg-red-50').length;
+                        e.target.textContent = `Chi tiết ${incorrectCountInDetails} câu sai`;
+                    }
+                });
+            });
         }
 
         async function loadLessonOptions(shouldFetch = true) {
@@ -1309,6 +1504,14 @@
              
              const grade = parseInt(adminGradeEl.value);
              const subject = adminSubjectEl.value;
+             
+             // NEW: Cập nhật giá trị Max Lesson khi thay đổi Grade/Subject
+             if (maxLessonLimits[grade] && maxLessonLimits[grade][subject]) {
+                 adminMaxLessonEl.value = maxLessonLimits[grade][subject];
+             } else {
+                 adminMaxLessonEl.value = 5; // Mặc định
+             }
+             
              // Need to safely check for existence of grade 0 data in admin logic
              const options = lessonsAvailable[grade] && lessonsAvailable[grade][subject] ? lessonsAvailable[grade][subject] : [];
              
@@ -1384,6 +1587,7 @@
             }
 
             // Kiểm tra trùng lặp trước khi Insert
+            await fetchLessonsFromSupabase();
             const existingLessons = lessonsAvailable[grade][subject] || [];
             const alreadyExists = existingLessons.some(l => l.lessonNumber === newLessonNumber);
             if (alreadyExists) {
@@ -1525,25 +1729,32 @@
             const lessonNumber = parseInt(adminLessonEl.value);
             
             if (!prompt) {
-                adminStatusEl.textContent = "Vui lòng nhập yêu cầu tạo câu hỏi cho AI.";
+                aiStatusMessageEl.textContent = "Vui lòng nhập yêu cầu tạo câu hỏi cho AI.";
+                aiStatusMessageEl.classList.remove('text-blue-600', 'text-green-600');
+                aiStatusMessageEl.classList.add('text-red-600');
                 return;
             }
             
             if (lessonNumber === 0) {
-                adminStatusEl.textContent = "⚠️ Vui lòng chọn Bài Học ở mục 3 hoặc tạo bài mới ở mục 1 trước khi tạo câu hỏi.";
+                aiStatusMessageEl.textContent = "⚠️ Vui lòng chọn Bài Học ở mục 3 hoặc tạo bài mới ở mục 1 trước khi tạo câu hỏi.";
+                aiStatusMessageEl.classList.remove('text-blue-600', 'text-green-600');
+                aiStatusMessageEl.classList.add('text-red-600');
                 return;
             }
             
             if (geminiKeys.length === 0) {
-                adminStatusEl.textContent = "⚠️ Vui lòng thêm ít nhất một API Key Gemini ở Mục 5.";
+                aiStatusMessageEl.textContent = "⚠️ Vui lòng thêm ít nhất một API Key Gemini ở Mục 5.";
+                aiStatusMessageEl.classList.remove('text-blue-600', 'text-green-600');
+                aiStatusMessageEl.classList.add('text-red-600');
                 return;
             }
 
             aiGenerateBtn.disabled = true;
             aiGenerateTextEl.textContent = "Đang tạo câu hỏi...";
             aiLoadingSpinnerEl.classList.remove('hidden');
-            adminStatusEl.textContent = "";
+            aiStatusMessageEl.textContent = ""; 
             aiResultPreviewEl.textContent = "";
+            adminStatusEl.textContent = ""; // Clear global status
 
             const subjectName = {
                 'TOAN': 'Toán Học (Phép tính và Lời văn)',
@@ -1587,17 +1798,16 @@
             let successful = false;
             let finalError = "Không thể kết nối hoặc tất cả API keys đều bị lỗi.";
             
-            // FIX: Sử dụng mô hình ổn định và bỏ bản preview có ngày tháng
             const MODEL_NAME = 'gemini-2.5-flash'; 
 
-            // Lặp qua tất cả các keys đã lưu trữ
             for (let i = 0; i < geminiKeys.length; i++) {
                 currentKeyIndex = (i + currentKeyIndex) % geminiKeys.length; // Xoay vòng index
                 const apiKey = geminiKeys[currentKeyIndex];
-                // FIX: Sử dụng mô hình mới
                 const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
                 
-                adminStatusEl.textContent = `Đang thử API Key số ${currentKeyIndex + 1}/${geminiKeys.length}...`;
+                aiStatusMessageEl.textContent = `Đang thử API Key số ${currentKeyIndex + 1}/${geminiKeys.length}...`; 
+                aiStatusMessageEl.classList.remove('text-red-600', 'text-green-600');
+                aiStatusMessageEl.classList.add('text-blue-600');
 
                 try {
                     const response = await fetch(apiUrl, {
@@ -1619,33 +1829,33 @@
                             if (Array.isArray(newQuestions) && newQuestions.length > 0) {
                                 await saveNewQuestions(grade, subject, lessonNumber, newQuestions);
                                 successful = true;
-                                break; // THÀNH CÔNG! Thoát vòng lặp key
+                                break; 
                             } else {
-                                throw new Error("AI trả về cấu trúc không phải là một mảng câu hỏi.");
+                                finalError = "AI trả về cấu trúc không phải là một mảng câu hỏi."; 
+                                throw new Error("AI returned non-array structure.");
                             }
                         } else {
-                            throw new Error("Không nhận được nội dung từ AI.");
+                            finalError = "Không nhận được nội dung từ AI.";
+                            throw new Error("No content received from AI.");
                         }
 
                     } else {
-                        // Lỗi API (4xx, 5xx). Ghi lại lỗi và thử key tiếp theo
                         const errorBody = await response.json();
                         const errorMessage = errorBody.error?.message || `Lỗi HTTP ${response.status}`;
                         finalError = `Key ${currentKeyIndex + 1} lỗi: ${errorMessage}`;
                         console.error(`Lỗi API Key ${currentKeyIndex + 1}:`, errorMessage);
-                        // Bỏ qua setTimeout, tiếp tục vòng lặp ngay lập tức để chuyển key nhanh hơn
                     }
 
                 } catch (error) {
-                    // Lỗi mạng hoặc lỗi JSON parsing. Thử key tiếp theo
                     finalError = `Key ${currentKeyIndex + 1} lỗi kết nối/mạng: ${error.message}`;
                     console.error(`Lỗi kết nối Key ${currentKeyIndex + 1}:`, error);
-                    // Bỏ qua setTimeout, tiếp tục vòng lặp ngay lập tức để chuyển key nhanh hơn
                 }
-            } // Kết thúc vòng lặp key
+            } 
 
             if (!successful) {
-                adminStatusEl.textContent = `LỖI AI/KẾT NỐI: ${finalError}`;
+                aiStatusMessageEl.textContent = `LỖI AI: ${finalError}`; 
+                aiStatusMessageEl.classList.remove('text-blue-600', 'text-green-600');
+                aiStatusMessageEl.classList.add('text-red-600');
             }
 
             aiGenerateBtn.disabled = false;
@@ -1660,7 +1870,9 @@
             const lesson = lessonsArray.find(l => l.lessonNumber === lessonNumber);
             
             if (!lesson) {
-                 adminStatusEl.textContent = `Lỗi lưu dữ liệu: Không tìm thấy Bài ${lessonNumber}.`;
+                 aiStatusMessageEl.textContent = `Lỗi lưu dữ liệu: Không tìm thấy Bài ${lessonNumber}.`;
+                 aiStatusMessageEl.classList.remove('text-blue-600', 'text-green-600');
+                 aiStatusMessageEl.classList.add('text-red-600');
                  return;
             }
 
@@ -1671,16 +1883,20 @@
                 const { data, error } = await supabase
                     .from('lessons')
                     .update({ 
-                        questions_data: updatedQuestions, // Cập nhật mảng câu hỏi
-                        num_questions: updatedQuestions.length // Cập nhật số lượng
+                        questions_data: updatedQuestions, 
+                        num_questions: updatedQuestions.length 
                     })
                     .eq('id', lesson.id)
                     .select();
                 
                 if (error) throw error;
                 
-                adminStatusEl.textContent = `✅ Đã lưu ${newQuestions.length} câu hỏi mới vào Bài ${lessonNumber}. Tổng số câu: ${updatedQuestions.length}.`;
-                aiResultPreviewEl.textContent = JSON.stringify(newQuestions, null, 2);
+                aiStatusMessageEl.textContent = `✅ Đã lưu ${newQuestions.length} câu hỏi mới vào Bài ${lessonNumber}. Tổng số câu: ${updatedQuestions.length}.`;
+                aiStatusMessageEl.classList.remove('text-red-600', 'text-blue-600');
+                aiStatusMessageEl.classList.add('text-green-600');
+                
+                // Hiển thị JSON nhỏ gọn
+                aiResultPreviewEl.textContent = JSON.stringify(newQuestions.slice(0, 3), null, 2) + `\n... và ${newQuestions.length - 3} câu khác.`;
                 
                 // Force cache update and reload options
                 await fetchLessonsFromSupabase(); 
@@ -1691,24 +1907,17 @@
                 previewLesson();
                 
             } catch (e) {
-                 adminStatusEl.textContent = `Lỗi lưu dữ liệu Supabase: ${e.message}`;
+                 aiStatusMessageEl.textContent = `Lỗi lưu dữ liệu Supabase: ${e.message}`;
+                 aiStatusMessageEl.classList.remove('text-green-600', 'text-blue-600');
+                 aiStatusMessageEl.classList.add('text-red-600');
                  console.error("Supabase Save Error:", e);
             }
         }
         
         // --- HISTORY VIEW LOGIC (Mục 4) ---
 
-        // NOTE: loadHistoryNames giờ đã là async và đảm bảo dữ liệu được tải
-        // trước khi tạo danh sách lọc và gọi displayHistory.
-
-        function loadHistoryNames() {
-            // NOTE: fetchHistoryFromSupabase() là async, nó cần được await. 
-            // Tôi đã chuyển logic này lên hàm loadHistoryNames() và biến nó thành async.
-            loadHistorySetup();
-        }
-
-        async function loadHistorySetup() { // Tên hàm mới để làm rõ nó là async
-            await fetchHistoryFromSupabase(); // Await data load
+        async function loadHistorySetup() { 
+            await fetchHistoryFromSupabase(); 
 
             const names = [...new Set(learningHistory.map(r => r.studentName))].sort();
 
@@ -1720,92 +1929,11 @@
                 historyFilterNameEl.appendChild(option);
             });
             
-            // Initial display with fresh data
-            displayHistory(); 
-        }
-
-        // FIX BUG 2: Change dynamic ID generation inside displayHistory
-        function displayHistory() {
-            const filterName = historyFilterNameEl.value;
-            const filterSubject = historyFilterSubjectEl.value;
-            historyListEl.innerHTML = '';
-
-            const filteredHistory = learningHistory.filter(record => {
-                const nameMatch = filterName === 'ALL' || record.studentName === filterName;
-                const subjectMatch = filterSubject === 'ALL' || record.subject === filterSubject;
-                return nameMatch && subjectMatch;
-            });
-
-            if (filteredHistory.length === 0) {
-                historyListEl.innerHTML = '<p class="text-sm text-gray-600 text-center p-4 border rounded-lg bg-white">Chưa có lịch sử làm bài nào được ghi lại.</p>';
-                return;
+            // Initial display with fresh data if content is visible
+            if (!historyContentEl.classList.contains('hidden')) {
+                displayHistory();
             }
-
-            filteredHistory.forEach((record, index) => { // Lấy index
-                // Supabase returns standard ISO format
-                const date = new Date(record.timestamp).toLocaleDateString('vi-VN', { 
-                    day: '2-digit', 
-                    month: '2-digit', 
-                    year: 'numeric',
-                    hour: '2-digit', 
-                    minute: '2-digit' 
-                });
-                
-                let subjectName = record.subject;
-                if (record.subject === 'TOAN') subjectName = 'Toán';
-                else if (record.subject === 'SPELL') subjectName = 'Chính Tả';
-                else if (record.subject === 'READ') subjectName = 'Luyện Đọc';
-                else if (record.subject === 'ALPHABET') subjectName = 'Mẫu Giáo'; // NEW Subject Name
-
-                const card = document.createElement('div');
-                card.className = 'bg-white p-4 rounded-xl shadow-md border-t-4 border-indigo-500 space-y-2';
-                
-                const incorrectCount = record.incorrectQuestions ? record.incorrectQuestions.length : 0;
-                const detailId = `details-${index}`; // ID an toàn, dựa trên index
-
-                card.innerHTML = `
-                    <p class="text-sm font-bold text-indigo-700">👤 ${record.studentName} | Lớp ${record.grade === 0 ? 'Mẫu Giáo' : record.grade} - ${subjectName}</p>
-                    <p class="text-xs text-gray-500">🕒 ${date} | Phạm vi Bài: ${record.lessonRange}</p>
-                    <div class="flex justify-between items-center text-lg font-extrabold pt-2">
-                        <span class="text-green-600">✅ ${record.score}</span>
-                        <span class="text-red-600">❌ ${record.missed}</span>
-                        <span class="text-gray-700">Tổng: ${record.total}</span>
-                    </div>
-                    ${incorrectCount > 0 ? `<button class="details-btn w-full mt-2 p-2 bg-yellow-400 text-yellow-900 text-sm font-bold rounded-lg hover:bg-yellow-500" data-target="#${detailId}">
-                        Chi tiết ${incorrectCount} câu sai
-                    </button>` : `<p class="text-sm text-green-500 font-semibold mt-2 text-center">Hoàn hảo! ${record.subject === 'ALPHABET' ? 'Đã hoàn thành.' : 'Không có câu sai.'}</p>`}
-                    
-                    <div id="${detailId}" class="hidden space-y-3 pt-3 border-t mt-3 text-sm">
-                        <p class="font-bold text-red-700">CÁC CÂU LÀM SAI:</p>
-                        ${record.incorrectQuestions ? record.incorrectQuestions.map((q, qIndex) => `
-                            <div class="bg-red-50 p-3 rounded-lg border border-red-200">
-                                <p class="font-semibold text-gray-800">Câu ${qIndex + 1} (Bài ${q.lesson}): ${q.q}</p>
-                                <p class="text-red-600">Bé chọn: <strong>${q.user_answer}</strong></p>
-                                <p class="text-green-600">Đáp án: <strong>${q.a}</strong></p>
-                            </div>
-                        `).join('') : ''}
-                    </div>
-                `;
-                historyListEl.appendChild(card);
-            });
-            
-            document.querySelectorAll('.details-btn').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    const targetId = e.target.getAttribute('data-target');
-                    const targetEl = document.querySelector(targetId);
-                    if (targetEl.classList.contains('hidden')) {
-                        targetEl.classList.remove('hidden');
-                        e.target.textContent = 'Ẩn chi tiết câu sai';
-                    } else {
-                        targetEl.classList.add('hidden');
-                        // Use innerHTML count as the button text, which is already set
-                        const incorrectCountInDetails = targetEl.querySelectorAll('.bg-red-50').length;
-                        e.target.textContent = `Chi tiết ${incorrectCountInDetails} câu sai`;
-                    }
-                });
-            });
         }
-
         
         // --- STARTUP ---
         window.onload = () => {
@@ -1813,8 +1941,10 @@
              // Add grade 0 to lessonsAvailable initialization if needed for admin view of history
              lessonsAvailable[0] = { ALPHABET: [] };
              fetchLessonsFromSupabase(); 
+             loadMaxLessonLimits(); // Load limits immediately
              showScreen('student-name-input');
         }
     </script>
+</body>
 </body>
 </html>
