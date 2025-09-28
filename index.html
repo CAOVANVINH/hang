@@ -66,6 +66,24 @@
             border-bottom: 2px solid #93c5fd; /* blue-300 */
             padding-bottom: 0.5rem;
         }
+        /* Style cho nút chữ cái Mẫu Giáo */
+        .alphabet-btn {
+            background-color: #f97316; /* Orange 500 */
+            transition: background-color 0.2s, transform 0.1s;
+            font-size: 2.5rem; /* text-4xl */
+            font-weight: 900;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .alphabet-btn:hover {
+            background-color: #ea580c; /* Orange 600 */
+            transform: scale(1.05);
+        }
+        .alphabet-btn:active {
+            transform: scale(0.98);
+        }
     </style>
     
     <!-- KHÔNG CÒN IMPORT FIREBASE -->
@@ -112,6 +130,12 @@
                     ⭐ Hằng Nga (Lớp 2)
                 </button>
             </div>
+            
+            <!-- NEW: Vinh Quang Button -->
+            <button onclick="selectStudentAndGrade('Vinh Quang', 0)" class="subject-btn w-full p-4 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-green-500 hover:bg-green-600">
+                👑 Vinh Quang (Mẫu Giáo)
+            </button>
+            <!-- END NEW -->
 
             <p class="text-center text-gray-500 font-semibold pt-2">Hoặc:</p>
             
@@ -225,6 +249,7 @@
             </div>
             
             <!-- KHU VỰC TRẢ LỜI BẰNG CHỌN NÚT (Toán & Tiếng Việt) -->
+            <!-- ĐÃ SỬA: Thêm khu vực hiển thị chữ cái cho chế độ ALPHABET -->
             <div id="selection-controls" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
                 <!-- Nút đáp án sẽ được chèn ở đây bằng JavaScript -->
             </div>
@@ -489,6 +514,39 @@
         // NEW GEMINI ADMIN ELEMENTS
         const geminiKeyInputEl = document.getElementById('gemini-key-input');
         const geminiKeysListEl = document.getElementById('gemini-keys-list');
+        
+        // NEW: Hardcoded questions for ALPHABET mode (24 letters for practice)
+        const ALPHABET_QUESTIONS = [
+            { q: "a", a: "a", options: ["a"], text: "a", type: "ALPHABET" },
+            { q: "b", a: "b", options: ["b"], text: "bờ", type: "ALPHABET" },
+            { q: "c", a: "c", options: ["c"], text: "cờ", type: "ALPHABET" },
+            { q: "d", a: "d", options: ["d"], text: "dờ", type: "ALPHABET" },
+            { q: "đ", a: "đ", options: ["đ"], text: "đờ", type: "ALPHABET" },
+            { q: "e", a: "e", options: ["e"], text: "e", type: "ALPHABET" },
+            { q: "ê", a: "ê", options: ["ê"], text: "ê", type: "ALPHABET" },
+            { q: "g", a: "g", options: ["g"], text: "gờ", type: "ALPHABET" },
+            { q: "h", a: "h", options: ["h"], text: "hờ", type: "ALPHABET" },
+            { q: "i", a: "i", options: ["i"], text: "i", type: "ALPHABET" },
+            { q: "k", a: "k", options: ["k"], text: "ca", type: "ALPHABET" },
+            { q: "l", a: "l", options: ["l"], text: "lờ", type: "ALPHABET" },
+            { q: "m", a: "m", options: ["m"], text: "mờ", type: "ALPHABET" },
+            { q: "n", a: "n", options: ["n"], text: "nờ", type: "ALPHABET" },
+            { q: "o", a: "o", options: ["o"], text: "o", type: "ALPHABET" },
+            { q: "p", a: "p", options: ["p"], text: "pờ", type: "ALPHABET" },
+            { q: "q", a: "q", options: ["q"], text: "cu", type: "ALPHABET" },
+            { q: "r", a: "r", options: ["r"], text: "rờ", type: "ALPHABET" },
+            { q: "s", a: "s", options: ["s"], text: "sờ", type: "ALPHABET" },
+            { q: "t", a: "t", options: ["t"], text: "tờ", type: "ALPHABET" },
+            { q: "u", a: "u", options: ["u"], text: "u", type: "ALPHABET" },
+            { q: "ư", a: "ư", options: ["ư"], text: "ư", type: "ALPHABET" }, // Thêm ư
+            { q: "v", a: "v", options: ["v"], text: "vê", type: "ALPHABET" },
+            { q: "x", a: "x", options: ["x"], text: "xờ", type: "ALPHABET" },
+            { q: "y", a: "y", options: ["y"], text: "i dài", type: "ALPHABET" },
+            { q: "ô", a: "ô", options: ["ô"], text: "ô", type: "ALPHABET" }, // Thêm ô
+            { q: "ơ", a: "ơ", options: ["ơ"], text: "ơ", type: "ALPHABET" }, // Thêm ơ
+            // Tổng cộng 29 chữ (24 chữ cái + thêm 5 chữ phụ âm/nguyên âm) để học
+        ];
+        const ALPHABET_LETTERS = ALPHABET_QUESTIONS.map(q => q.q); // Lấy danh sách chữ cái
 
         // --- TTS (CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI CỦA TRÌNH DUYỆT) ---
         
@@ -514,7 +572,7 @@
         }
 
         function playAudio() {
-            if (currentMode === 'READ' || currentMode === 'SPELL' || currentMode === 'MATH') {
+            if (currentMode === 'READ' || currentMode === 'SPELL' || currentMode === 'MATH' || currentMode === 'ALPHABET') {
                 speakText(currentTextToRead); 
             }
         }
@@ -531,6 +589,10 @@
             // Hiển thị thống kê chỉ trong chế độ Player
             if (screenId === 'grade-selection' || screenId === 'subject-selection' || screenId === 'setup-area' || screenId === 'game-area') {
                 statsDisplayEl.classList.remove('hidden');
+                statsDisplayEl.classList.remove('alphabet-hidden-stats');
+            } else if (screenId === 'game-area' && currentSubject === 'ALPHABET') {
+                // Ẩn thống kê khi ở chế độ ALPHABET (chỉ hiển thị current-info)
+                statsDisplayEl.classList.add('hidden'); 
             } else {
                 statsDisplayEl.classList.add('hidden');
             }
@@ -545,11 +607,18 @@
         function selectStudentAndGrade(name, grade) {
             studentName = name;
             currentGrade = grade;
-            currentInfoEl.textContent = `Lớp ${grade} | ${studentName}`;
+            currentInfoEl.textContent = `Lớp ${grade === 0 ? 'Mẫu Giáo' : grade} | ${studentName}`;
             score = 0;
             missed = 0;
             updateScoreDisplay();
-            showScreen('subject-selection');
+            
+            if (grade === 0) {
+                // Special logic for Kindergarten Alphabet mode (Vinh Quang)
+                currentSubject = 'ALPHABET';
+                startAlphabetLesson(); // Go straight to the game setup for Alphabet
+            } else {
+                showScreen('subject-selection');
+            }
         }
 
         function promptForGrade() {
@@ -598,6 +667,12 @@
         function selectSubject(subject) {
             currentSubject = subject;
             let subjectName = '';
+
+            if (subject === 'ALPHABET') {
+                startAlphabetLesson();
+                return; 
+            }
+            
             if (subject === 'TOAN') { subjectName = 'Toán Học'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Toán'; }
             else if (subject === 'SPELL') { subjectName = 'Chính Tả (Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Chính Tả'; }
             else if (subject === 'READ') { subjectName = 'Luyện Đọc (Nghe & Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Luyện Đọc'; }
@@ -613,6 +688,63 @@
             showScreen('setup-area');
         }
 
+        function startAlphabetLesson() {
+            currentMode = 'ALPHABET';
+            isLessonSetMode = true;
+            // Dọn dẹp giao diện game
+            questionTextEl.className = 'text-2xl sm:text-3xl font-black text-gray-800 mb-2'; 
+            questionTextEl.textContent = 'Chọn chữ cái bé muốn luyện đọc:'; 
+            imageHintEl.textContent = '(Nhấp vào chữ cái để nghe phát âm)';
+            imageHintEl.className = 'text-base font-medium text-gray-600 my-2';
+            readingControlsEl.classList.add('hidden'); // Ẩn nút Đọc lại chung
+
+            // Hiển thị 24 chữ cái
+            setupAlphabetButtons();
+            
+            selectionControlsEl.classList.remove('hidden');
+            lessonProgressEl.classList.add('hidden'); // Ẩn thanh tiến độ
+            statsDisplayEl.classList.add('hidden'); // Ẩn thống kê
+
+            showScreen('game-area');
+
+            // Nút Dừng Luyện Tập sẽ hoạt động như nút "Quay lại"
+            document.querySelector('#game-area button').onclick = () => {
+                isLessonSetMode = false;
+                lessonProgressEl.classList.remove('hidden');
+                showScreen('student-name-input');
+            };
+        }
+
+        function setupAlphabetButtons() {
+            selectionControlsEl.innerHTML = '';
+            selectionControlsEl.className = 'grid grid-cols-4 sm:grid-cols-6 gap-3 mb-6';
+
+            ALPHABET_LETTERS.forEach(letter => {
+                const button = document.createElement('button');
+                button.textContent = letter.toUpperCase();
+                button.className = 'alphabet-btn text-white rounded-xl shadow-lg';
+                
+                // Tìm âm phát âm chuẩn (ví dụ: 'A' -> 'a', 'B' -> 'bờ')
+                const phonemeData = ALPHABET_QUESTIONS.find(q => q.q === letter.toLowerCase());
+                const textToSpeak = phonemeData ? phonemeData.text : letter.toLowerCase();
+
+                button.onclick = () => {
+                    // Cập nhật text to read cho chế độ PlayAudio (nếu muốn)
+                    currentTextToRead = textToSpeak; 
+                    speakText(textToSpeak); 
+                    
+                    // Phản hồi trực quan
+                    feedbackEl.textContent = `Đang đọc: ${textToSpeak.toUpperCase()}`;
+                    feedbackEl.className = 'h-8 mb-4 text-center font-bold text-2xl text-orange-600 animate-pulse'; 
+                    setTimeout(() => {
+                        feedbackEl.textContent = "";
+                        feedbackEl.className = 'h-8 mb-4 text-center font-bold text-lg';
+                    }, 1000);
+                };
+                selectionControlsEl.appendChild(button);
+            });
+        }
+        
         async function checkLessonRange(showFeedback = true) {
              const grade = currentGrade;
              const subject = currentSubject;
@@ -670,13 +802,19 @@
                 lessonErrorEl.textContent = "⚠️ Vui lòng nhập đúng phạm vi Bài Bắt Đầu và Bài Kết Thúc.";
                 return;
             }
-
+            
+            // NOTE: ALPHABET mode is handled in selectSubject/startAlphabetLesson
             isLessonSetMode = true;
             questionCount = 0;
             score = 0;
             missed = 0;
             incorrectQuestions = []; 
             updateScoreDisplay();
+            
+            lessonProgressEl.classList.remove('hidden'); // Hiển thị thanh tiến độ
+            statsDisplayEl.classList.remove('hidden'); // Hiển thị thống kê
+            document.querySelector('#game-area button').onclick = endLessonSet; // Reset nút Dừng
+
             showScreen('game-area');
             
             await loadAndShuffleQuestions();
@@ -724,6 +862,11 @@
         }
         
         async function endLessonSet() { 
+            if (currentSubject === 'ALPHABET') {
+                endAlphabetLesson();
+                return;
+            }
+
             let total = score + missed;
             let accuracy = total > 0 ? (score / total * 100).toFixed(1) : 0;
             
@@ -753,29 +896,76 @@
                 showScreen('setup-area');
             }, 3000); 
         }
+        
+        async function endAlphabetLesson() {
+            // Custom end logic for ALPHABET mode
+            let total = ALPHABET_LETTERS.length;
+            score = total; // Assume successful completion
+            missed = 0;
+            
+            questionTextEl.textContent = `🎉 Hoàn thành Luyện đọc!`;
+            imageHintEl.textContent = `Tuyệt vời, con đã đọc hết các chữ cái!`;
+            readingControlsEl.classList.add('hidden');
+            selectionControlsEl.classList.add('hidden');
+            
+            // Save minimal history record (Chỉ lưu khi bé hoàn thành, không áp dụng cho chế độ khám phá)
+            // const historyRecord = {
+            //     student_name: studentName,
+            //     grade: currentGrade, // 0
+            //     subject: currentSubject, // ALPHABET
+            //     score: score,
+            //     missed: missed,
+            //     total: total,
+            //     incorrect_questions: [], 
+            //     lesson_range: 'Mẫu Giáo - 29 Chữ Cái'
+            // };
+            // await saveHistoryRecord(historyRecord);
+
+            isLessonSetMode = false;
+            
+            setTimeout(() => {
+                // Go back to the initial student name input screen
+                showScreen('student-name-input');
+            }, 3000); 
+        }
+
 
         // --- LOGIC CHƠI GAME & HỖ TRỢ NGÔÔN NGỮ (Không đổi) ---
 
         function updateScoreDisplay() {
             scoreEl.textContent = score;
             missedEl.textContent = missed;
-            if (isLessonSetMode) {
+            if (isLessonSetMode && currentSubject !== 'ALPHABET') {
+                const totalDisplay = lessonSetQuestions.length;
                 questionCount = currentQuestionIndex + 1;
-                lessonProgressEl.textContent = `Câu: ${questionCount} / ${lessonSetQuestions.length}`;
+                lessonProgressEl.textContent = `Câu: ${questionCount} / ${totalDisplay}`;
+            } else if (currentSubject === 'ALPHABET') {
+                 // Ẩn nội dung trong chế độ này
+                 lessonProgressEl.classList.add('hidden');
             } else {
                  lessonProgressEl.textContent = `Câu: - / ${TOTAL_QUESTIONS}`;
             }
         }
 
         function generateQuestion() {
+            if (isLessonSetMode && currentSubject === 'ALPHABET') {
+                // Xử lý chế độ ALPHABET trong startAlphabetLesson
+                return;
+            }
+            
             if (isLessonSetMode && currentQuestionIndex >= lessonSetQuestions.length) {
                 endLessonSet();
                 return;
             }
 
             const qData = lessonSetQuestions[currentQuestionIndex];
-            currentMode = qData.type.startsWith('MATH') ? 'MATH' : qData.type;
+            currentMode = qData.type;
             
+            
+            // --- Normal Mode Rendering ---
+            questionTextEl.className = 'text-2xl sm:text-3xl font-black text-gray-800 mb-2'; // Reset font size
+            imageHintEl.className = 'text-base font-medium text-gray-600 my-2'; // Reset font size
+
             readingControlsEl.classList.remove('hidden'); 
             selectionControlsEl.classList.remove('hidden'); 
             
@@ -804,7 +994,14 @@
             
             setTimeout(() => speakText(currentTextToRead), 500);
         }
-        
+
+        // Chức năng này không còn cần thiết trong chế độ mới.
+        // function nextAlphabetQuestion() { 
+        //     // Logic này đã bị loại bỏ
+        // }
+
+        // ... (numberToVietnamese and formatMathQuestionForSpeech remain unchanged) ...
+
         function numberToVietnamese(n) {
             if (n < 0 || n > 100) return String(n);
             const units = ["", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
@@ -849,6 +1046,8 @@
         }
 
         function setupSelectionButtons(options) {
+            if (currentSubject === 'ALPHABET') return; // Do not render buttons in ALPHABET mode
+
             selectionControlsEl.classList.remove('hidden');
             selectionControlsEl.innerHTML = '';
             
@@ -870,6 +1069,8 @@
         }
         
         function checkAnswer(selectedOption) {
+            if (currentSubject === 'ALPHABET') return; // Should not happen, but safety check
+
             const currentQData = lessonSetQuestions[currentQuestionIndex];
             // Danh sách các biểu tượng chúc mừng
             const correctEmojis = ["🎉", "🌟", "🥳", "✨", "💯", "💖", "💡"];
@@ -1048,7 +1249,8 @@
 
              const { data, error } = await supabase
                  .from('history')
-                 .insert([record]);
+                 // Supabase automatically adds 'timestamp' column if configured
+                 .insert([record]); 
              
              if (error) {
                  console.error('Lỗi lưu lịch sử lên Supabase:', error);
@@ -1059,9 +1261,6 @@
         // NEW: Fetch history from Supabase
         async function fetchHistoryFromSupabase() {
             if (!supabase) return;
-            
-            // NOTE: fetchHistoryFromSupabase giờ đây là hàm tải dữ liệu chính.
-            // Nó cần được await trong loadHistoryNames.
             
             const { data, error } = await supabase
                 .from('history')
@@ -1110,7 +1309,8 @@
              
              const grade = parseInt(adminGradeEl.value);
              const subject = adminSubjectEl.value;
-             const options = lessonsAvailable[grade][subject];
+             // Need to safely check for existence of grade 0 data in admin logic
+             const options = lessonsAvailable[grade] && lessonsAvailable[grade][subject] ? lessonsAvailable[grade][subject] : [];
              
              adminLessonEl.innerHTML = '';
              if (options && options.length > 0) {
@@ -1555,6 +1755,7 @@
                 if (record.subject === 'TOAN') subjectName = 'Toán';
                 else if (record.subject === 'SPELL') subjectName = 'Chính Tả';
                 else if (record.subject === 'READ') subjectName = 'Luyện Đọc';
+                else if (record.subject === 'ALPHABET') subjectName = 'Mẫu Giáo'; // NEW Subject Name
 
                 const card = document.createElement('div');
                 card.className = 'bg-white p-4 rounded-xl shadow-md border-t-4 border-indigo-500 space-y-2';
@@ -1563,7 +1764,7 @@
                 const detailId = `details-${index}`; // ID an toàn, dựa trên index
 
                 card.innerHTML = `
-                    <p class="text-sm font-bold text-indigo-700">👤 ${record.studentName} | Lớp ${record.grade} - ${subjectName}</p>
+                    <p class="text-sm font-bold text-indigo-700">👤 ${record.studentName} | Lớp ${record.grade === 0 ? 'Mẫu Giáo' : record.grade} - ${subjectName}</p>
                     <p class="text-xs text-gray-500">🕒 ${date} | Phạm vi Bài: ${record.lessonRange}</p>
                     <div class="flex justify-between items-center text-lg font-extrabold pt-2">
                         <span class="text-green-600">✅ ${record.score}</span>
@@ -1572,7 +1773,7 @@
                     </div>
                     ${incorrectCount > 0 ? `<button class="details-btn w-full mt-2 p-2 bg-yellow-400 text-yellow-900 text-sm font-bold rounded-lg hover:bg-yellow-500" data-target="#${detailId}">
                         Chi tiết ${incorrectCount} câu sai
-                    </button>` : `<p class="text-sm text-green-500 font-semibold mt-2 text-center">Hoàn hảo! Không có câu sai.</p>`}
+                    </button>` : `<p class="text-sm text-green-500 font-semibold mt-2 text-center">Hoàn hảo! ${record.subject === 'ALPHABET' ? 'Đã hoàn thành.' : 'Không có câu sai.'}</p>`}
                     
                     <div id="${detailId}" class="hidden space-y-3 pt-3 border-t mt-3 text-sm">
                         <p class="font-bold text-red-700">CÁC CÂU LÀM SAI:</p>
@@ -1609,6 +1810,8 @@
         // --- STARTUP ---
         window.onload = () => {
              // NEW: Tải data từ Supabase
+             // Add grade 0 to lessonsAvailable initialization if needed for admin view of history
+             lessonsAvailable[0] = { ALPHABET: [] };
              fetchLessonsFromSupabase(); 
              showScreen('student-name-input');
         }
