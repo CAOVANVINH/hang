@@ -3,900 +3,1605 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trò Chơi Học Tiếng Việt</title>
+    <title>Toán & Tiếng Việt Tí Hon (Supabase)</title>
+    <!-- Tải Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tải Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Định nghĩa font chữ */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
         body {
-            font-family: 'Roboto Slab', serif;
-            background: linear-gradient(135deg, #a7c0f1, #d4a7f1);
-            color: #4a5568;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
         }
-        .container {
-            background-color: #ffffff;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
-            max-width: 800px;
-            width: 100%;
-            border: 5px solid #fff;
-            animation: bounceIn 1s ease-in-out;
-            position: relative;
+        .game-input:focus, .admin-input:focus {
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.4);
         }
-        .message-box {
-            min-height: 80px;
-            font-size: 1.5rem;
+        .primary-btn {
+            background-color: #ef4444;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .primary-btn:hover { background-color: #dc2626; }
+        .primary-btn:active { transform: scale(0.98); }
+        .subject-btn {
+             background-color: #4f46e5; 
+             transition: background-color 0.2s, transform 0.1s;
+        }
+        .subject-btn:hover { background-color: #4338ca; }
+        .select-btn {
+             background-color: #4f46e5;
+             transition: background-color 0.2s, transform 0.1s, opacity 0.3s;
+             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+             word-break: break-word;
+             text-align: left;
+        }
+        .select-btn:hover { opacity: 0.9; }
+        .read-btn {
+            background-color: #10b981;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .read-btn:hover { background-color: #059669; }
+        
+        .admin-nav-btn {
+            background-color: #3b82f6; /* Blue 500 */
+        }
+        .admin-nav-btn:hover {
+            background-color: #2563eb; /* Blue 600 */
+        }
+        .danger-btn {
+            background-color: #f43f5e; /* Rose 500 */
+            transition: background-color 0.2s;
+        }
+        .danger-btn:hover {
+            background-color: #e11d48; /* Rose 600 */
+        }
+        .admin-section-header {
             font-weight: 700;
-            color: #4a5568;
-            animation: fadeIn 1s;
-        }
-        .score-box {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: #ffe53b;
-            background-image: linear-gradient(147deg, #ffe53b 0%, #ff2525 74%);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 12px;
-            font-weight: bold;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .card {
-            background: linear-gradient(45deg, #fce38a, #f38181);
-            border-radius: 12px;
-            padding: 20px;
-            font-size: 5rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            user-select: none;
-            border: 3px solid #fce38a;
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-        }
-        .card:hover {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 12px 20px rgba(0,0,0,0.3);
-            background: linear-gradient(45deg, #f38181, #fce38a);
-        }
-        .correct {
-            background: linear-gradient(45deg, #a8ff78, #78ffd6);
-            border-color: #78ffd6;
-            animation: pulse 0.5s;
-        }
-        .incorrect {
-            background: linear-gradient(45deg, #ff416c, #ff4b2b);
-            border-color: #ff416c;
-            animation: shake 0.5s;
-        }
-        .button {
-            padding: 15px 30px;
-            margin: 10px;
-            border-radius: 50px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-        }
-        .button:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.2);
-        }
-        .intro-button {
-            background-color: #6a11cb;
-            color: #fff;
-            background-image: linear-gradient(to right, #2575fc 0%, #6a11cb 100%);
-        }
-        .next-button {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .next-button:hover {
-            background-color: #45a049;
-        }
-        .fireworks {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 10;
-        }
-        .practice-button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
-            font-size: 2rem;
-            font-weight: bold;
-            background: linear-gradient(147deg, #4d90fe 0%, #00d2ff 100%);
-            color: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.2s;
-            cursor: pointer;
-            user-select: none;
-            min-height: 80px;
-            min-width: 80px;
-        }
-        .practice-button:hover {
-            transform: scale(1.05) translateY(-5px);
-            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-        }
-        .practice-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 12px;
-            cursor: pointer;
-            background-color: #fce38a;
-            border-radius: 12px;
-            transition: transform 0.2s;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .practice-item:hover {
-            transform: translateY(-5px);
-        }
-        .practice-word-text {
-            font-size: 1.25rem;
-            margin-top: 8px;
-            font-weight: bold;
-            color: #4a5568;
-        }
-        .practice-category {
-            margin-top: 2rem;
-            padding: 1rem;
-            background: #f7f3e9;
-            border-radius: 15px;
-        }
-        .word-challenge-box {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-        }
-        .word-challenge-text {
-            font-size: 3rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            margin-bottom: 10px;
-        }
-        .read-aloud-button {
-            padding: 8px 16px;
-            background: #4d90fe;
-            color: white;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        .read-aloud-button:hover {
-            transform: scale(1.05);
-        }
-        .loading-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 16px;
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            border-radius: 12px;
-            z-index: 100;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-        @keyframes shake {
-            0% { transform: translateX(0); }
-            20% { transform: translateX(-10px); }
-            40% { transform: translateX(10px); }
-            60% { transform: translateX(-10px); }
-            80% { transform: translateX(10px); }
-            100% { transform: translateX(0); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        @keyframes bounceIn {
-            0% { transform: scale(0.9); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            100% { transform: scale(1); }
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            font-size: 1.25rem; /* text-xl */
+            color: #1d4ed8; /* blue-700 */
+            border-bottom: 2px solid #93c5fd; /* blue-300 */
+            padding-bottom: 0.5rem;
         }
     </style>
-</head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-
-    <div id="game-container" class="container">
-        <div id="score-box" class="score-box hidden">Điểm: <span id="score-value">0</span></div>
-        <h1 class="text-4xl sm:text-5xl font-bold mb-6 text-pink-500 animate-pulse">Trò Chơi Học Tiếng Việt</h1>
-
-        <div id="intro-screen" class="flex flex-col items-center">
-            <p class="text-xl sm:text-2xl mb-8 font-bold">Chào mừng bé đến với trò chơi! Hãy chọn cấp độ để bắt đầu.</p>
-            <div id="level-select" class="flex flex-col sm:flex-row gap-4">
-                <button class="button intro-button" onclick="startGame('letters')">Học Chữ Cái</button>
-                <button class="button intro-button" onclick="startGame('vowels')">Học Vần</button>
-                <button class="button intro-button" onclick="startGame('words')">Học Từ Vựng</button>
-                <button class="button intro-button" onclick="startGame('vowel-match')">Nối Vần</button>
-            </div>
-            <button class="button next-button mt-8" onclick="startGame('practice')">Chế Độ Luyện Tập</button>
-        </div>
-
-        <div id="game-screen" class="hidden flex flex-col items-center">
-            <div id="current-task" class="text-2xl sm:text-3xl font-bold mb-8 text-blue-500"></div>
-            <div id="challenge-box" class="card mb-8"></div>
-            <div id="message-box" class="message-box text-xl sm:text-2xl font-bold mb-6"></div>
-            <div id="options-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
-        </div>
-        
-        <div id="practice-screen" class="hidden">
-            <h2 class="text-3xl font-bold mb-6 text-blue-500">Chế độ Luyện Tập</h2>
-            
-            <div class="practice-category">
-                <h3 class="text-2xl font-bold mt-4 mb-2 text-purple-600">Luyện Chữ Cái</h3>
-                <div id="letters-practice-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-4 w-full"></div>
-            </div>
-            
-            <div class="practice-category">
-                <h3 class="text-2xl font-bold mt-8 mb-2 text-purple-600">Luyện Vần</h3>
-                <div id="vowels-practice-grid" class="grid grid-cols-4 sm:grid-cols-6 gap-4 w-full"></div>
-            </div>
-            
-            <div class="practice-category">
-                <h3 class="text-2xl font-bold mt-8 mb-2 text-purple-600">Luyện Từ Vựng</h3>
-                <div id="words-practice-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full"></div>
-            </div>
-            
-            <button class="button next-button mt-8" onclick="backToMenu()">Quay Lại</button>
-        </div>
-    </div>
     
-    <canvas id="fireworks-canvas" class="fireworks hidden"></canvas>
-    <div id="loading-indicator" class="loading-indicator hidden">
-        <div class="spinner"></div>
-        <span>Đang tải âm thanh...</span>
+    <!-- KHÔNG CÒN IMPORT FIREBASE -->
+    <script type="module">
+        // Đánh dấu đã sẵn sàng ngay lập tức vì không cần chờ Auth
+        window.isAuthReady = true; 
+    </script>
+</head>
+<body class="p-4 sm:p-8 min-h-screen flex items-center justify-center">
+
+    <div id="app" class="w-full max-w-lg bg-white rounded-3xl shadow-2xl p-6 sm:p-10 border-b-8 border-red-500">
+        
+        <!-- TIÊU ĐỀ CHUNG -->
+        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 text-center mb-2">
+            🧠 Học Mà Chơi Cùng Tí Hon
+        </h1>
+        <p class="text-center text-sm text-red-500 font-semibold mb-6">Phiên bản lưu trữ Supabase (Cloud)</p>
+
+        <!-- KẾT QUẢ VÀ ĐIỂM SỐ -->
+        <div id="stats-display" class="flex justify-between items-center bg-red-50 p-3 rounded-xl mb-6 shadow-inner hidden">
+            <div class="text-center">
+                <span class="block text-2xl font-bold text-green-700" id="score">0</span>
+                <span class="text-xs font-medium text-gray-600">Đúng</span>
+            </div>
+            <div class="text-center">
+                <span class="block text-2xl font-bold text-red-700" id="missed">0</span>
+                <span class="text-xs font-medium text-gray-600">Sai</span>
+            </div>
+            <div class="text-center">
+                <span class="block text-2xl font-bold text-gray-700" id="current-info">Chọn Lớp</span>
+                <span class="text-xs font-medium text-gray-600">Cấp độ</span>
+            </div>
+        </div>
+        
+        <!-- 0. MÀN HÌNH NHẬP TÊN HỌC SINH (UPDATED) -->
+        <div id="student-name-input" class="space-y-4 mb-8">
+            <h2 class="text-lg font-bold text-gray-700 text-center">Xin chào! Con tên là gì?</h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="selectStudentAndGrade('Thảo Huyền', 1)" class="subject-btn w-full p-4 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-pink-500 hover:bg-pink-600">
+                    👧 Thảo Huyền (Lớp 1)
+                </button>
+                <button onclick="selectStudentAndGrade('Hằng Nga', 2)" class="subject-btn w-full p-4 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-orange-500 hover:bg-orange-600">
+                    ⭐ Hằng Nga (Lớp 2)
+                </button>
+            </div>
+
+            <p class="text-center text-gray-500 font-semibold pt-2">Hoặc:</p>
+            
+            <input type="text" id="student-name-input-field" placeholder="Nhập tên học sinh khác..." class="game-input w-full p-3 border-2 border-gray-300 rounded-xl outline-none transition duration-200">
+            <p id="name-input-error" class="text-sm text-red-500 text-center h-4"></p>
+            <button onclick="promptForGrade()" class="primary-btn w-full p-4 text-xl font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
+                Bắt Đầu Học Tập
+            </button>
+            <button onclick="showScreen('login-area')" class="w-full text-sm font-medium text-blue-600 hover:text-blue-800 transition pt-2">
+                🔑 Đăng nhập Admin
+            </button>
+        </div>
+
+        <!-- 0.5. MÀN HÌNH ĐĂNG NHẬP ADMIN -->
+        <div id="login-area" class="hidden space-y-4 mb-8">
+            <h2 class="text-lg font-bold text-gray-700 text-center">Đăng nhập Quản trị</h2>
+            <input type="text" id="admin-user" placeholder="Tên đăng nhập (admin)" value="admin" class="admin-input w-full p-3 border-2 border-gray-300 rounded-xl outline-none transition duration-200">
+            <input type="password" id="admin-pass" placeholder="Mật khẩu (admin)" value="admin" class="admin-input w-full p-3 border-2 border-gray-300 rounded-xl outline-none transition duration-200" onkeydown="if(event.key === 'Enter') adminLogin()">
+            <button onclick="adminLogin()" class="subject-btn w-full p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
+                Đăng Nhập
+            </button>
+            <p id="login-error" class="text-sm text-red-500 text-center"></p>
+            <button onclick="showScreen('student-name-input')" class="w-full text-sm font-medium text-indigo-600 hover:text-indigo-800 transition pt-2">
+                Quay lại
+            </button>
+        </div>
+
+        <!-- 1. CHỌN LỚP (PLAYER) (Giờ chỉ dùng cho tên nhập thủ công) -->
+        <div id="grade-selection" class="space-y-4 mb-8 hidden">
+            <h2 class="text-lg font-bold text-gray-700 text-center">Con học Lớp mấy?</h2>
+            <button onclick="selectGrade(1)" class="primary-btn w-full p-4 text-xl font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
+                🌟 Lớp 1
+            </button>
+            <button onclick="selectGrade(2)" class="primary-btn w-full p-4 text-xl font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
+                🚀 Lớp 2
+            </button>
+            <button onclick="showScreen('student-name-input')" class="w-full text-sm font-medium text-red-600 hover:text-red-800 transition pt-2">
+                Quay lại Nhập Tên
+            </button>
+        </div>
+
+        <!-- 2. CHỌN MÔN HỌC (PLAYER) -->
+        <div id="subject-selection" class="hidden space-y-4 mb-8">
+            <h2 class="text-lg font-bold text-gray-700 text-center">Con muốn luyện tập Môn gì?</h2>
+            <button onclick="selectSubject('TOAN')" class="subject-btn w-full p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
+                🧮 Toán Học
+            </button>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button onclick="selectSubject('SPELL')" class="subject-btn w-full p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-purple-600 hover:bg-purple-700">
+                    🇻🇳 Chính Tả (Chọn)
+                </button>
+                <button onclick="selectSubject('READ')" class="subject-btn w-full p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:bg-teal-700 bg-teal-600">
+                    🎧 Luyện Đọc (Nghe & Chọn)
+                </button>
+            </div>
+            <button onclick="showScreen('grade-selection')" class="w-full text-sm font-medium text-red-600 hover:text-red-800 transition pt-2">
+                Quay lại Chọn Lớp
+            </button>
+        </div>
+        
+        <!-- 3. KHU VỰC THIẾT LẬP BÀI (PLAYER) -->
+        <div id="setup-area" class="hidden text-center">
+            <h2 class="text-xl font-bold text-gray-700 mb-4" id="setup-title"></h2>
+            
+            <div class="p-4 border border-indigo-200 rounded-xl mb-6 bg-indigo-50">
+                <p class="text-sm text-indigo-700 font-semibold mb-2">Giới hạn: Mỗi lần luyện tập có 30 câu hỏi.</p>
+                <div class="flex justify-center items-center gap-4">
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Bài Bắt Đầu:</label>
+                        <!-- ĐÃ SỬA: Thay input number bằng select dropdown -->
+                        <select id="start-lesson" class="game-input w-full p-2 text-center border-2 rounded-lg outline-none"></select>
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Bài Kết Thúc:</label>
+                        <!-- ĐÃ SỬA: Thay input number bằng select dropdown -->
+                        <select id="end-lesson" class="game-input w-full p-2 text-center border-2 rounded-lg outline-none"></select>
+                    </div>
+                </div>
+                <p class="text-xs text-red-500 mt-2" id="lesson-error"></p>
+                <button onclick="checkLessonRange()" class="subject-btn mt-4 w-full p-2 text-md font-bold text-white rounded-xl">
+                    Kiểm tra & Cập nhật
+                </button>
+            </div>
+
+            <button onclick="startLessonSet()" class="primary-btn w-full p-3 text-xl font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
+                ▶️ Bắt Đầu Luyện Tập (30 câu)
+            </button>
+            <button onclick="showScreen('subject-selection')" class="w-full text-sm font-medium text-red-600 hover:text-red-800 transition pt-3">
+                Quay lại Chọn Môn
+            </button>
+        </div>
+
+        <!-- 4. KHU VỰC CHƠI GAME (PLAYER) -->
+        <div id="game-area" class="hidden text-center">
+            
+            <div id="feedback" class="h-8 mb-4 text-center font-bold text-lg"></div>
+
+            <!-- HIỂN THỊ CÂU HỎI -->
+            <div class="bg-yellow-100 p-6 rounded-2xl mb-6 shadow-md border-2 border-dashed border-red-300 min-h-[150px] flex flex-col justify-center">
+                <p class="text-2xl sm:text-3xl font-black text-gray-800 mb-2" id="question-text">
+                    Sẵn sàng...
+                </p>
+                <div id="image-hint" class="text-base font-medium text-gray-600 my-2"></div>
+                
+                <!-- NÚT CHO PHÉP ĐỌC -->
+                <div id="reading-controls" class="hidden mt-4">
+                    <button id="read-button" onclick="playAudio()" class="read-btn p-3 text-lg font-bold text-white rounded-xl shadow-md disabled:bg-gray-400">
+                        🔊 Đọc Lại
+                    </button>
+                </div>
+            </div>
+            
+            <!-- KHU VỰC TRẢ LỜI BẰNG CHỌN NÚT (Toán & Tiếng Việt) -->
+            <div id="selection-controls" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <!-- Nút đáp án sẽ được chèn ở đây bằng JavaScript -->
+            </div>
+
+            <!-- HIỂN THỊ TRẠNG THÁI BÀI THI -->
+            <p id="lesson-progress" class="text-sm font-bold text-indigo-600 mb-4">
+                Câu: 1 / 30
+            </p>
+
+            <button onclick="endLessonSet()" class="w-full text-sm font-medium text-red-600 hover:text-red-800 transition">
+                Dừng Luyện Tập & Quay lại Chọn Bài
+            </button>
+        </div>
+        
+        <!-- 5. MÀN HÌNH ADMIN -->
+        <div id="admin-panel" class="hidden space-y-4 mb-8">
+            <h2 class="text-2xl font-bold text-blue-700 text-center">Bảng Quản Trị Nội Dung</h2>
+            <p class="text-xs text-center text-red-600 font-semibold mb-3">Lưu trữ bằng Supabase (yêu cầu cấu hình)</p>
+
+            <!-- 1. TẠO CẤU TRÚC BÀI HỌC MỚI -->
+            <div class="bg-indigo-50 p-4 rounded-xl shadow-inner">
+                <h3 class="admin-section-header text-indigo-700 border-indigo-300 mt-0">1. Tạo Cấu Trúc Bài Học Mới</h3>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lớp</label>
+                        <select id="new-lesson-grade" class="admin-input w-full p-2 border-2 rounded-lg">
+                            <option value="1">Lớp 1</option>
+                            <option value="2">Lớp 2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Môn</label>
+                        <select id="new-lesson-subject" class="admin-input w-full p-2 border-2 rounded-lg">
+                            <option value="TOAN">Toán Học</option>
+                            <option value="SPELL">Chính Tả</option>
+                            <option value="READ">Luyện Đọc</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Số Bài Học</label>
+                    <input type="number" id="new-lesson-number" class="admin-input w-full p-2 border-2 rounded-lg" placeholder="VD: 3">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Tên Bài Học (VD: Phép cộng có nhớ)</label>
+                    <input type="text" id="new-lesson-name-input" class="admin-input w-full p-2 border-2 rounded-lg" placeholder="Nhập tên bài học">
+                </div>
+                
+                <button onclick="createNewLessonStructure()" class="subject-btn w-full p-3 text-white font-bold rounded-xl flex items-center justify-center">
+                    ➕ Tạo Cấu Trúc Bài Học
+                </button>
+            </div>
+
+
+            <!-- 2. TẠO CÂU HỎI BẰNG AI (VẪN GIỮ NGUYÊN) -->
+            <div class="p-4 border border-blue-400 rounded-xl space-y-3">
+                <h3 class="admin-section-header text-blue-700 border-blue-300">2. Tạo Câu Hỏi Bằng AI (Gemini)</h3>
+                <div class="bg-yellow-50 p-3 rounded-lg text-sm text-yellow-800 font-medium">
+                    <span id="ai-target-info">Vui lòng chọn Bài Học ở mục 3 trước khi tạo câu hỏi.</span>
+                </div>
+                
+                <textarea id="ai-prompt" rows="3" placeholder="Ví dụ: Tạo 30 phép trừ có nhớ trong phạm vi 100. Hoặc: Tạo 30 câu chính tả phân biệt s/x." class="admin-input w-full p-2 border-2 rounded-lg"></textarea>
+                <button onclick="generateAndSaveQuestions()" class="admin-nav-btn w-full p-3 text-white font-bold rounded-xl flex items-center justify-center disabled:bg-gray-400" id="ai-generate-btn">
+                    <span id="ai-generate-text">✨ Tạo & Lưu 30 Câu Hỏi Mới</span>
+                    <svg id="ai-loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </button>
+                <p id="ai-result-preview" class="text-xs text-gray-600 whitespace-pre-wrap"></p>
+            </div>
+            
+            <!-- 3. QUẢN LÝ NỘI DUNG HIỆN CÓ -->
+             <div class="bg-blue-50 p-4 rounded-xl shadow-inner">
+                <h3 class="admin-section-header text-blue-700 border-blue-300">3. Quản Lý Nội Dung Hiện Có</h3>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lớp</label>
+                        <select id="admin-grade" class="admin-input w-full p-2 border-2 rounded-lg" onchange="loadLessonOptions()">
+                            <option value="1">Lớp 1</option>
+                            <option value="2">Lớp 2</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Môn</label>
+                        <select id="admin-subject" onchange="loadLessonOptions()" class="admin-input w-full p-2 border-2 rounded-lg">
+                            <option value="TOAN">Toán Học</option>
+                            <option value="SPELL">Chính Tả</option>
+                            <option value="READ">Luyện Đọc</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Bài Học</label>
+                    <div class="flex gap-2">
+                        <select id="admin-lesson" class="admin-input flex-grow p-2 border-2 rounded-lg" onchange="previewLesson()">
+                        </select>
+                    </div>
+                </div>
+
+                <div id="lesson-name-control" class="mb-4 hidden">
+                    <label class="block text-sm font-medium text-gray-700">Tên Bài Học:</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="admin-lesson-name" class="admin-input flex-grow p-2 border-2 rounded-lg" placeholder="Nhập tên bài học (VD: Phép cộng có nhớ)">
+                        <button onclick="updateLessonName()" class="admin-nav-btn text-white p-2 rounded-lg text-sm font-bold">Lưu Tên</button>
+                    </div>
+                </div>
+                
+                <p id="lesson-preview" class="text-sm font-medium text-gray-700">Tổng số câu trong bài này: 0</p>
+                <button onclick="confirmDeleteLesson()" class="danger-btn w-full p-3 text-white font-bold rounded-xl mt-4">
+                    ⚠️ Xóa TOÀN BỘ Bài Học này
+                </button>
+
+            </div>
+
+            <!-- 4. LỊCH SỬ LÀM BÀI -->
+            <div id="history-management" class="p-4 border border-green-400 rounded-xl space-y-3 bg-green-50">
+                <h3 class="admin-section-header text-green-700 border-green-300">4. Lịch Sử Làm Bài Của Học Sinh</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lọc theo Tên HS:</label>
+                        <select id="history-filter-name" class="admin-input w-full p-2 border-2 rounded-lg" onchange="displayHistory()"></select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Lọc theo Môn:</label>
+                        <select id="history-filter-subject" class="admin-input w-full p-2 border-2 rounded-lg" onchange="displayHistory()">
+                            <option value="ALL">Tất cả</option>
+                            <option value="TOAN">Toán Học</option>
+                            <option value="SPELL">Chính Tả</option>
+                            <option value="READ">Luyện Đọc</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="history-list" class="space-y-4 pt-4 text-center">
+                    <p class="text-sm text-gray-600">Lịch sử sẽ hiển thị ở đây sau khi học sinh làm bài.</p>
+                </div>
+            </div>
+
+            <!-- 5. QUẢN LÝ API KEYS GEMINI (NEW) -->
+            <div class="p-4 border border-purple-400 rounded-xl space-y-3 bg-purple-50">
+                <h3 class="admin-section-header text-purple-700 border-purple-300">5. Quản Lý API Keys Gemini</h3>
+                <p class="text-xs text-gray-700">Thêm nhiều keys để có cơ chế tự động chuyển đổi khi một key bị lỗi hoặc quá tải.</p>
+                
+                <div class="flex gap-2 mb-2">
+                    <input type="text" id="gemini-key-input" class="admin-input flex-grow p-2 border-2 rounded-lg" placeholder="Nhập API Key Gemini mới...">
+                    <button onclick="addGeminiKey()" class="admin-nav-btn text-white p-2 rounded-lg text-sm font-bold bg-purple-600 hover:bg-purple-700">Thêm Key</button>
+                </div>
+
+                <div id="gemini-keys-list" class="space-y-2 max-h-48 overflow-y-auto p-2 bg-purple-100 rounded-lg border border-purple-200">
+                    <!-- Danh sách keys sẽ hiển thị ở đây -->
+                </div>
+            </div>
+            
+            <p id="admin-status" class="text-sm text-green-600 font-semibold text-center pt-4"></p>
+
+            <button onclick="adminLogout()" class="w-full text-sm font-medium text-red-600 hover:text-red-800 transition pt-3">
+                Đăng Xuất & Quay lại
+            </button>
+        </div>
+
     </div>
 
-    <script>
-        const letters = ['a', 'b', 'c', 'd', 'đ', 'e', 'ê', 'g', 'h', 'i', 'k', 'l', 'm', 'n', 'o', 'ô', 'ơ', 'p', 'q', 'r', 's', 't', 'u', 'ư', 'v', 'x', 'y'];
-        const vowels = ['ai', 'ay', 'ao', 'au', 'eo', 'ia', 'iu', 'oa', 'oe', 'oi', 'ua', 'ui', 'uo', 'ưu'];
-        const words = [
-            'con cá', 'con bò', 'máy bay', 'cái ô', 'cái nhà', 'quả táo', 'quả cam', 'quả dứa', 'con mèo', 'quyển sách',
-            'cái quạt', 'cái bàn', 'cái ghế', 'cái tủ', 'cái giường', 'cây bút', 'cái thước', 'cái cặp', 'bánh mì', 'quả chanh',
-            'mặt trời', 'mặt trăng', 'ngôi sao', 'con chim', 'bông hoa', 'cây xanh', 'cánh cửa', 'bức tranh', 'quả bóng', 'cái chén'
-        ];
-        const vowelMatchWords = [
-            { question: 'cái ca', vowel: 'a' },
-            { question: 'cá mè', vowel: 'e' },
-            { question: 'lá đa', vowel: 'a' },
-            { question: 'con bò', vowel: 'o' },
-            { question: 'tủ tivi', vowel: 'i' },
-            { question: 'củ khoai', vowel: 'ai'},
-            { question: 'mâm cơm', vowel: 'ơm'},
-            { question: 'cái rổ', vowel: 'ô'},
-            { question: 'cây cau', vowel: 'au'},
-            { question: 'cây mía', vowel: 'ia'},
-            { question: 'xe hơi', vowel: 'ơi'},
-            { question: 'cái bát', vowel: 'át'},
-            { question: 'đôi dép', vowel: 'ép'},
-            { question: 'chim sẻ', vowel: 'e'},
-            { question: 'cánh buồm', vowel: 'uồm'},
-            { question: 'con voi', vowel: 'oi'},
-            { question: 'con chó', vowel: 'o'},
-            { question: 'máy giặt', vowel: 'ặt'},
-            { question: 'máy tính', vowel: 'ính'},
-            { question: 'bông sen', vowel: 'en'},
-            { question: 'con lợn', vowel: 'ợn'},
-            { question: 'cây tre', vowel: 'e'},
-            { question: 'cánh diều', vowel: 'iều'},
-            { question: 'đèn pin', vowel: 'in'},
-            { question: 'con ong', vowel: 'ong'},
-            { question: 'cái thìa', vowel: 'ia'},
-            { question: 'tủ lạnh', vowel: 'ạnh'},
-            { question: 'cái nồi', vowel: 'ồi'},
-            { question: 'cái chổi', vowel: 'ổi'},
-            { question: 'cái ghế', vowel: 'ế'}
-        ];
+    <script id="script_app_logic">
+        // --- SUPABASE CONFIGURATION (THAY THẾ CHỖ NÀY BẰNG THÔNG TIN THẬT CỦA BẠN) ---
+        const SUPABASE_URL = 'https://vuzbzjieuqghneipkprg.supabase.co'; // Đã dán URL của bạn
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ1emJ6amlldXFnaG5laXBrcHJnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkwNTUwMDIsImV4cCI6MjA3NDYzMTAwMn0.xsPbKPJK74RM6MmqOBjjnyon6z4vVo8vrWmzFFvx4xc'; // Đã dán Public Key của bạn
 
-        let currentLevel = '';
-        let currentOptions = [];
-        let correctAnswer = '';
-        let correctDisplay = '';
+        const supabase = SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase
+                            ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) // Sửa lỗi: Truy cập qua window.supabase
+                            : null;
+
+        if (!supabase) {
+             console.error("Vui lòng cấu hình SUPABASE_URL và SUPABASE_ANON_KEY.");
+             // Đã loại bỏ alert() theo quy tắc
+        }
+        
+        // --- BIẾN TOÀN CỤC ---
+        const TOTAL_QUESTIONS = 30;
         let score = 0;
-        let isSpeaking = false;
-        let isLoading = false;
-        let vietnameseVoice = null;
-        let vietnameseVoiceAvailable = false;
-
-        const introScreen = document.getElementById('intro-screen');
-        const gameScreen = document.getElementById('game-screen');
-        const practiceScreen = document.getElementById('practice-screen');
-        const scoreBox = document.getElementById('score-box');
-        const scoreValue = document.getElementById('score-value');
-        const currentTaskEl = document.getElementById('current-task');
-        const challengeBox = document.getElementById('challenge-box');
-        const optionsGrid = document.getElementById('options-grid');
-        const messageBox = document.getElementById('message-box');
-        const lettersPracticeGrid = document.getElementById('letters-practice-grid');
-        const vowelsPracticeGrid = document.getElementById('vowels-practice-grid');
-        const wordsPracticeGrid = document.getElementById('words-practice-grid');
-        const fireworksCanvas = document.getElementById('fireworks-canvas');
-        const loadingIndicator = document.getElementById('loading-indicator');
+        let missed = 0;
+        let currentGrade = 0;
+        let currentSubject = '';
+        let currentAnswer = null; 
+        let currentMode = ''; 
+        let currentTextToRead = ''; 
+        let studentName = ''; 
+        let incorrectQuestions = []; 
         
-        // --- TTS API integration ---
-        const apiKey = "";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
-        const voiceName = "Kore";
+        let lessonStart = 1;
+        let lessonEnd = 5;
+        let lessonsAvailable = {}; 
+        let learningHistory = []; 
+        
+        let questionCount = 0; 
+        let isLessonSetMode = false;
+        let lessonSetQuestions = []; 
+        let currentQuestionIndex = 0; 
 
-        // Check for built-in Vietnamese voice
-        function findVietnameseVoice() {
-            const voices = window.speechSynthesis.getVoices();
-            vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-') && voice.name.includes('Google'));
-            if (!vietnameseVoice) {
-                vietnameseVoice = voices.find(voice => voice.lang.startsWith('vi-'));
-            }
-            if (vietnameseVoice) {
-                vietnameseVoiceAvailable = true;
-                console.log("Found built-in Vietnamese voice:", vietnameseVoice.name);
+        // BIẾN MỚI CHO GEMINI
+        let geminiKeys = [];
+        let currentKeyIndex = 0;
+        
+        // --- ELEMENTS ---
+        const scoreEl = document.getElementById('score');
+        const missedEl = document.getElementById('missed');
+        const currentInfoEl = document.getElementById('current-info');
+        const questionTextEl = document.getElementById('question-text');
+        const feedbackEl = document.getElementById('feedback');
+        const imageHintEl = document.getElementById('image-hint');
+        const readingControlsEl = document.getElementById('reading-controls');
+        const readButtonEl = document.getElementById('read-button');
+        const statsDisplayEl = document.getElementById('stats-display');
+        
+        const selectionControlsEl = document.getElementById('selection-controls'); 
+
+        const studentNameInputField = document.getElementById('student-name-input-field');
+        const studentNameInputScreen = document.getElementById('student-name-input');
+        const nameInputErrorEl = document.getElementById('name-input-error');
+
+        const loginAreaEl = document.getElementById('login-area');
+        const gradeSelectionEl = document.getElementById('grade-selection');
+        const subjectSelectionEl = document.getElementById('subject-selection');
+        const setupAreaEl = document.getElementById('setup-area');
+        const gameAreaEl = document.getElementById('game-area');
+
+        const setupTitleEl = document.getElementById('setup-title');
+        // Đã đổi từ input sang select, lấy lại tham chiếu
+        const startLessonEl = document.getElementById('start-lesson'); 
+        const endLessonEl = document.getElementById('end-lesson'); 
+        const lessonErrorEl = document.getElementById('lesson-error');
+        const lessonProgressEl = document.getElementById('lesson-progress');
+        
+        // Admin Elements
+        const adminPanelEl = document.getElementById('admin-panel');
+        const adminGradeEl = document.getElementById('admin-grade');
+        const adminSubjectEl = document.getElementById('admin-subject');
+        const adminLessonEl = document.getElementById('admin-lesson');
+        const adminLessonNameEl = document.getElementById('admin-lesson-name');
+        const lessonNameControlEl = document.getElementById('lesson-name-control');
+        const lessonPreviewEl = document.getElementById('lesson-preview');
+        const adminStatusEl = document.getElementById('admin-status');
+        
+        const aiPromptEl = document.getElementById('ai-prompt');
+        const aiGenerateBtn = document.getElementById('ai-generate-btn');
+        const aiGenerateTextEl = document.getElementById('ai-generate-text');
+        const aiLoadingSpinnerEl = document.getElementById('ai-loading-spinner');
+        const aiResultPreviewEl = document.getElementById('ai-result-preview');
+        const aiTargetInfoEl = document.getElementById('ai-target-info');
+
+        const newLessonGradeEl = document.getElementById('new-lesson-grade');
+        const newLessonSubjectEl = document.getElementById('new-lesson-subject');
+        const newLessonNumberEl = document.getElementById('new-lesson-number');
+        const newLessonNameInputEl = document.getElementById('new-lesson-name-input');
+        
+        const historyFilterNameEl = document.getElementById('history-filter-name');
+        const historyFilterSubjectEl = document.getElementById('history-filter-subject');
+        const historyListEl = document.getElementById('history-list');
+        
+        // NEW GEMINI ADMIN ELEMENTS
+        const geminiKeyInputEl = document.getElementById('gemini-key-input');
+        const geminiKeysListEl = document.getElementById('gemini-keys-list');
+
+        // --- TTS (CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI CỦA TRÌNH DUYỆT) ---
+        
+        function speakText(text) {
+            if (!text) return; 
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel(); 
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'vi-VN'; 
+                utterance.rate = 0.7; // FIX: Giảm tốc độ để đọc chuẩn và rõ hơn
+                utterance.pitch = 1.1; // FIX: Tăng cao độ nhẹ để nghe to và rõ hơn
+                
+                window.speechSynthesis.speak(utterance);
+                
+                readButtonEl.disabled = true;
+                utterance.onend = () => {
+                    readButtonEl.disabled = false;
+                };
             } else {
-                vietnameseVoiceAvailable = false;
-                console.log("Built-in Vietnamese voice not found, will use API.");
+                feedbackEl.textContent = "Trình duyệt không hỗ trợ đọc tự động.";
+                feedbackEl.className = 'h-8 mb-4 text-center font-bold text-lg text-red-600';
+            }
+        }
+
+        function playAudio() {
+            if (currentMode === 'READ' || currentMode === 'SPELL' || currentMode === 'MATH') {
+                speakText(currentTextToRead); 
+            }
+        }
+
+        // --- CHUYỂN MÀN HÌNH & CHỌN MÔN ---
+        function showScreen(screenId) {
+            // Hide all screens
+            const screens = [studentNameInputScreen, loginAreaEl, gradeSelectionEl, subjectSelectionEl, setupAreaEl, gameAreaEl, adminPanelEl];
+            screens.forEach(screen => screen.classList.add('hidden'));
+            
+            // Show target screen
+            document.getElementById(screenId).classList.remove('hidden');
+            
+            // Hiển thị thống kê chỉ trong chế độ Player
+            if (screenId === 'grade-selection' || screenId === 'subject-selection' || screenId === 'setup-area' || screenId === 'game-area') {
+                statsDisplayEl.classList.remove('hidden');
+            } else {
+                statsDisplayEl.classList.add('hidden');
+            }
+            
+            // NEW: Load history and Gemini keys on Admin Panel entry
+            if (screenId === 'admin-panel') {
+                loadGeminiKeys(); // Tải API keys
+                loadHistoryNames(); // Tải lịch sử & hiển thị
             }
         }
         
-        if (window.speechSynthesis) {
-            window.speechSynthesis.onvoiceschanged = findVietnameseVoice;
-            findVietnameseVoice();
+        function selectStudentAndGrade(name, grade) {
+            studentName = name;
+            currentGrade = grade;
+            currentInfoEl.textContent = `Lớp ${grade} | ${studentName}`;
+            score = 0;
+            missed = 0;
+            updateScoreDisplay();
+            showScreen('subject-selection');
         }
 
-        function base64ToArrayBuffer(base64) {
-            const binaryString = atob(base64);
-            const len = binaryString.length;
-            const bytes = new Uint8Array(len);
-            for (let i = 0; i < len; i++) {
-                bytes[i] = binaryString.charCodeAt(i);
+        function promptForGrade() {
+            studentName = studentNameInputField.value.trim();
+             if (!studentName) {
+                 nameInputErrorEl.textContent = "⚠️ Vui lòng nhập tên học sinh.";
+                 return;
+             }
+             nameInputErrorEl.textContent = "";
+             currentInfoEl.textContent = `Chào ${studentName}!`;
+             showScreen('grade-selection'); 
+        }
+
+        // --- ADMIN LOGIN LOGIC ---
+        function adminLogin() {
+            const user = document.getElementById('admin-user').value;
+            const pass = document.getElementById('admin-pass').value;
+            const errorEl = document.getElementById('login-error');
+
+            if (user === 'admin' && pass === 'admin') {
+                errorEl.textContent = 'Đăng nhập thành công!';
+                errorEl.className = 'text-sm text-green-600 text-center';
+                showScreen('admin-panel');
+                loadLessonOptions();
+            } else {
+                errorEl.textContent = 'Sai tên đăng nhập hoặc mật khẩu. Vui lòng thử lại.';
+                errorEl.className = 'text-sm text-red-500 text-center';
             }
-            return bytes.buffer;
+        }
+        
+        function adminLogout() {
+             adminStatusEl.textContent = '';
+             showScreen('student-name-input'); 
         }
 
-        function pcmToWav(pcmData, sampleRate = 16000, numChannels = 1, bitDepth = 16) {
-            const dataLength = pcmData.length * 2;
-            const buffer = new ArrayBuffer(44 + dataLength);
-            const view = new DataView(buffer);
-            let offset = 0;
+        // --- PLAYER MODE LOGIC ---
+        function selectGrade(grade) {
+            currentGrade = grade;
+            currentInfoEl.textContent = `Lớp ${grade} | ${studentName}`; 
+            score = 0;
+            missed = 0;
+            updateScoreDisplay();
+            showScreen('subject-selection');
+        }
 
-            const writeString = (str) => {
-                for (let i = 0; i < str.length; i++) {
-                    view.setUint8(offset++, str.charCodeAt(i));
+        function selectSubject(subject) {
+            currentSubject = subject;
+            let subjectName = '';
+            if (subject === 'TOAN') { subjectName = 'Toán Học'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Toán'; }
+            else if (subject === 'SPELL') { subjectName = 'Chính Tả (Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Chính Tả'; }
+            else if (subject === 'READ') { subjectName = 'Luyện Đọc (Nghe & Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Luyện Đọc'; }
+            
+            currentInfoEl.textContent = `${subjectName} (${currentGrade}) | ${studentName}`;
+            lessonErrorEl.textContent = '';
+            
+            // Xóa giá trị cũ trong input (giờ là select)
+            startLessonEl.value = 1; 
+            endLessonEl.value = 5;
+
+            checkLessonRange(false); 
+            showScreen('setup-area');
+        }
+
+        async function checkLessonRange(showFeedback = true) {
+             const grade = currentGrade;
+             const subject = currentSubject;
+             
+             let maxLesson = 0;
+             await fetchLessonsFromSupabase(); 
+             
+             if (lessonsAvailable[grade] && lessonsAvailable[grade][subject]) {
+                 if (lessonsAvailable[grade][subject].length > 0) {
+                     maxLesson = Math.max(...lessonsAvailable[grade][subject].map(l => l.lessonNumber));
+                 }
+             }
+
+             // FIX 1: Cập nhật dropdown select với các số bài học
+             startLessonEl.innerHTML = '';
+             endLessonEl.innerHTML = '';
+             let maxNumber = maxLesson > 0 ? maxLesson : 1;
+             
+             for (let i = 1; i <= maxNumber; i++) {
+                 const startOption = document.createElement('option');
+                 startOption.value = i;
+                 startOption.textContent = `Bài ${i}`;
+                 startLessonEl.appendChild(startOption);
+
+                 const endOption = document.createElement('option');
+                 endOption.value = i;
+                 endOption.textContent = `Bài ${i}`;
+                 endLessonEl.appendChild(endOption);
+             }
+             
+             if (maxLesson > 0) {
+                 // Đặt giá trị mặc định cho dropdown
+                 startLessonEl.value = 1;
+                 endLessonEl.value = maxLesson;
+                 
+                 if (showFeedback) {
+                     lessonErrorEl.className = "text-xs text-green-600 mt-2";
+                     lessonErrorEl.textContent = `✅ Đã tìm thấy tối đa Bài ${maxLesson}.`;
+                 }
+             } else {
+                 lessonErrorEl.className = "text-xs text-red-500 mt-2";
+                 lessonErrorEl.textContent = "⚠️ Không tìm thấy bài học nào. Vui lòng tạo bài mới trong chế độ Admin.";
+                 // Đặt giá trị mặc định khi không có bài học
+                 startLessonEl.value = 1;
+                 endLessonEl.value = 1;
+             }
+        }
+
+        async function startLessonSet() {
+            // Lấy giá trị từ select (đã là chuỗi số)
+            lessonStart = parseInt(startLessonEl.value);
+            lessonEnd = parseInt(endLessonEl.value);
+
+            if (isNaN(lessonStart) || isNaN(lessonEnd) || lessonStart < 1 || lessonEnd < 1 || lessonStart > lessonEnd) {
+                lessonErrorEl.textContent = "⚠️ Vui lòng nhập đúng phạm vi Bài Bắt Đầu và Bài Kết Thúc.";
+                return;
+            }
+
+            isLessonSetMode = true;
+            questionCount = 0;
+            score = 0;
+            missed = 0;
+            incorrectQuestions = []; 
+            updateScoreDisplay();
+            showScreen('game-area');
+            
+            await loadAndShuffleQuestions();
+            currentQuestionIndex = 0;
+            generateQuestion();
+        }
+
+        async function loadAndShuffleQuestions() {
+            let allQuestions = [];
+            
+            await fetchLessonsFromSupabase(); 
+
+            const lessons = lessonsAvailable[currentGrade][currentSubject];
+            
+            for (let i = 0; i < lessons.length; i++) {
+                const lesson = lessons[i];
+                if (lesson.lessonNumber >= lessonStart && lesson.lessonNumber <= lessonEnd) {
+                    if (lesson.questions_data) {
+                        lesson.questions_data.forEach(q => {
+                            allQuestions.push({...q, lessonNumber: lesson.lessonNumber, lessonName: lesson.lessonName}); 
+                        });
+                    }
+                }
+            }
+            
+            if (allQuestions.length === 0) {
+                 questionTextEl.textContent = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
+                 currentTextToRead = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
+                 selectionControlsEl.innerHTML = '';
+                 currentAnswer = null;
+                 return;
+            }
+
+            allQuestions.sort(() => Math.random() - 0.5);
+            
+            lessonSetQuestions = allQuestions.slice(0, TOTAL_QUESTIONS);
+            if (lessonSetQuestions.length < TOTAL_QUESTIONS) {
+                console.warn(`Chỉ tìm thấy ${lessonSetQuestions.length} câu hỏi.`);
+            }
+        }
+
+        function endGame() {
+            isLessonSetMode = false;
+            showScreen('grade-selection');
+        }
+        
+        async function endLessonSet() { 
+            let total = score + missed;
+            let accuracy = total > 0 ? (score / total * 100).toFixed(1) : 0;
+            
+            questionTextEl.textContent = `🎉 HOÀN THÀNH (${total} câu)`;
+            imageHintEl.textContent = `✅ Đúng: ${score}, ❌ Sai: ${missed} (${accuracy}%)`;
+            readingControlsEl.classList.add('hidden');
+            selectionControlsEl.classList.add('hidden');
+            
+            if (total > 0 && studentName) {
+                const historyRecord = {
+                    student_name: studentName, // Sử dụng student_name cho Supabase
+                    grade: currentGrade,
+                    subject: currentSubject,
+                    score: score,
+                    missed: missed,
+                    total: total,
+                    incorrect_questions: incorrectQuestions, // Sử dụng incorrect_questions cho Supabase
+                    lesson_range: `${lessonStart} - ${lessonEnd}`
+                };
+                await saveHistoryRecord(historyRecord); // Ghi lịch sử Supabase
+            }
+            
+            incorrectQuestions = [];
+            isLessonSetMode = false;
+            
+            setTimeout(() => {
+                showScreen('setup-area');
+            }, 3000); 
+        }
+
+        // --- LOGIC CHƠI GAME & HỖ TRỢ NGÔÔN NGỮ (Không đổi) ---
+
+        function updateScoreDisplay() {
+            scoreEl.textContent = score;
+            missedEl.textContent = missed;
+            if (isLessonSetMode) {
+                questionCount = currentQuestionIndex + 1;
+                lessonProgressEl.textContent = `Câu: ${questionCount} / ${lessonSetQuestions.length}`;
+            } else {
+                 lessonProgressEl.textContent = `Câu: - / ${TOTAL_QUESTIONS}`;
+            }
+        }
+
+        function generateQuestion() {
+            if (isLessonSetMode && currentQuestionIndex >= lessonSetQuestions.length) {
+                endLessonSet();
+                return;
+            }
+
+            const qData = lessonSetQuestions[currentQuestionIndex];
+            currentMode = qData.type.startsWith('MATH') ? 'MATH' : qData.type;
+            
+            readingControlsEl.classList.remove('hidden'); 
+            selectionControlsEl.classList.remove('hidden'); 
+            
+            if (currentMode === 'MATH' && qData.type === 'MATH_OP') {
+                const match = qData.q.match(/(\d+)\s*([+\-x:])\s*(\d+)/);
+                if (match) {
+                    currentTextToRead = formatMathQuestionForSpeech(parseInt(match[1]), parseInt(match[3]), match[2]);
+                } else {
+                    currentTextToRead = qData.q;
+                }
+                questionTextEl.textContent = qData.q;
+                imageHintEl.textContent = `(Bài ${qData.lessonNumber}: Phép tính)`;
+            } else if (currentMode === 'READ') {
+                questionTextEl.textContent = `👂 Nghe kỹ và CHỌN câu/từ bạn vừa nghe:`; 
+                currentTextToRead = qData.text || qData.q;
+                imageHintEl.textContent = `(Bài ${qData.lessonNumber}: Luyện Nghe)`;
+            }
+            else {
+                questionTextEl.textContent = qData.q;
+                currentTextToRead = qData.text || qData.q;
+                imageHintEl.textContent = `(Bài ${qData.lessonNumber}: ${qData.type})`;
+            }
+            
+            currentAnswer = qData.a; 
+            setupSelectionButtons(qData.options);
+            
+            setTimeout(() => speakText(currentTextToRead), 500);
+        }
+        
+        function numberToVietnamese(n) {
+            if (n < 0 || n > 100) return String(n);
+            const units = ["", "một", "hai", "ba", "bốn", "năm", "sáu", "bảy", "tám", "chín"];
+            const tens = ["", "mười", "hai mươi", "ba mươi", "bốn mươi", "năm mươi", "sáu mươi", "bảy mươi", "tám mươi", "chín mươi"];
+            if (n === 0) return "không";
+            if (n <= 9) return units[n];
+            if (n === 10) return "mười";
+            const t = Math.floor(n / 10);
+            const u = n % 10;
+            let result = tens[t];
+
+            if (t === 1 && u > 0) {
+                if (u === 1) result = "mười một";
+                else if (u === 4) result = "mười bốn"; 
+                else if (u === 5) result = "mười lăm"; 
+                else result = `mười ${units[u]}`;
+            } else if (t > 1 && u > 0) {
+                if (u === 1) result = `${tens[t]} mốt`; 
+                else if (u === 4) result = `${tens[t]} tư`; 
+                else if (u === 5) result = `${tens[t]} lăm`; 
+                else result = `${tens[t]} ${units[u]}`;
+            } else if (u === 0 && t > 1) {
+                result = tens[t];
+            }
+            if (n === 100) return "một trăm";
+            return result.trim();
+        }
+
+        function formatMathQuestionForSpeech(a, b, operator) {
+            const aText = numberToVietnamese(a);
+            const bText = numberToVietnamese(b);
+            let opText = '';
+            
+            switch (operator) {
+                case '+': opText = 'cộng'; break;
+                case '-': opText = 'trừ'; break;
+                case 'x': opText = 'nhân'; break;
+                case ':': opText = 'chia'; break;
+                default: opText = operator;
+            }
+            return `${aText} ${opText} ${bText} bằng bao nhiêu`;
+        }
+
+        function setupSelectionButtons(options) {
+            selectionControlsEl.classList.remove('hidden');
+            selectionControlsEl.innerHTML = '';
+            
+            const shuffledOptions = [...options].sort(() => 0.5 - Math.random()); 
+            
+            if (currentSubject === 'TOAN' || currentGrade === 1) {
+                 selectionControlsEl.className = 'grid grid-cols-2 gap-4 mb-6'; 
+            } else {
+                 selectionControlsEl.className = 'grid grid-cols-1 gap-4 mb-6';
+            }
+
+            shuffledOptions.forEach(option => {
+                const button = document.createElement('button');
+                button.textContent = option;
+                button.className = 'select-btn p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl w-full';
+                button.onclick = () => checkAnswer(option); 
+                selectionControlsEl.appendChild(button);
+            });
+        }
+        
+        function checkAnswer(selectedOption) {
+            const currentQData = lessonSetQuestions[currentQuestionIndex];
+            let userAnswer = String(selectedOption).toLowerCase().trim().replace(/[\.,!?'"']/g, ''); 
+            
+            if (userAnswer === currentAnswer.toLowerCase().trim().replace(/[\.,!?'"']/g, '')) {
+                score++;
+                feedbackEl.textContent = "🥳 Đúng rồi! Giỏi quá!";
+                feedbackEl.className = 'h-8 mb-4 text-center font-bold text-lg text-green-600 animate-pulse';
+            } else {
+                missed++;
+                feedbackEl.textContent = `🥺 Sai rồi! Đáp án đúng là: ${currentAnswer}`;
+                feedbackEl.className = 'h-8 mb-4 text-center font-bold text-lg text-red-600';
+                
+                incorrectQuestions.push({
+                    q: currentQData.q,
+                    a: currentQData.a,
+                    user_answer: selectedOption,
+                    type: currentQData.type,
+                    lesson: currentQData.lessonNumber,
+                    lessonName: currentQData.lessonName 
+                });
+            }
+
+            updateScoreDisplay();
+            currentQuestionIndex++;
+            
+            setTimeout(() => {
+                feedbackEl.textContent = "";
+                generateQuestion();
+            }, 1200); 
+        }
+        
+        // --- SUPABASE & ADMIN LOGIC ---
+        
+        // NEW: Gemini Key Management Functions
+        async function loadGeminiKeys() {
+            if (!supabase) return;
+
+            try {
+                const { data, error } = await supabase
+                    .from('config')
+                    .select('gemini_keys')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (error && error.code !== 'PGRST116') throw error; // PGRST116: no rows found
+
+                geminiKeys = data?.gemini_keys || [];
+                renderGeminiKeys();
+                adminStatusEl.textContent = `✅ Đã tải ${geminiKeys.length} API key Gemini.`;
+
+            } catch (e) {
+                console.error("Lỗi tải API keys:", e);
+                adminStatusEl.textContent = `LỖI SUPABASE: Không tải được API keys (${e.message}). Vui lòng kiểm tra bảng 'config'.`;
+            }
+        }
+
+        async function saveGeminiKeys(keys) {
+            if (!supabase) return;
+
+            try {
+                const { error } = await supabase
+                    .from('config')
+                    .upsert({ id: 1, gemini_keys: keys }, { onConflict: 'id' });
+
+                if (error) throw error;
+                
+                geminiKeys = keys;
+                renderGeminiKeys();
+                adminStatusEl.textContent = `✅ Đã lưu ${keys.length} API key Gemini mới.`;
+
+            } catch (e) {
+                console.error("Lỗi lưu API keys:", e);
+                adminStatusEl.textContent = `LỖI SUPABASE: Không lưu được API keys (${e.message}).`;
+            }
+        }
+
+        function renderGeminiKeys() {
+            geminiKeysListEl.innerHTML = '';
+            if (geminiKeys.length === 0) {
+                geminiKeysListEl.innerHTML = '<p class="text-sm text-gray-500">Chưa có API key nào được lưu. AI sẽ không hoạt động.</p>';
+                aiGenerateBtn.disabled = true;
+                return;
+            }
+
+            aiGenerateBtn.disabled = false;
+            geminiKeys.forEach((key, index) => {
+                const keyDisplay = key.substring(0, 4) + '... (Length: ' + key.length + ')';
+                const item = document.createElement('div');
+                item.className = 'flex justify-between items-center p-2 bg-white rounded-lg border border-gray-200';
+                item.innerHTML = `
+                    <span class="font-mono text-xs text-gray-700">${index + 1}. ${keyDisplay}</span>
+                    <button onclick="deleteGeminiKey(${index})" class="danger-btn px-2 py-1 text-xs text-white rounded-md hover:bg-red-700">Xóa</button>
+                `;
+                geminiKeysListEl.appendChild(item);
+            });
+        }
+
+        function addGeminiKey() {
+            const newKey = geminiKeyInputEl.value.trim();
+            if (newKey.length < 20) {
+                adminStatusEl.textContent = "⚠️ API Key quá ngắn. Vui lòng kiểm tra lại.";
+                return;
+            }
+            if (geminiKeys.includes(newKey)) {
+                adminStatusEl.textContent = "⚠️ Key này đã được thêm.";
+                return;
+            }
+            const updatedKeys = [...geminiKeys, newKey];
+            geminiKeyInputEl.value = '';
+            saveGeminiKeys(updatedKeys);
+        }
+
+        function deleteGeminiKey(index) {
+            if (index >= 0 && index < geminiKeys.length) {
+                if (confirm(`Bạn có chắc chắn muốn xóa API Key số ${index + 1} không?`)) {
+                    const updatedKeys = geminiKeys.filter((_, i) => i !== index);
+                    saveGeminiKeys(updatedKeys);
+                }
+            }
+        }
+        
+        // NEW: Fetch all lessons from Supabase and format for lessonsAvailable structure
+        async function fetchLessonsFromSupabase() {
+             if (!supabase) return;
+
+             const { data, error } = await supabase
+                 .from('lessons')
+                 .select('id, grade, subject, lesson_number, lesson_name, num_questions, questions_data');
+             
+             if (error) {
+                 console.error('Lỗi tải bài học từ Supabase:', error);
+                 adminStatusEl.textContent = `LỖI SUPABASE: Không tải được bài học (${error.message})`;
+                 return;
+             }
+             
+             // Reset structure
+             lessonsAvailable = { 1: { TOAN: [], SPELL: [], READ: [] }, 2: { TOAN: [], SPELL: [], READ: [] } };
+
+             data.forEach(lesson => {
+                 const grade = lesson.grade;
+                 const subject = lesson.subject;
+
+                 if (lessonsAvailable[grade] && lessonsAvailable[grade][subject]) {
+                     lessonsAvailable[grade][subject].push({
+                         id: lesson.id,
+                         grade: lesson.grade,
+                         subject: lesson.subject,
+                         lessonNumber: lesson.lesson_number,
+                         lessonName: lesson.lesson_name,
+                         numQuestions: lesson.num_questions,
+                         questions_data: lesson.questions_data,
+                     });
+                 }
+             });
+             
+             // Sắp xếp
+             for (let g of [1, 2]) {
+                 for (let s of ['TOAN', 'SPELL', 'READ']) {
+                     if (lessonsAvailable[g] && lessonsAvailable[g][s]) {
+                         lessonsAvailable[g][s].sort((a, b) => a.lessonNumber - b.lessonNumber);
+                     }
+                 }
+             }
+
+        }
+        
+        // NEW: Save history record to Supabase
+        async function saveHistoryRecord(record) {
+             if (!supabase) return;
+
+             const { data, error } = await supabase
+                 .from('history')
+                 .insert([record]);
+             
+             if (error) {
+                 console.error('Lỗi lưu lịch sử lên Supabase:', error);
+                 // Tùy chọn: Ghi vào console/status cho Admin biết
+             }
+        }
+        
+        // NEW: Fetch history from Supabase
+        async function fetchHistoryFromSupabase() {
+            if (!supabase) return;
+            
+            // NOTE: fetchHistoryFromSupabase giờ đây là hàm tải dữ liệu chính.
+            // Nó cần được await trong loadHistoryNames.
+            
+            const { data, error } = await supabase
+                .from('history')
+                .select('*')
+                .order('timestamp', { ascending: false }); // Bài mới nhất lên trước
+
+            if (error) {
+                console.error('Lỗi tải lịch sử từ Supabase:', error);
+                return;
+            }
+
+            learningHistory = data.map(record => ({
+                studentName: record.student_name,
+                grade: record.grade,
+                subject: record.subject,
+                timestamp: record.timestamp,
+                score: record.score,
+                missed: record.missed,
+                total: record.total,
+                incorrectQuestions: record.incorrect_questions,
+                lessonRange: record.lesson_range
+            }));
+        }
+
+        // FIX BUG 1: Make loadHistoryNames async and ensure data is loaded before processing
+        async function loadHistoryNames() {
+            // Await data fetch to ensure learningHistory is populated
+            await fetchHistoryFromSupabase(); 
+            
+            const names = [...new Set(learningHistory.map(r => r.studentName))].sort();
+
+            historyFilterNameEl.innerHTML = '<option value="ALL">Tất cả học sinh</option>';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                historyFilterNameEl.appendChild(option);
+            });
+            
+            // Call displayHistory to show initial results with loaded data
+            displayHistory(); 
+        }
+
+        async function loadLessonOptions(shouldFetch = true) {
+             if (shouldFetch) await fetchLessonsFromSupabase(); 
+             
+             const grade = parseInt(adminGradeEl.value);
+             const subject = adminSubjectEl.value;
+             const options = lessonsAvailable[grade][subject];
+             
+             adminLessonEl.innerHTML = '';
+             if (options && options.length > 0) {
+                 options.forEach(l => {
+                     const option = document.createElement('option');
+                     option.value = l.lessonNumber;
+                     option.textContent = `Bài ${l.lessonNumber} - ${l.lessonName} (${l.numQuestions} câu)`; 
+                     adminLessonEl.appendChild(option);
+                 });
+                 adminLessonEl.value = options[0].lessonNumber;
+                 lessonNameControlEl.classList.remove('hidden'); 
+             } else {
+                 const option = document.createElement('option');
+                 option.value = 0;
+                 option.textContent = "Chưa có bài học nào";
+                 adminLessonEl.appendChild(option);
+                 lessonNameControlEl.classList.add('hidden'); 
+             }
+             
+             previewLesson();
+        }
+
+        async function previewLesson() {
+             const grade = parseInt(adminGradeEl.value);
+             const subject = adminSubjectEl.value;
+             const lessonNumber = parseInt(adminLessonEl.value);
+             
+             if (lessonNumber > 0) {
+                 const currentLesson = lessonsAvailable[grade][subject].find(l => l.lessonNumber === lessonNumber);
+                 if (currentLesson) {
+                     aiTargetInfoEl.textContent = `Mục tiêu AI: Lớp ${grade} - Môn ${subject} - Bài ${lessonNumber} ("${currentLesson.lessonName}")`;
+                 }
+             } else {
+                 aiTargetInfoEl.textContent = 'Vui lòng chọn Bài Học ở mục 3 trước khi tạo câu hỏi.';
+             }
+
+
+             if (lessonNumber === 0) {
+                 lessonPreviewEl.textContent = "Tổng số câu trong bài này: 0";
+                 return;
+             }
+             
+             const lesson = lessonsAvailable[grade][subject].find(l => l.lessonNumber === lessonNumber);
+             
+             if (lesson) {
+                 lessonPreviewEl.textContent = `Tổng số câu trong Bài ${lessonNumber}: ${lesson.numQuestions}`;
+                 adminLessonNameEl.value = lesson.lessonName; 
+                 lessonNameControlEl.classList.remove('hidden'); 
+             }
+             
+             aiResultPreviewEl.textContent = '';
+        }
+        
+        // NEW: Tạo Cấu Trúc Bài Học Mới (SUPABASE INSERT)
+        async function createNewLessonStructure() {
+            if (!supabase) return;
+            const grade = parseInt(newLessonGradeEl.value);
+            const subject = newLessonSubjectEl.value;
+            const newLessonNumber = parseInt(newLessonNumberEl.value.trim());
+            const name = newLessonNameInputEl.value.trim();
+            
+            adminStatusEl.textContent = '';
+
+            if (isNaN(newLessonNumber) || newLessonNumber <= 0) {
+                adminStatusEl.textContent = "⚠️ Số bài học phải là một số nguyên dương.";
+                return;
+            }
+            if (!name) {
+                adminStatusEl.textContent = "⚠️ Tên bài học không được để trống.";
+                return;
+            }
+
+            // Kiểm tra trùng lặp trước khi Insert
+            const existingLessons = lessonsAvailable[grade][subject] || [];
+            const alreadyExists = existingLessons.some(l => l.lessonNumber === newLessonNumber);
+            if (alreadyExists) {
+                adminStatusEl.textContent = `⚠️ Bài ${newLessonNumber} đã tồn tại trong môn này. Vui lòng chọn số bài khác.`;
+                return;
+            }
+
+            try {
+                const lessonData = {
+                    grade: grade,
+                    subject: subject,
+                    lesson_number: newLessonNumber, // Tên cột Supabase
+                    lesson_name: name, // Tên cột Supabase
+                    questions_data: [], // Tên cột Supabase
+                    num_questions: 0, // Tên cột Supabase
+                };
+
+                const { data, error } = await supabase
+                    .from('lessons')
+                    .insert([lessonData])
+                    .select();
+
+                if (error) throw error;
+                
+                adminStatusEl.textContent = `✅ Đã tạo Bài ${newLessonNumber} ("${name}") thành công trên Supabase!`;
+                
+                const currentLessonValue = String(newLessonNumber);
+                
+                // --- ĐỒNG BỘ MỤC 3 VÀ MỤC 2 ---
+                await fetchLessonsFromSupabase(); 
+                
+                adminGradeEl.value = String(grade);
+                adminSubjectEl.value = subject;
+                await loadLessonOptions(false); 
+                
+                adminLessonEl.value = currentLessonValue;
+                previewLesson(); 
+
+                // Reset input
+                newLessonNumberEl.value = '';
+                newLessonNameInputEl.value = '';
+                
+            } catch (e) {
+                adminStatusEl.textContent = `Lỗi tạo bài Supabase: ${e.message}`;
+            }
+        }
+
+        // NEW: Cập nhật tên bài học (SUPABASE UPDATE)
+        async function updateLessonName() {
+            if (!supabase) return;
+            const grade = parseInt(adminGradeEl.value);
+            const subject = adminSubjectEl.value;
+            const lessonNumber = parseInt(adminLessonEl.value);
+            const newName = adminLessonNameEl.value.trim();
+            
+            if (lessonNumber === 0 || !newName) {
+                adminStatusEl.textContent = "⚠️ Vui lòng chọn bài học và nhập tên.";
+                return;
+            }
+            
+            const currentLessonValue = String(lessonNumber);
+            const lesson = lessonsAvailable[grade][subject].find(l => l.lessonNumber === lessonNumber);
+            
+            if (!lesson) {
+                 adminStatusEl.textContent = "Không tìm thấy bài học.";
+                 return;
+            }
+
+            try {
+                const { data, error } = await supabase
+                    .from('lessons')
+                    .update({ lesson_name: newName }) // Tên cột Supabase
+                    .eq('id', lesson.id) // Điều kiện ID
+                    .select();
+
+                if (error) throw error;
+
+                adminStatusEl.textContent = `✅ Đã lưu tên mới: "${newName}"`;
+                
+                await fetchLessonsFromSupabase(); 
+                await loadLessonOptions(false); 
+                
+                adminLessonEl.value = currentLessonValue; 
+                previewLesson();
+            } catch (e) {
+                adminStatusEl.textContent = `Lỗi lưu tên Supabase: ${e.message}`;
+            }
+        }
+        
+        // NEW: Xóa toàn bộ Bài học (SUPABASE DELETE)
+        function confirmDeleteLesson() {
+            const lessonNumber = parseInt(adminLessonEl.value);
+            if (lessonNumber === 0) {
+                adminStatusEl.textContent = "Vui lòng chọn bài học hợp lệ để xóa.";
+                return;
+            }
+            // Thay thế window.confirm bằng cảnh báo văn bản trong UI nếu có thể, nhưng giữ nguyên theo code gốc.
+            if (window.confirm(`Bạn có chắc chắn muốn xóa TOÀN BỘ Bài ${lessonNumber} (${adminLessonNameEl.value}) không? Hành động này không thể hoàn tác.`)) {
+                deleteLesson();
+            }
+        }
+        
+        async function deleteLesson() {
+            if (!supabase) return;
+            const grade = parseInt(adminGradeEl.value);
+            const subject = adminSubjectEl.value;
+            const lessonNumber = parseInt(adminLessonEl.value);
+            
+            const lesson = lessonsAvailable[grade][subject].find(l => l.lessonNumber === lessonNumber);
+            if (!lesson) {
+                 adminStatusEl.textContent = "Không tìm thấy bài học để xóa.";
+                 return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('lessons')
+                    .delete()
+                    .eq('id', lesson.id);
+
+                if (error) throw error;
+                
+                adminStatusEl.textContent = `✅ Đã xóa Bài ${lessonNumber} ("${lesson.lessonName}") thành công khỏi Supabase!`;
+                
+                await fetchLessonsFromSupabase(); 
+                await loadLessonOptions(false);
+            } catch (e) {
+                adminStatusEl.textContent = `Lỗi xóa bài Supabase: ${e.message}`;
+            }
+        }
+
+        // --- GEMINI API INTEGRATION (Mục 2) ---
+        
+        async function generateAndSaveQuestions() {
+            if (!supabase) return;
+            const prompt = aiPromptEl.value.trim();
+            const grade = parseInt(adminGradeEl.value);
+            const subject = adminSubjectEl.value;
+            const lessonNumber = parseInt(adminLessonEl.value);
+            
+            if (!prompt) {
+                adminStatusEl.textContent = "Vui lòng nhập yêu cầu tạo câu hỏi cho AI.";
+                return;
+            }
+            
+            if (lessonNumber === 0) {
+                adminStatusEl.textContent = "⚠️ Vui lòng chọn Bài Học ở mục 3 hoặc tạo bài mới ở mục 1 trước khi tạo câu hỏi.";
+                return;
+            }
+            
+            if (geminiKeys.length === 0) {
+                adminStatusEl.textContent = "⚠️ Vui lòng thêm ít nhất một API Key Gemini ở Mục 5.";
+                return;
+            }
+
+            aiGenerateBtn.disabled = true;
+            aiGenerateTextEl.textContent = "Đang tạo câu hỏi...";
+            aiLoadingSpinnerEl.classList.remove('hidden');
+            adminStatusEl.textContent = "";
+            aiResultPreviewEl.textContent = "";
+
+            const subjectName = {
+                'TOAN': 'Toán Học (Phép tính và Lời văn)',
+                'SPELL': 'Tiếng Việt - Chính Tả (Phân biệt âm/vần, điền từ)',
+                'READ': 'Tiếng Việt - Luyện Đọc (Nghe và chọn câu/từ)',
+            }[subject];
+
+            const systemInstruction = `Bạn là một giáo viên tiểu học. Hãy tạo 30 câu hỏi dựa trên yêu cầu người dùng, cho Lớp ${grade} - Môn ${subjectName}.
+            
+            TUÂN THỦ CẤU TRÚC JSON NGHIÊM NGẶT sau (Array of Objects):
+            1. 'q': Câu hỏi hiển thị (dùng cho Toán/Chính tả) HOẶC Dòng hướng dẫn (dùng cho Luyện đọc).
+            2. 'a': Đáp án đúng (luôn là chuỗi).
+            3. 'options': Array chứa 4 lựa chọn (bao gồm cả đáp án đúng).
+            4. 'text': Văn bản chính xác cần đọc to (chỉ cần cho Luyện đọc và Toán lời văn, bỏ trống cho Toán phép tính).
+            5. 'type': BẮT BUỘC là một trong các giá trị sau: MATH_OP (Phép tính), MATH_WORD (Lời văn), SPELL (Chính tả), READ (Luyện đọc).`;
+            
+            let jsonSchema = {
+                type: "ARRAY",
+                items: {
+                    type: "OBJECT",
+                    properties: {
+                        "q": { "type": "STRING", "description": "Câu hỏi hiển thị" },
+                        "a": { "type": "STRING", "description": "Đáp án đúng" },
+                        "options": { "type": "ARRAY", "items": { "type": "STRING" }, "description": "4 lựa chọn" },
+                        "text": { "type": "STRING", "description": "Văn bản để đọc (bỏ trống nếu là Toán phép tính)" },
+                        "type": { "type": "STRING", "description": "MATH_OP, MATH_WORD, SPELL, hoặc READ" }
+                    },
+                    required: ["q", "a", "options", "text", "type"]
                 }
             };
             
-            const writeUint32 = (val) => {
-                view.setUint32(offset, val, true);
-                offset += 4;
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+                systemInstruction: { parts: [{ text: systemInstruction }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: jsonSchema,
+                }
             };
 
-            const writeUint16 = (val) => {
-                view.setUint16(offset, val, true);
-                offset += 2;
-            };
+            let successful = false;
+            let finalError = "Không thể kết nối hoặc tất cả API keys đều bị lỗi.";
 
-            writeString('RIFF');
-            writeUint32(36 + dataLength);
-            writeString('WAVE');
-            writeString('fmt ');
-            writeUint32(16);
-            writeUint16(1);
-            writeUint16(numChannels);
-            writeUint32(sampleRate);
-            writeUint32(sampleRate * numChannels * bitDepth / 8);
-            writeUint16(numChannels * bitDepth / 8);
-            writeUint16(bitDepth);
-            writeString('data');
-            writeUint32(dataLength);
-
-            const pcm16 = new Int16Array(pcmData);
-            for (let i = 0; i < pcm16.length; i++) {
-                view.setInt16(offset, pcm16[i], true);
-                offset += 2;
-            }
-
-            return new Blob([view], { type: 'audio/wav' });
-        }
-
-        async function speakText(text) {
-            if (isSpeaking) return;
-            isSpeaking = true;
-            disableAllButtons();
-
-            if (vietnameseVoiceAvailable) {
-                const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'vi-VN';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
-                utterance.voice = vietnameseVoice;
+            // Lặp qua tất cả các keys đã lưu trữ
+            for (let i = 0; i < geminiKeys.length; i++) {
+                currentKeyIndex = (i + currentKeyIndex) % geminiKeys.length; // Xoay vòng index
+                const apiKey = geminiKeys[currentKeyIndex];
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
                 
-                utterance.onend = () => {
-                    isSpeaking = false;
-                    enableAllButtons();
-                };
-                utterance.onerror = (event) => {
-                    console.error("Error with built-in TTS:", event.error);
-                    isSpeaking = false;
-                    enableAllButtons();
-                };
+                adminStatusEl.textContent = `Đang thử API Key số ${currentKeyIndex + 1}/${geminiKeys.length}...`;
 
-                window.speechSynthesis.speak(utterance);
-            } else {
-                isLoading = true;
-                loadingIndicator.classList.remove('hidden');
-                
                 try {
-                    const payload = {
-                        contents: [{ parts: [{ text: text }] }],
-                        generationConfig: {
-                            responseModalities: ["AUDIO"],
-                            speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: voiceName } } }
-                        },
-                        model: "gemini-2.5-flash-preview-tts"
-                    };
-
                     const response = await fetch(apiUrl, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     });
-                    
-                    if (!response.ok) {
-                        throw new Error(`API error: ${response.status} ${response.statusText}`);
-                    }
 
-                    const result = await response.json();
-                    const part = result?.candidates?.[0]?.content?.parts?.[0];
-                    const audioData = part?.inlineData?.data;
-                    const mimeType = part?.inlineData?.mimeType;
+                    if (response.ok) {
+                        const result = await response.json();
+                        
+                        if (result.candidates && result.candidates.length > 0 && 
+                            result.candidates[0].content && result.candidates[0].content.parts &&
+                            result.candidates[0].content.parts.length > 0) {
+                                
+                            const jsonString = result.candidates[0].content.parts[0].text;
+                            const newQuestions = JSON.parse(jsonString);
+                            
+                            if (Array.isArray(newQuestions) && newQuestions.length > 0) {
+                                await saveNewQuestions(grade, subject, lessonNumber, newQuestions);
+                                successful = true;
+                                break; // THÀNH CÔNG! Thoát vòng lặp key
+                            } else {
+                                throw new Error("AI trả về cấu trúc không phải là một mảng câu hỏi.");
+                            }
+                        } else {
+                            throw new Error("Không nhận được nội dung từ AI.");
+                        }
 
-                    if (audioData && mimeType && mimeType.startsWith("audio/")) {
-                        const sampleRateMatch = mimeType.match(/rate=(\d+)/);
-                        const sampleRate = sampleRateMatch ? parseInt(sampleRateMatch[1], 10) : 16000;
-                        const pcmData = base64ToArrayBuffer(audioData);
-                        const wavBlob = pcmToWav(new Int16Array(pcmData), sampleRate);
-                        const audioUrl = URL.createObjectURL(wavBlob);
-                        
-                        const audio = new Audio(audioUrl);
-                        audio.play();
-                        
-                        audio.onended = () => {
-                            isSpeaking = false;
-                            URL.revokeObjectURL(audioUrl);
-                            enableAllButtons();
-                        };
                     } else {
-                        console.error("No audio data found in API response.");
-                        isSpeaking = false;
-                        enableAllButtons();
+                        // Lỗi API (4xx, 5xx). Ghi lại lỗi và thử key tiếp theo
+                        const errorBody = await response.json();
+                        const errorMessage = errorBody.error?.message || `Lỗi HTTP ${response.status}`;
+                        finalError = `Key ${currentKeyIndex + 1} lỗi: ${errorMessage}`;
+                        console.error(`Lỗi API Key ${currentKeyIndex + 1}:`, errorMessage);
+                        // continue (tự động chuyển sang key tiếp theo trong vòng lặp)
                     }
+
                 } catch (error) {
-                    console.error("Error speaking text:", error);
-                    isSpeaking = false;
-                    enableAllButtons();
-                } finally {
-                    isLoading = false;
-                    loadingIndicator.classList.add('hidden');
+                    // Lỗi mạng hoặc lỗi JSON parsing. Thử key tiếp theo
+                    finalError = `Key ${currentKeyIndex + 1} lỗi kết nối/mạng: ${error.message}`;
+                    console.error(`Lỗi kết nối Key ${currentKeyIndex + 1}:`, error);
+                    // continue
                 }
+            } // Kết thúc vòng lặp key
+
+            if (!successful) {
+                adminStatusEl.textContent = `LỖI AI/KẾT NỐI: ${finalError}`;
             }
-        }
 
-        function disableAllButtons() {
-            const buttons = document.querySelectorAll('button:not(.practice-button)');
-            buttons.forEach(btn => btn.disabled = true);
-        }
-
-        function enableAllButtons() {
-            const buttons = document.querySelectorAll('button:not(.practice-button)');
-            buttons.forEach(btn => btn.disabled = false);
+            aiGenerateBtn.disabled = false;
+            aiGenerateTextEl.textContent = "✨ Tạo & Lưu 30 Câu Hỏi Mới";
+            aiLoadingSpinnerEl.classList.add('hidden');
         }
         
-        function shuffleArray(array) {
-            for (let i = array.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [array[i], array[j]] = [array[j], array[i]];
+        // NEW: Lưu câu hỏi mới (SUPABASE UPDATE - Questions_data)
+        async function saveNewQuestions(grade, subject, lessonNumber, newQuestions) {
+            
+            const lessonsArray = lessonsAvailable[grade][subject];
+            const lesson = lessonsArray.find(l => l.lessonNumber === lessonNumber);
+            
+            if (!lesson) {
+                 adminStatusEl.textContent = `Lỗi lưu dữ liệu: Không tìm thấy Bài ${lessonNumber}.`;
+                 return;
+            }
+
+            try {
+                let existingQuestions = lesson.questions_data || [];
+                const updatedQuestions = [...existingQuestions, ...newQuestions];
+                
+                const { data, error } = await supabase
+                    .from('lessons')
+                    .update({ 
+                        questions_data: updatedQuestions, // Cập nhật mảng câu hỏi
+                        num_questions: updatedQuestions.length // Cập nhật số lượng
+                    })
+                    .eq('id', lesson.id)
+                    .select();
+                
+                if (error) throw error;
+                
+                adminStatusEl.textContent = `✅ Đã lưu ${newQuestions.length} câu hỏi mới vào Bài ${lessonNumber}. Tổng số câu: ${updatedQuestions.length}.`;
+                aiResultPreviewEl.textContent = JSON.stringify(newQuestions, null, 2);
+                
+                // Force cache update and reload options
+                await fetchLessonsFromSupabase(); 
+                
+                await loadLessonOptions(false); 
+                
+                adminLessonEl.value = String(lessonNumber); 
+                previewLesson();
+                
+            } catch (e) {
+                 adminStatusEl.textContent = `Lỗi lưu dữ liệu Supabase: ${e.message}`;
+                 console.error("Supabase Save Error:", e);
             }
         }
         
-        function startGame(level) {
-            currentLevel = level;
-            introScreen.classList.add('hidden');
-            scoreBox.classList.remove('hidden');
-            scoreValue.textContent = score;
+        // --- HISTORY VIEW LOGIC (Mục 4) ---
 
-            if (level === 'practice') {
-                gameScreen.classList.add('hidden');
-                scoreBox.classList.add('hidden');
-                practiceScreen.classList.remove('hidden');
-                setupPracticeMode();
-            } else {
-                practiceScreen.classList.add('hidden');
-                gameScreen.classList.remove('hidden');
-                nextRound();
-            }
+        // NOTE: loadHistoryNames giờ đã là async và đảm bảo dữ liệu được tải
+        // trước khi tạo danh sách lọc và gọi displayHistory.
+
+        function loadHistoryNames() {
+            // NOTE: fetchHistoryFromSupabase() là async, nó cần được await. 
+            // Tôi đã chuyển logic này lên hàm loadHistoryNames() và biến nó thành async.
+            loadHistorySetup();
         }
-        
-        function setupPracticeMode() {
-            lettersPracticeGrid.innerHTML = '';
-            vowelsPracticeGrid.innerHTML = '';
-            wordsPracticeGrid.innerHTML = '';
 
-            letters.forEach(item => {
-                const button = document.createElement('button');
-                button.textContent = item;
-                button.classList.add('practice-button');
-                button.addEventListener('click', () => {
-                    speakText(item);
-                });
-                lettersPracticeGrid.appendChild(button);
+        async function loadHistorySetup() { // Tên hàm mới để làm rõ nó là async
+            await fetchHistoryFromSupabase(); // Await data load
+
+            const names = [...new Set(learningHistory.map(r => r.studentName))].sort();
+
+            historyFilterNameEl.innerHTML = '<option value="ALL">Tất cả học sinh</option>';
+            names.forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                historyFilterNameEl.appendChild(option);
+            });
+            
+            // Initial display with fresh data
+            displayHistory(); 
+        }
+
+        // FIX BUG 2: Change dynamic ID generation inside displayHistory
+        function displayHistory() {
+            const filterName = historyFilterNameEl.value;
+            const filterSubject = historyFilterSubjectEl.value;
+            historyListEl.innerHTML = '';
+
+            const filteredHistory = learningHistory.filter(record => {
+                const nameMatch = filterName === 'ALL' || record.studentName === filterName;
+                const subjectMatch = filterSubject === 'ALL' || record.subject === filterSubject;
+                return nameMatch && subjectMatch;
             });
 
-            vowels.forEach(item => {
-                const button = document.createElement('button');
-                button.textContent = item;
-                button.classList.add('practice-button');
-                button.addEventListener('click', () => {
-                     if (item === 'ai') {
-                        speakText('ai');
-                    } else if (item === 'ay') {
-                        speakText('ay');
+            if (filteredHistory.length === 0) {
+                historyListEl.innerHTML = '<p class="text-sm text-gray-600 text-center p-4 border rounded-lg bg-white">Chưa có lịch sử làm bài nào được ghi lại.</p>';
+                return;
+            }
+
+            filteredHistory.forEach((record, index) => { // Lấy index
+                // Supabase returns standard ISO format
+                const date = new Date(record.timestamp).toLocaleDateString('vi-VN', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+                
+                let subjectName = record.subject;
+                if (record.subject === 'TOAN') subjectName = 'Toán';
+                else if (record.subject === 'SPELL') subjectName = 'Chính Tả';
+                else if (record.subject === 'READ') subjectName = 'Luyện Đọc';
+
+                const card = document.createElement('div');
+                card.className = 'bg-white p-4 rounded-xl shadow-md border-t-4 border-indigo-500 space-y-2';
+                
+                const incorrectCount = record.incorrectQuestions ? record.incorrectQuestions.length : 0;
+                const detailId = `details-${index}`; // ID an toàn, dựa trên index
+
+                card.innerHTML = `
+                    <p class="text-sm font-bold text-indigo-700">👤 ${record.studentName} | Lớp ${record.grade} - ${subjectName}</p>
+                    <p class="text-xs text-gray-500">🕒 ${date} | Phạm vi Bài: ${record.lessonRange}</p>
+                    <div class="flex justify-between items-center text-lg font-extrabold pt-2">
+                        <span class="text-green-600">✅ ${record.score}</span>
+                        <span class="text-red-600">❌ ${record.missed}</span>
+                        <span class="text-gray-700">Tổng: ${record.total}</span>
+                    </div>
+                    ${incorrectCount > 0 ? `<button class="details-btn w-full mt-2 p-2 bg-yellow-400 text-yellow-900 text-sm font-bold rounded-lg hover:bg-yellow-500" data-target="#${detailId}">
+                        Chi tiết ${incorrectCount} câu sai
+                    </button>` : `<p class="text-sm text-green-500 font-semibold mt-2 text-center">Hoàn hảo! Không có câu sai.</p>`}
+                    
+                    <div id="${detailId}" class="hidden space-y-3 pt-3 border-t mt-3 text-sm">
+                        <p class="font-bold text-red-700">CÁC CÂU LÀM SAI:</p>
+                        ${record.incorrectQuestions ? record.incorrectQuestions.map((q, qIndex) => `
+                            <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                                <p class="font-semibold text-gray-800">Câu ${qIndex + 1} (Bài ${q.lesson}): ${q.q}</p>
+                                <p class="text-red-600">Bé chọn: <strong>${q.user_answer}</strong></p>
+                                <p class="text-green-600">Đáp án: <strong>${q.a}</strong></p>
+                            </div>
+                        `).join('') : ''}
+                    </div>
+                `;
+                historyListEl.appendChild(card);
+            });
+            
+            document.querySelectorAll('.details-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const targetId = e.target.getAttribute('data-target');
+                    const targetEl = document.querySelector(targetId);
+                    if (targetEl.classList.contains('hidden')) {
+                        targetEl.classList.remove('hidden');
+                        e.target.textContent = 'Ẩn chi tiết câu sai';
                     } else {
-                        speakText(item);
+                        targetEl.classList.add('hidden');
+                        // Use innerHTML count as the button text, which is already set
+                        const incorrectCountInDetails = targetEl.querySelectorAll('.bg-red-50').length;
+                        e.target.textContent = `Chi tiết ${incorrectCountInDetails} câu sai`;
                     }
                 });
-                vowelsPracticeGrid.appendChild(button);
-            });
-
-            words.forEach(word => {
-                const itemContainer = document.createElement('div');
-                itemContainer.classList.add('practice-item');
-                itemContainer.addEventListener('click', () => {
-                    speakText(word);
-                });
-                
-                const text = document.createElement('span');
-                text.textContent = word;
-                text.classList.add('practice-word-text');
-                
-                itemContainer.appendChild(text);
-                wordsPracticeGrid.appendChild(itemContainer);
-            });
-        }
-        
-        function backToMenu() {
-            introScreen.classList.remove('hidden');
-            gameScreen.classList.add('hidden');
-            practiceScreen.classList.add('hidden');
-            scoreBox.classList.add('hidden');
-        }
-
-        function nextRound() {
-            messageBox.textContent = '';
-            challengeBox.classList.remove('correct', 'incorrect');
-            optionsGrid.innerHTML = '';
-            
-            const toCase = (text) => text.toLowerCase();
-
-            if (currentLevel === 'letters') {
-                shuffleArray(letters);
-                correctAnswer = letters[0];
-                
-                currentOptions = [correctAnswer];
-                const otherLetters = [...letters].filter(l => l !== correctAnswer);
-                shuffleArray(otherLetters);
-                currentOptions.push(...otherLetters.slice(0, 3));
-                shuffleArray(currentOptions);
-                
-                currentTaskEl.textContent = 'Bé hãy lắng nghe và tìm chữ cái!';
-                challengeBox.innerHTML = `<button class="read-aloud-button" onclick="speakText('${correctAnswer}')">Đọc lại</button>`;
-                speakText(correctAnswer);
-                createOptions(currentOptions.map(toCase));
-
-            } else if (currentLevel === 'vowels') {
-                shuffleArray(vowels);
-                correctAnswer = vowels[0];
-                
-                currentOptions = [correctAnswer];
-                const otherVowels = [...vowels].filter(v => v !== correctAnswer);
-                shuffleArray(otherVowels);
-                const uniqueVowels = otherVowels.filter(v => !v.includes(correctAnswer.charAt(0)) && !correctAnswer.includes(v.charAt(0)));
-                currentOptions.push(...uniqueVowels.slice(0, 3));
-                shuffleArray(currentOptions);
-
-                currentTaskEl.textContent = 'Bé hãy lắng nghe và tìm vần!';
-                challengeBox.innerHTML = `<button class="read-aloud-button" onclick="speakText('${correctAnswer}')">Đọc lại</button>`;
-                if (correctAnswer === 'ai') {
-                    speakText('ai');
-                } else if (correctAnswer === 'ay') {
-                    speakText('ay');
-                } else {
-                    speakText(correctAnswer);
-                }
-                createOptions(currentOptions.map(toCase));
-            } else if (currentLevel === 'words') {
-                shuffleArray(words);
-                const currentWord = words[0];
-                correctAnswer = currentWord;
-                
-                currentOptions = [currentWord];
-                const otherWords = words.filter(w => w !== correctAnswer);
-                shuffleArray(otherWords);
-                currentOptions.push(...otherWords.slice(0, 3));
-                shuffleArray(currentOptions);
-
-                challengeBox.innerHTML = `
-                    <div class="word-challenge-box">
-                        <p class="text-xl sm:text-2xl font-bold mb-2">Bé hãy lắng nghe và tìm từ nhé!</p>
-                        <button class="read-aloud-button" onclick="speakText('${currentWord}')">Đọc lại</button>
-                    </div>
-                `;
-                challengeBox.classList.remove('cursor-pointer');
-                challengeBox.classList.add('p-8');
-                
-                currentTaskEl.textContent = 'Tìm từ:';
-                speakText(`Em hãy tìm từ: ${currentWord}`);
-                createOptions(currentOptions.map(toCase));
-            } else if (currentLevel === 'vowel-match') {
-                shuffleArray(vowelMatchWords);
-                const currentMatch = vowelMatchWords[0];
-                correctAnswer = currentMatch.question;
-                const vowelToFind = currentMatch.vowel;
-
-                // Filter words that do NOT contain the vowel
-                const incorrectWords = vowelMatchWords.filter(w => !w.question.includes(vowelToFind) && w.question !== correctAnswer);
-                
-                // If there are not enough incorrect words, fill with other random words
-                if (incorrectWords.length < 3) {
-                    const allOtherWords = words.filter(w => !w.includes(vowelToFind) && w !== correctAnswer);
-                    shuffleArray(allOtherWords);
-                    incorrectWords.push(...allOtherWords);
-                }
-                
-                shuffleArray(incorrectWords);
-                const incorrectOptions = incorrectWords.slice(0, 3).map(w => w.question);
-                
-                currentOptions = [correctAnswer, ...incorrectOptions];
-                shuffleArray(currentOptions);
-
-                currentTaskEl.textContent = `Bé hãy lắng nghe và tìm từ có vần!`;
-                challengeBox.innerHTML = `
-                    <div class="word-challenge-box">
-                        <p class="text-xl sm:text-2xl font-bold mb-2">Từ có chứa vần "${toCase(vowelToFind)}"</p>
-                        <button class="read-aloud-button" onclick="speakText('${vowelToFind}')">Đọc lại</button>
-                    </div>
-                `;
-                speakText(vowelToFind);
-                createOptions(currentOptions.map(toCase));
-            }
-        }
-
-        function createOptions(options) {
-            options.forEach(option => {
-                const button = document.createElement('button');
-                button.textContent = option;
-                button.classList.add('card', 'text-2xl', 'p-4');
-                button.style.fontSize = '2rem';
-                button.addEventListener('click', () => checkAnswer(option, button));
-                optionsGrid.appendChild(button);
             });
         }
 
-        function checkAnswer(selected, button) {
-            const normalizedSelected = selected.toLowerCase();
-            const normalizedCorrect = correctAnswer.toLowerCase();
-            const allButtons = optionsGrid.querySelectorAll('button');
-            allButtons.forEach(btn => btn.disabled = true);
-
-            if (normalizedSelected === normalizedCorrect) {
-                messageBox.textContent = 'Đúng rồi!';
-                button.classList.add('correct');
-                speakText('Con giỏi lắm!');
-                updateScore(1);
-                setTimeout(nextRound, 2000);
-            } else {
-                messageBox.textContent = 'Sai rồi, bé hãy cố gắng hơn nhé!';
-                button.classList.add('incorrect');
-                
-                let selectedPronunciation = normalizedSelected;
-                let correctPronunciation = normalizedCorrect;
-
-                if (currentLevel === 'letters' || currentLevel === 'vowels') {
-                    if (normalizedSelected === 'ay') {
-                        selectedPronunciation = 'ay';
-                    } else if (normalizedSelected === 'ai') {
-                        selectedPronunciation = 'ai';
-                    }
-                     if (normalizedCorrect === 'ay') {
-                        correctPronunciation = 'ay';
-                    } else if (normalizedCorrect === 'ai') {
-                        correctPronunciation = 'ai';
-                    }
-                    speakText(`Đây là ${selectedPronunciation}, không phải ${correctPronunciation}. Sai rồi, cố lên con nhé!`);
-
-                } else {
-                    speakText(`Đây là từ ${selectedPronunciation}, chúng ta đang tìm từ ${correctPronunciation}. Sai rồi, cố lên con nhé!`);
-                }
-
-                setTimeout(() => {
-                    button.classList.remove('incorrect');
-                    allButtons.forEach(btn => btn.disabled = false);
-                }, 500);
-            }
-        }
         
-        function updateScore(points) {
-            score += points;
-            scoreValue.textContent = score;
-            if (score === 5 || score === 10 || score === 15) {
-                showFireworks();
-                speakText(`Chúc mừng! Bạn đã đạt ${score} điểm!`);
-            }
-        }
-        
-        const c = fireworksCanvas.getContext('2d');
-        let particles = [];
-        let tick = 0;
-        
-        function showFireworks() {
-            fireworksCanvas.classList.remove('hidden');
-            fireworksCanvas.width = window.innerWidth;
-            fireworksCanvas.height = window.innerHeight;
-            particles = [];
-            tick = 0;
-            requestAnimationFrame(animateFireworks);
-        }
-        
-        function animateFireworks() {
-            tick++;
-            c.fillStyle = 'rgba(255, 255, 255, 0.2)';
-            c.fillRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
-            c.clearRect(0, 0, fireworksCanvas.width, fireworksCanvas.height);
-            
-            if (tick % 20 === 0) {
-                particles.push(new Firework(Math.random() * fireworksCanvas.width, fireworksCanvas.height, Math.random() * fireworksCanvas.width, Math.random() * fireworksCanvas.height / 2));
-            }
-            
-            particles.forEach((p, i) => {
-                p.update();
-                p.draw();
-                if (p.isExploded) {
-                    particles.splice(i, 1);
-                }
-            });
-            
-            if (tick < 150) {
-                requestAnimationFrame(animateFireworks);
-            } else {
-                fireworksCanvas.classList.add('hidden');
-            }
-        }
-        
-        function Firework(x, y, targetX, targetY) {
-            this.x = x;
-            this.y = y;
-            this.targetX = targetX;
-            this.targetY = targetY;
-            this.isExploded = false;
-            this.trail = [];
-            this.hue = Math.random() * 360;
-            this.speedX = (this.targetX - this.x) / 50;
-            this.speedY = (this.targetY - this.y) / 50;
-            
-            this.update = function() {
-                if (this.isExploded) {
-                    this.trail.forEach(p => p.update());
-                    this.trail = this.trail.filter(p => !p.isDead());
-                    if (this.trail.length === 0) {
-                        this.isExploded = true;
-                    }
-                    return;
-                }
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.trail.push({ x: this.x, y: this.y, alpha: 1 });
-                if (this.trail.length > 5) {
-                    this.trail.shift();
-                }
-                if (Math.abs(this.x - this.targetX) < 5 && Math.abs(this.y - this.targetY) < 5) {
-                    this.explode();
-                }
-            };
-            
-            this.draw = function() {
-                if (this.isExploded) {
-                    this.trail.forEach(p => p.draw());
-                    return;
-                }
-                c.beginPath();
-                c.arc(this.x, this.y, 3, 0, Math.PI * 2);
-                c.fillStyle = `hsl(${this.hue}, 100%, 50%)`;
-                c.fill();
-            };
-            
-            this.explode = function() {
-                this.isExploded = true;
-                for (let i = 0; i < 50; i++) {
-                    this.trail.push(new Particle(this.x, this.y, this.hue));
-                }
-            };
-        }
-        
-        function Particle(x, y, hue) {
-            this.x = x;
-            this.y = y;
-            this.speedX = (Math.random() - 0.5) * 5;
-            this.speedY = (Math.random() - 0.5) * 5;
-            this.gravity = 0.1;
-            this.alpha = 1;
-            this.decay = 0.01;
-            this.hue = hue;
-            
-            this.update = function() {
-                this.speedY += this.gravity;
-                this.x += this.speedX;
-                this.y += this.speedY;
-                this.alpha -= this.decay;
-            };
-            
-            this.draw = function() {
-                c.beginPath();
-                c.arc(this.x, this.y, 2, 0, Math.PI * 2);
-                c.fillStyle = `hsla(${this.hue}, 100%, 50%, ${this.alpha})`;
-                c.fill();
-            };
-            
-            this.isDead = function() {
-                return this.alpha <= 0;
-            };
+        // --- STARTUP ---
+        window.onload = () => {
+             // NEW: Tải data từ Supabase
+             fetchLessonsFromSupabase(); 
+             showScreen('student-name-input');
         }
     </script>
 </body>
 </html>
-
-
