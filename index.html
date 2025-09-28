@@ -871,12 +871,17 @@
         
         function checkAnswer(selectedOption) {
             const currentQData = lessonSetQuestions[currentQuestionIndex];
+            // Danh sách các biểu tượng chúc mừng
+            const correctEmojis = ["🎉", "🌟", "🥳", "✨", "💯", "💖", "💡"];
+            const randomEmoji = correctEmojis[Math.floor(Math.random() * correctEmojis.length)];
+
             let userAnswer = String(selectedOption).toLowerCase().trim().replace(/[\.,!?'"']/g, ''); 
             
             if (userAnswer === currentAnswer.toLowerCase().trim().replace(/[\.,!?'"']/g, '')) {
                 score++;
-                feedbackEl.textContent = "🥳 Đúng rồi! Giỏi quá!";
-                feedbackEl.className = 'h-8 mb-4 text-center font-bold text-lg text-green-600 animate-pulse';
+                // FIX: Thêm biểu tượng chúc mừng
+                feedbackEl.textContent = `${randomEmoji} Đúng rồi! Giỏi quá! ${randomEmoji}`;
+                feedbackEl.className = 'h-8 mb-4 text-center font-bold text-2xl text-green-600 animate-pulse'; // Tăng kích thước font cho nổi bật
             } else {
                 missed++;
                 feedbackEl.textContent = `🥺 Sai rồi! Đáp án đúng là: ${currentAnswer}`;
@@ -897,6 +902,7 @@
             
             setTimeout(() => {
                 feedbackEl.textContent = "";
+                feedbackEl.className = 'h-8 mb-4 text-center font-bold text-lg'; // Reset class
                 generateQuestion();
             }, 1200); 
         }
@@ -1380,12 +1386,16 @@
 
             let successful = false;
             let finalError = "Không thể kết nối hoặc tất cả API keys đều bị lỗi.";
+            
+            // FIX: Sử dụng mô hình ổn định và bỏ bản preview có ngày tháng
+            const MODEL_NAME = 'gemini-2.5-flash'; 
 
             // Lặp qua tất cả các keys đã lưu trữ
             for (let i = 0; i < geminiKeys.length; i++) {
                 currentKeyIndex = (i + currentKeyIndex) % geminiKeys.length; // Xoay vòng index
                 const apiKey = geminiKeys[currentKeyIndex];
-                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
+                // FIX: Sử dụng mô hình mới
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
                 
                 adminStatusEl.textContent = `Đang thử API Key số ${currentKeyIndex + 1}/${geminiKeys.length}...`;
 
@@ -1423,14 +1433,14 @@
                         const errorMessage = errorBody.error?.message || `Lỗi HTTP ${response.status}`;
                         finalError = `Key ${currentKeyIndex + 1} lỗi: ${errorMessage}`;
                         console.error(`Lỗi API Key ${currentKeyIndex + 1}:`, errorMessage);
-                        // continue (tự động chuyển sang key tiếp theo trong vòng lặp)
+                        // Bỏ qua setTimeout, tiếp tục vòng lặp ngay lập tức để chuyển key nhanh hơn
                     }
 
                 } catch (error) {
                     // Lỗi mạng hoặc lỗi JSON parsing. Thử key tiếp theo
                     finalError = `Key ${currentKeyIndex + 1} lỗi kết nối/mạng: ${error.message}`;
                     console.error(`Lỗi kết nối Key ${currentKeyIndex + 1}:`, error);
-                    // continue
+                    // Bỏ qua setTimeout, tiếp tục vòng lặp ngay lập tức để chuyển key nhanh hơn
                 }
             } // Kết thúc vòng lặp key
 
