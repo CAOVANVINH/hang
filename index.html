@@ -84,6 +84,39 @@
         .alphabet-btn:active {
             transform: scale(0.98);
         }
+        /* Style cho Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        /* NEW: Class để tăng kích thước emoji trong nút chọn học sinh */
+        #student-name-input button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #student-name-input button span {
+            font-size: 1.5rem; /* Tăng kích thước emoji */
+            margin-right: 0.5rem;
+        }
     </style>
     
     <!-- KHÔNG CÒN IMPORT FIREBASE -->
@@ -120,30 +153,26 @@
         
         <!-- 0. MÀN HÌNH NHẬP TÊN HỌC SINH (UPDATED) -->
         <div id="student-name-input" class="space-y-4 mb-8">
-            <h2 class="text-lg font-bold text-gray-700 text-center">Xin chào! Con tên là gì?</h2>
+            <h2 class="text-lg font-bold text-gray-700 text-center">Con tên là gì? Chọn tên con để bắt đầu:</h2>
             
             <div class="grid grid-cols-2 gap-4">
                 <button onclick="selectStudentAndGrade('Thảo Huyền', 1)" class="subject-btn w-full p-4 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-pink-500 hover:bg-pink-600">
-                    👧 Thảo Huyền (Lớp 1)
+                    <span class="text-2xl">🌸</span> Thảo Huyền (Lớp 1)
                 </button>
                 <button onclick="selectStudentAndGrade('Hằng Nga', 2)" class="subject-btn w-full p-4 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-orange-500 hover:bg-orange-600">
-                    ⭐ Hằng Nga (Lớp 2)
+                    <span class="text-2xl">🌈</span> Hằng Nga (Lớp 2)
                 </button>
             </div>
             
             <!-- NEW: Vinh Quang Button -->
             <button onclick="selectStudentAndGrade('Vinh Quang', 0)" class="subject-btn w-full p-4 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-green-500 hover:bg-green-600">
-                👑 Vinh Quang (Mẫu Giáo)
+                <span class="text-2xl">🚀</span> Vinh Quang (Mẫu Giáo)
             </button>
             <!-- END NEW -->
 
-            <p class="text-center text-gray-500 font-semibold pt-2">Hoặc:</p>
+            <!-- ĐÃ XÓA: Ô input nhập tên học sinh khác -->
+            <!-- ĐÃ XÓA: Nút Bắt Đầu Học Tập -->
             
-            <input type="text" id="student-name-input-field" placeholder="Nhập tên học sinh khác..." class="game-input w-full p-3 border-2 border-gray-300 rounded-xl outline-none transition duration-200">
-            <p id="name-input-error" class="text-sm text-red-500 text-center h-4"></p>
-            <button onclick="promptForGrade()" class="primary-btn w-full p-4 text-xl font-bold text-white rounded-xl shadow-lg hover:shadow-xl">
-                Bắt Đầu Học Tập
-            </button>
             <button onclick="showScreen('login-area')" class="w-full text-sm font-medium text-blue-600 hover:text-blue-800 transition pt-2">
                 🔑 Đăng nhập Admin
             </button>
@@ -364,7 +393,7 @@
                     </div>
                 </div>
 
-                <!-- NEW: Giới hạn Bài Học Tối Đa cho học sinh -->
+                <!-- NEW: GIỚI HẠN BÀI HỌC TỐI ĐA (MAX) -->
                 <div id="max-lesson-control" class="mb-4">
                     <label class="block text-sm font-medium text-gray-700">Giới hạn Bài Học cho Học sinh (Max):</label>
                     <div class="flex gap-2">
@@ -372,12 +401,39 @@
                         <button onclick="updateMaxLesson()" class="admin-nav-btn text-white p-2 rounded-lg text-sm font-bold">Lưu Max</button>
                     </div>
                 </div>
+
+                <!-- NEW: CẤU HÌNH PHẠM VI BÀI HỌC BẮT BUỘC CHO PLAYER -->
+                <div id="player-range-control" class="p-3 border border-purple-300 rounded-xl bg-purple-50 space-y-2">
+                    <h4 class="text-sm font-bold text-purple-700 border-b border-purple-300 pb-2 mb-2">Tùy chỉnh Phạm vi Bé học (Bé không được chọn)</h4>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Bài Bắt Đầu:</label>
+                            <input type="number" id="player-start-lesson" min="1" class="admin-input w-full p-2 border-2 rounded-lg" placeholder="VD: 1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-gray-700">Bài Kết Thúc:</label>
+                            <input type="number" id="player-end-lesson" min="1" class="admin-input w-full p-2 border-2 rounded-lg" placeholder="VD: 10">
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 pt-2">
+                        <input type="checkbox" id="lock-player-range" class="form-checkbox h-5 w-5 text-purple-600 rounded">
+                        <label for="lock-player-range" class="text-sm font-medium text-gray-700 font-bold">
+                            **Khóa phạm vi này cho Học sinh (Bé không được chọn)**
+                        </label>
+                    </div>
+                    <button onclick="updatePlayerRangeLock()" class="admin-nav-btn w-full p-2 text-white font-bold rounded-xl bg-purple-600 hover:bg-purple-700">Lưu Phạm Vi & Khóa</button>
+                </div>
                 
                 <p id="lesson-preview" class="text-sm font-medium text-gray-700">Tổng số câu trong bài này: 0</p>
-                <button onclick="confirmDeleteLesson()" class="danger-btn w-full p-3 text-white font-bold rounded-xl mt-4">
-                    ⚠️ Xóa TOÀN BỘ Bài Học này
-                </button>
-
+                <div class="grid grid-cols-2 gap-2 mt-4">
+                    <!-- NEW: Nút Xem Chi Tiết Câu Hỏi -->
+                    <button onclick="showQuestionDetailsModal()" id="detail-question-btn" class="subject-btn p-3 text-white font-bold rounded-xl disabled:bg-gray-400">
+                        📝 Xem Chi Tiết Câu Hỏi
+                    </button>
+                    <button onclick="confirmDeleteLesson()" class="danger-btn p-3 text-white font-bold rounded-xl">
+                        ⚠️ Xóa TOÀN BỘ Bài Học này
+                    </button>
+                </div>
             </div>
 
             <!-- 4. LỊCH SỬ LÀM BÀI -->
@@ -436,6 +492,21 @@
 
     </div>
 
+    <!-- MODAL HIỂN THỊ CHI TIẾT CÂU HỎI -->
+    <div id="question-detail-modal" class="modal hidden">
+        <div class="modal-content">
+            <h3 class="text-xl font-bold text-blue-700 mb-4 border-b pb-2" id="modal-lesson-title">Chi Tiết Câu Hỏi Bài X</h3>
+            <div id="modal-questions-list" class="space-y-4">
+                <!-- Nội dung chi tiết câu hỏi được chèn bởi JavaScript -->
+                <p class="text-gray-500 text-center">Đang tải...</p>
+            </div>
+            <button onclick="closeQuestionDetailsModal()" class="primary-btn w-full p-3 text-white font-bold rounded-xl mt-6">
+                Đóng
+            </button>
+        </div>
+    </div>
+
+
     <script id="script_app_logic">
         // --- SUPABASE CONFIGURATION (THAY THẾ CHỖ NÀY BẰNG THÔNG TIN THẬT CỦA BẠN) ---
         const SUPABASE_URL = 'https://vuzbzjieuqghneipkprg.supabase.co'; // Đã dán URL của bạn
@@ -491,9 +562,9 @@
         
         const selectionControlsEl = document.getElementById('selection-controls'); 
 
-        const studentNameInputField = document.getElementById('student-name-input-field');
+        // const studentNameInputField = document.getElementById('student-name-input-field'); // ĐÃ XÓA
         const studentNameInputScreen = document.getElementById('student-name-input');
-        const nameInputErrorEl = document.getElementById('name-input-error');
+        // const nameInputErrorEl = document.getElementById('name-input-error'); // ĐÃ XÓA
 
         const loginAreaEl = document.getElementById('login-area');
         const gradeSelectionEl = document.getElementById('grade-selection');
@@ -543,6 +614,18 @@
         // NEW GEMINI ADMIN ELEMENTS
         const geminiKeyInputEl = document.getElementById('gemini-key-input');
         const geminiKeysListEl = document.getElementById('gemini-keys-list');
+
+        // NEW Modal Elements
+        const questionDetailModalEl = document.getElementById('question-detail-modal');
+        const modalLessonTitleEl = document.getElementById('modal-lesson-title');
+        const modalQuestionsListEl = document.getElementById('modal-questions-list');
+        const detailQuestionBtn = document.getElementById('detail-question-btn');
+        
+        // NEW Player Range Control Elements
+        const playerStartLessonEl = document.getElementById('player-start-lesson');
+        const playerEndLessonEl = document.getElementById('player-end-lesson');
+        const lockPlayerRangeEl = document.getElementById('lock-player-range');
+
         
         // NEW: Hardcoded questions for ALPHABET mode (24 letters for practice)
         const ALPHABET_QUESTIONS = [
@@ -652,16 +735,16 @@
             }
         }
 
-        function promptForGrade() {
-            studentName = studentNameInputField.value.trim();
-             if (!studentName) {
-                 nameInputErrorEl.textContent = "⚠️ Vui lòng nhập tên học sinh.";
-                 return;
-             }
-             nameInputErrorEl.textContent = "";
-             currentInfoEl.textContent = `Chào ${studentName}!`;
-             showScreen('grade-selection'); 
-        }
+        // function promptForGrade() { // ĐÃ XÓA
+        //     studentName = studentNameInputField.value.trim();
+        //      if (!studentName) {
+        //          nameInputErrorEl.textContent = "⚠️ Vui lòng nhập tên học sinh.";
+        //          return;
+        //      }
+        //      nameInputErrorEl.textContent = "";
+        //      currentInfoEl.textContent = `Chào ${studentName}!`;
+        //      showScreen('grade-selection'); 
+        // }
 
         // --- ADMIN LOGIN LOGIC ---
         function adminLogin() {
@@ -782,8 +865,13 @@
              const subject = currentSubject;
              
              let maxLessonFromDB = 0; // Số bài học lớn nhất thực tế có trong DB
-             let maxLessonLimit = maxLessonLimits[grade] ? maxLessonLimits[grade][subject] : 5; // Giới hạn Admin đặt
+             let maxLessonLimit = 5; // Mặc định là 5
              
+             // Lấy cấu hình giới hạn (Max limit) từ biến toàn cục
+             if (maxLessonLimits[grade] && maxLessonLimits[grade][subject] && typeof maxLessonLimits[grade][subject].max === 'number') {
+                 maxLessonLimit = maxLessonLimits[grade][subject].max;
+             }
+
              await fetchLessonsFromSupabase(); 
              
              if (lessonsAvailable[grade] && lessonsAvailable[grade][subject]) {
@@ -792,13 +880,32 @@
                  }
              }
 
-             // Sử dụng giá trị nhỏ hơn giữa DB Max và Admin Limit
-             const actualMaxLesson = Math.min(maxLessonFromDB, maxLessonLimit);
+             // Lấy cấu hình forced range & lock
+             let isRangeLocked = false;
+             let forcedStart = 1;
+             let forcedEnd = maxLessonLimit;
+
+             if (maxLessonLimits[grade] && maxLessonLimits[grade][subject]) {
+                 const config = maxLessonLimits[grade][subject];
+                 isRangeLocked = config.lockRange === true;
+                 
+                 // Đảm bảo forcedStart và forcedEnd không vượt quá Max limit và Max DB
+                 if (config.playerStartRange && config.playerStartRange >= 1) {
+                     forcedStart = Math.min(config.playerStartRange, maxLessonLimit, maxLessonFromDB || 1);
+                 }
+                 if (config.playerEndRange && config.playerEndRange >= forcedStart) {
+                     forcedEnd = Math.min(config.playerEndRange, maxLessonLimit, maxLessonFromDB || 1);
+                 }
+             }
+             
+             // Sử dụng giá trị nhỏ hơn giữa DB Max và Admin Limit (cho dropdown range)
+             const actualMaxLessonForDropdown = Math.min(maxLessonFromDB, maxLessonLimit);
              
              startLessonEl.innerHTML = '';
              endLessonEl.innerHTML = '';
-             let maxNumber = actualMaxLesson > 0 ? actualMaxLesson : 1;
+             let maxNumber = actualMaxLessonForDropdown > 0 ? actualMaxLessonForDropdown : 1;
              
+             // Tạo options cho dropdown
              for (let i = 1; i <= maxNumber; i++) {
                  const startOption = document.createElement('option');
                  startOption.value = i;
@@ -812,15 +919,22 @@
              }
              
              if (maxLessonFromDB > 0) {
-                 // Đặt giá trị mặc định cho dropdown
-                 startLessonEl.value = 1;
-                 endLessonEl.value = maxNumber; // Sử dụng maxNumber đã được giới hạn
+                 // Đặt giá trị mặc định/bị khóa
+                 startLessonEl.value = isRangeLocked ? forcedStart : 1;
+                 endLessonEl.value = isRangeLocked ? forcedEnd : maxNumber; 
                  
+                 // Áp dụng khóa
+                 startLessonEl.disabled = isRangeLocked;
+                 endLessonEl.disabled = isRangeLocked;
+
                  if (showFeedback) {
                      lessonErrorEl.className = "text-xs text-green-600 mt-2";
-                     lessonErrorEl.textContent = `✅ Đã tìm thấy Bài 1 đến Bài ${maxLessonFromDB}. Giới hạn hiện tại cho bé là Bài ${maxNumber}.`;
+                     let lockMsg = isRangeLocked ? ` **(ĐÃ KHÓA: Bài ${forcedStart} - ${forcedEnd})**` : ` (Giới hạn bé học: Bài ${maxNumber})`;
+                     lessonErrorEl.textContent = `✅ Đã tìm thấy Bài 1 đến Bài ${maxLessonFromDB}.` + lockMsg;
                  }
              } else {
+                 startLessonEl.disabled = true;
+                 endLessonEl.disabled = true;
                  lessonErrorEl.className = "text-xs text-red-500 mt-2";
                  lessonErrorEl.textContent = "⚠️ Không tìm thấy bài học nào. Vui lòng tạo bài mới trong chế độ Admin.";
                  // Đặt giá trị mặc định khi không có bài học
@@ -834,6 +948,7 @@
             lessonStart = parseInt(startLessonEl.value);
             lessonEnd = parseInt(endLessonEl.value);
 
+            // Kiểm tra lại sau khi đã áp dụng khóa
             if (isNaN(lessonStart) || isNaN(lessonEnd) || lessonStart < 1 || lessonEnd < 1 || lessonStart > lessonEnd) {
                 lessonErrorEl.textContent = "⚠️ Vui lòng nhập đúng phạm vi Bài Bắt Đầu và Bài Kết Thúc.";
                 return;
@@ -1146,19 +1261,44 @@
 
                 if (error && error.code !== 'PGRST116') throw error; // PGRST116: no rows found
 
+                // FIX: Đảm bảo maxLessonLimits luôn có cấu trúc {1: {}, 2: {}} để tránh lỗi undefined
+                // Đặt giá trị mặc định cho các trường mới: max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false
                 if (data && data.max_lesson_limits) {
-                    // Cập nhật cấu trúc maxLessonLimits từ DB
-                    maxLessonLimits = data.max_lesson_limits;
+                    maxLessonLimits = { 1: {}, 2: {} };
+                    for (const grade of [1, 2]) {
+                        for (const subject of ['TOAN', 'SPELL', 'READ']) {
+                             const existing = data.max_lesson_limits[grade] ? (data.max_lesson_limits[grade][subject] || {}) : {};
+                             
+                             // FIX: Ensure it's a nested object for consistency
+                             if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
+                             
+                             maxLessonLimits[grade][subject] = {
+                                 max: existing.max !== undefined ? existing.max : 5,
+                                 playerStartRange: existing.playerStartRange !== undefined ? existing.playerStartRange : 1,
+                                 playerEndRange: existing.playerEndRange !== undefined ? existing.playerEndRange : 5,
+                                 lockRange: existing.lockRange === true // Chỉ true khi được set là true
+                             };
+                        }
+                    }
+                } else {
+                    // Nếu không có data, giữ nguyên mặc định
+                    maxLessonLimits = {
+                         1: { TOAN: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, SPELL: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, READ: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false } },
+                         2: { TOAN: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, SPELL: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, READ: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false } }
+                    };
                 }
                 
                 // Đảm bảo admin-max-lesson luôn hiển thị giá trị hiện tại khi load
                 const grade = parseInt(adminGradeEl.value);
                 const subject = adminSubjectEl.value;
-                if (maxLessonLimits[grade] && maxLessonLimits[grade][subject]) {
-                     adminMaxLessonEl.value = maxLessonLimits[grade][subject];
-                } else {
-                     adminMaxLessonEl.value = 5; // Mặc định là 5
-                }
+                
+                // Lấy giá trị từ cấu trúc đã được đảm bảo an toàn
+                const config = maxLessonLimits[grade] && maxLessonLimits[grade][subject] ? maxLessonLimits[grade][subject] : { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
+
+                adminMaxLessonEl.value = config.max;
+                playerStartLessonEl.value = config.playerStartRange;
+                playerEndLessonEl.value = config.playerEndRange;
+                lockPlayerRangeEl.checked = config.lockRange;
 
 
             } catch (e) {
@@ -1180,9 +1320,14 @@
                 return;
             }
             
-            // Cập nhật biến cục bộ
+            // Cập nhật cấu trúc Max
             if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
-            maxLessonLimits[grade][subject] = newMax;
+            if (!maxLessonLimits[grade][subject]) {
+                // Giữ lại các giá trị player range nếu đã có
+                maxLessonLimits[grade][subject] = { max: newMax, playerStartRange: 1, playerEndRange: 5, lockRange: false };
+            } else {
+                maxLessonLimits[grade][subject].max = newMax;
+            }
             
             try {
                 const { error } = await supabase
@@ -1197,6 +1342,56 @@
             } catch (e) {
                 console.error("Lỗi lưu giới hạn bài học:", e);
                 adminStatusEl.textContent = `LỖI SUPABASE: Không lưu được giới hạn bài học (${e.message}).`;
+            }
+        }
+
+        // NEW: Cập nhật Player Range & Lock Status
+        async function updatePlayerRangeLock() {
+            if (!supabase) return;
+            const grade = parseInt(adminGradeEl.value);
+            const subject = adminSubjectEl.value;
+            const start = parseInt(playerStartLessonEl.value);
+            const end = parseInt(playerEndLessonEl.value);
+            const lock = lockPlayerRangeEl.checked;
+            
+            adminStatusEl.textContent = '';
+
+            if (isNaN(start) || isNaN(end) || start < 1 || end < 1 || start > end) {
+                adminStatusEl.textContent = "⚠️ Phạm vi bài học bắt đầu/kết thúc không hợp lệ.";
+                return;
+            }
+
+            // Đảm bảo cấu trúc tồn tại
+            if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
+            if (!maxLessonLimits[grade][subject]) {
+                 // Nếu chưa có, khởi tạo với max mặc định là 5
+                 maxLessonLimits[grade][subject] = { max: 5 };
+            }
+            
+            const maxLimit = maxLessonLimits[grade][subject].max || 5;
+
+            if (start > maxLimit || end > maxLimit) {
+                 adminStatusEl.textContent = `⚠️ Phạm vi không được vượt quá Giới hạn Max đã đặt (${maxLimit}).`;
+                 return;
+            }
+
+            // Cập nhật các trường Player Range
+            maxLessonLimits[grade][subject].playerStartRange = start;
+            maxLessonLimits[grade][subject].playerEndRange = end;
+            maxLessonLimits[grade][subject].lockRange = lock;
+
+            try {
+                const { error } = await supabase
+                    .from('config')
+                    .upsert({ id: 1, max_lesson_limits: maxLessonLimits }, { onConflict: 'id' });
+
+                if (error) throw error;
+                
+                adminStatusEl.textContent = `✅ Đã lưu Cấu hình Phạm vi Bé học cho Lớp ${grade} - Môn ${subject}: Bài ${start} đến ${end}. (Khóa: ${lock ? 'Bật' : 'Tắt'})`;
+
+            } catch (e) {
+                console.error("Lỗi lưu cấu hình Player Range:", e);
+                adminStatusEl.textContent = `LỖI SUPABASE: Không lưu được Cấu hình Player Range (${e.message}).`;
             }
         }
 
@@ -1282,10 +1477,10 @@
 
         function deleteGeminiKey(index) {
             if (index >= 0 && index < geminiKeys.length) {
-                if (confirm(`Bạn có chắc chắn muốn xóa API Key số ${index + 1} không?`)) {
-                    const updatedKeys = geminiKeys.filter((_, i) => i !== index);
-                    saveGeminiKeys(updatedKeys);
-                }
+                // Thay thế window.confirm bằng thông báo trực tiếp
+                adminStatusEl.textContent = `⚠️ Đã xóa API Key số ${index + 1}. Vui lòng Lưu lại (Save) cấu hình nếu cần.`;
+                const updatedKeys = geminiKeys.filter((_, i) => i !== index);
+                saveGeminiKeys(updatedKeys); // Vẫn gọi save để cập nhật DB
             }
         }
         
@@ -1505,12 +1700,16 @@
              const grade = parseInt(adminGradeEl.value);
              const subject = adminSubjectEl.value;
              
-             // NEW: Cập nhật giá trị Max Lesson khi thay đổi Grade/Subject
-             if (maxLessonLimits[grade] && maxLessonLimits[grade][subject]) {
-                 adminMaxLessonEl.value = maxLessonLimits[grade][subject];
-             } else {
-                 adminMaxLessonEl.value = 5; // Mặc định
-             }
+             // Lấy cấu hình hiện tại để hiển thị trong Admin UI
+             const config = maxLessonLimits[grade] && maxLessonLimits[grade][subject] 
+                           ? maxLessonLimits[grade][subject] 
+                           : { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
+
+             adminMaxLessonEl.value = config.max;
+             playerStartLessonEl.value = config.playerStartRange;
+             playerEndLessonEl.value = config.playerEndRange;
+             lockPlayerRangeEl.checked = config.lockRange;
+
              
              // Need to safely check for existence of grade 0 data in admin logic
              const options = lessonsAvailable[grade] && lessonsAvailable[grade][subject] ? lessonsAvailable[grade][subject] : [];
@@ -1525,12 +1724,14 @@
                  });
                  adminLessonEl.value = options[0].lessonNumber;
                  lessonNameControlEl.classList.remove('hidden'); 
+                 detailQuestionBtn.disabled = false;
              } else {
                  const option = document.createElement('option');
                  option.value = 0;
                  option.textContent = "Chưa có bài học nào";
                  adminLessonEl.appendChild(option);
                  lessonNameControlEl.classList.add('hidden'); 
+                 detailQuestionBtn.disabled = true;
              }
              
              previewLesson();
@@ -1719,6 +1920,141 @@
             }
         }
 
+        // --- NEW: CHỨC NĂNG QUẢN LÝ CÂU HỎI CHI TIẾT ---
+
+        function showQuestionDetailsModal() {
+            const grade = parseInt(adminGradeEl.value);
+            const subject = adminSubjectEl.value;
+            const lessonNumber = parseInt(adminLessonEl.value);
+
+            if (lessonNumber === 0) {
+                adminStatusEl.textContent = "⚠️ Vui lòng chọn Bài Học hợp lệ để xem chi tiết câu hỏi.";
+                return;
+            }
+
+            const lesson = lessonsAvailable[grade][subject].find(l => l.lessonNumber === lessonNumber);
+
+            if (!lesson || !lesson.questions_data || lesson.questions_data.length === 0) {
+                modalLessonTitleEl.textContent = `Bài ${lessonNumber} - ${lesson.lessonName}`;
+                modalQuestionsListEl.innerHTML = '<p class="text-sm text-gray-500 text-center">Bài học này chưa có câu hỏi nào.</p>';
+                questionDetailModalEl.classList.remove('hidden');
+                return;
+            }
+
+            modalLessonTitleEl.textContent = `Chi Tiết Câu Hỏi Bài ${lessonNumber} - ${lesson.lessonName} (${lesson.numQuestions} câu)`;
+            
+            let html = '';
+            lesson.questions_data.forEach((q, index) => {
+                const qType = q.type || (subject === 'TOAN' ? 'MATH_OP' : subject);
+                html += `
+                    <div class="p-3 border border-blue-200 rounded-lg bg-blue-50 space-y-1 text-sm">
+                        <div class="flex justify-between items-start">
+                            <p class="font-bold text-gray-800">Câu ${index + 1} (${qType}):</p>
+                            <button 
+                                onclick="confirmDeleteQuestion(${lesson.id}, ${index}, 'Câu ${index + 1}')" 
+                                class="danger-btn px-2 py-1 text-xs text-white rounded-md hover:bg-red-700 font-bold ml-4"
+                            >
+                                Xóa
+                            </button>
+                        </div>
+                        <p class="text-gray-700"><strong>Hỏi:</strong> ${q.q}</p>
+                        <p class="text-green-600"><strong>Đáp án:</strong> ${q.a}</p>
+                        <p class="text-gray-500 text-xs">Lựa chọn: ${q.options ? q.options.join(' | ') : 'Không có'}</p>
+                    </div>
+                `;
+            });
+            modalQuestionsListEl.innerHTML = html;
+            questionDetailModalEl.classList.remove('hidden');
+        }
+
+        function closeQuestionDetailsModal() {
+            questionDetailModalEl.classList.add('hidden');
+        }
+
+        function confirmDeleteQuestion(lessonId, questionIndex, questionLabel) {
+             // Thay thế window.confirm bằng thông báo trực tiếp
+             if (window.confirm(`Bạn có chắc chắn muốn xóa ${questionLabel} này không? Hành động này không thể hoàn tác.`)) {
+                deleteQuestion(lessonId, questionIndex);
+             }
+        }
+
+        async function deleteQuestion(lessonId, questionIndex) {
+            if (!supabase) return;
+            
+            // 1. Tìm bài học trong bộ nhớ đệm
+            let lessonToUpdate = null;
+            let currentSubjectLocal = null;
+            let currentGradeLocal = null;
+            let currentLessonNumberLocal = null;
+
+            for (const grade in lessonsAvailable) {
+                for (const subject in lessonsAvailable[grade]) {
+                    const found = lessonsAvailable[grade][subject].find(l => l.id === lessonId);
+                    if (found) {
+                        lessonToUpdate = found;
+                        currentSubjectLocal = subject;
+                        currentGradeLocal = parseInt(grade);
+                        currentLessonNumberLocal = found.lessonNumber;
+                        break;
+                    }
+                }
+                if (lessonToUpdate) break;
+            }
+
+            if (!lessonToUpdate) {
+                adminStatusEl.textContent = "Lỗi: Không tìm thấy ID bài học.";
+                closeQuestionDetailsModal();
+                return;
+            }
+
+            // 2. Tạo mảng câu hỏi mới
+            let updatedQuestions = [...lessonToUpdate.questions_data];
+            
+            if (questionIndex >= updatedQuestions.length) {
+                adminStatusEl.textContent = "Lỗi: Chỉ số câu hỏi không hợp lệ.";
+                closeQuestionDetailsModal();
+                return;
+            }
+
+            updatedQuestions.splice(questionIndex, 1); // Xóa câu hỏi
+            
+            // 3. Cập nhật Supabase
+            try {
+                const { error } = await supabase
+                    .from('lessons')
+                    .update({ 
+                        questions_data: updatedQuestions,
+                        num_questions: updatedQuestions.length 
+                    })
+                    .eq('id', lessonId);
+
+                if (error) throw error;
+
+                adminStatusEl.textContent = `✅ Đã xóa thành công câu hỏi số ${questionIndex + 1} khỏi bài ${lessonToUpdate.lessonNumber}.`;
+                
+                // 4. Cập nhật UI/Cache
+                closeQuestionDetailsModal();
+                await fetchLessonsFromSupabase(); 
+                
+                // Cập nhật lại Admin Panel với bài đang chọn
+                adminGradeEl.value = String(currentGradeLocal);
+                adminSubjectEl.value = currentSubjectLocal;
+                await loadLessonOptions(false); 
+                adminLessonEl.value = String(currentLessonNumberLocal); // Sử dụng lesson number đã lưu
+                previewLesson();
+                
+                // Mở lại modal để refresh danh sách (nếu còn câu hỏi)
+                const latestLesson = lessonsAvailable[currentGradeLocal][currentSubjectLocal].find(l => l.lessonNumber === currentLessonNumberLocal);
+                if (latestLesson && latestLesson.numQuestions > 0) {
+                    showQuestionDetailsModal();
+                }
+
+            } catch (e) {
+                adminStatusEl.textContent = `Lỗi xóa câu hỏi Supabase: ${e.message}`;
+                closeQuestionDetailsModal();
+            }
+        }
+
         // --- GEMINI API INTEGRATION (Mục 2) ---
         
         async function generateAndSaveQuestions() {
@@ -1880,14 +2216,13 @@
                 let existingQuestions = lesson.questions_data || [];
                 const updatedQuestions = [...existingQuestions, ...newQuestions];
                 
-                const { data, error } = await supabase
+                const { error } = await supabase
                     .from('lessons')
                     .update({ 
                         questions_data: updatedQuestions, 
                         num_questions: updatedQuestions.length 
                     })
-                    .eq('id', lesson.id)
-                    .select();
+                    .eq('id', lesson.id);
                 
                 if (error) throw error;
                 
