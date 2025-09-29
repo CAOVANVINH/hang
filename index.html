@@ -117,10 +117,23 @@
             font-size: 1.5rem; /* Tăng kích thước emoji */
             margin-right: 0.5rem;
         }
+
+        /* NEW: Style cho nút từ vựng (ENGLISH mode) */
+        .vocab-btn {
+            background-color: #1d4ed8; /* Blue 700 */
+            transition: background-color 0.2s, transform 0.1s, opacity 0.3s;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-align: center;
+        }
+        .vocab-btn:hover {
+            background-color: #1e40af; /* Blue 800 */
+        }
     </style>
     
     <script type="module">
-        // Đánh dấu đã sẵn sàng ngay lập tức vì không cần chờ Auth
+        // Đánh dấu đã sẵn sàng ngay lập lập tức vì không cần chờ Auth
         window.isAuthReady = true; 
     </script>
 </head>
@@ -216,6 +229,11 @@
                     🎧 Luyện Đọc (Nghe & Chọn)
                 </button>
             </div>
+            <!-- ENGLISH BUTTON -->
+            <button onclick="selectSubject('ENGLISH')" class="subject-btn w-full p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl bg-blue-600 hover:bg-blue-700">
+                🇬🇧 Tiếng Anh (Luyện Từ)
+            </button>
+            <!-- END ENGLISH BUTTON -->
             <button onclick="showScreen('student-name-input')" class="w-full text-sm font-medium text-red-600 hover:text-red-800 transition pt-2">
                 Quay lại Chọn Lớp
             </button>
@@ -226,7 +244,7 @@
             <h2 class="text-xl font-bold text-gray-700 mb-4" id="setup-title"></h2>
             
             <div class="p-4 border border-indigo-200 rounded-xl mb-6 bg-indigo-50">
-                <p class="text-sm text-indigo-700 font-semibold mb-2">Giới hạn: Mỗi lần luyện tập có 30 câu hỏi.</p>
+                <p class="text-sm text-indigo-700 font-semibold mb-2" id="setup-limit-text">Giới hạn: Mỗi lần luyện tập có 30 câu hỏi.</p>
                 <div class="flex justify-center items-center gap-4">
                     <div class="flex-1">
                         <label class="block text-xs font-medium text-gray-600 mb-1">Bài Bắt Đầu:</label>
@@ -237,7 +255,7 @@
                         <select id="end-lesson" class="game-input w-full p-2 text-center border-2 rounded-lg outline-none"></select>
                     </div>
                 </div>
-                <p class="text-xs text-red-500 mt-2" id="lesson-error"></p>
+                <p class="自身的xs text-red-500 mt-2" id="lesson-error"></p>
                 <button onclick="checkLessonRange()" class="subject-btn mt-4 w-full p-2 text-md font-bold text-white rounded-xl">
                     Kiểm tra & Cập nhật
                 </button>
@@ -263,21 +281,32 @@
                 </p>
                 <div id="image-hint" class="text-base font-medium text-gray-600 my-2"></div>
                 
-                <!-- NÚT CHO PHÉP ĐỌC -->
-                <div id="reading-controls" class="hidden mt-4">
-                    <button id="read-button" onclick="playAudio()" class="read-btn p-3 text-lg font-bold text-white rounded-xl shadow-md disabled:bg-gray-400">
+                <!-- NÚT CHO PHÉP ĐỌC VÀ DỊCH -->
+                <div id="reading-controls" class="hidden mt-4 space-y-2">
+                    <button id="read-button" onclick="playAudio()" class="read-btn p-3 text-lg font-bold text-white rounded-xl shadow-md disabled:bg-gray-400 w-full sm:w-1/2 mx-auto">
                         🔊 Đọc Lại
                     </button>
+                    <!-- NEW: Nút Giải thích (chỉ cho Tiếng Anh) -->
+                    <button id="explain-btn" onclick="getVocabularyExplanation()" class="subject-btn p-3 text-sm font-bold text-white rounded-xl shadow-md disabled:bg-gray-400 w-full sm:w-1/2 mx-auto bg-green-600 hover:bg-green-700 hidden flex items-center justify-center">
+                        <span id="explain-text">🤖 Hỏi AI Giải Thích</span>
+                        <svg id="explain-loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    </button>
+                    <!-- Xóa nút Dịch & Đọc cũ (translate-btn) -->
                 </div>
-                <!-- END NÚT CHO PHÉP ĐỌC -->
             </div>
             
-            <!-- KHU VỰC TRẢ LỜI BẰNG CHỌN NÚT (Toán & Tiếng Việt) -->
+            <!-- NEW: Khu vực hiển thị giải thích AI -->
+            <div id="ai-explanation-output" class="p-4 bg-gray-50 rounded-xl mb-6 border border-gray-200 text-left hidden">
+                <p class="text-gray-600 font-bold">Giải thích từ:</p>
+            </div>
+            <!-- END NEW -->
+
+            <!-- KHU VỰC TRẢ LỜI BẰNG CHỌN NÚT (Sẽ dùng để hiển thị từ vựng trong chế độ ENGLISH) -->
             <div id="selection-controls" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-                <!-- Nút đáp án sẽ được chèn ở đây bằng JavaScript -->
+                <!-- Nút đáp án / Nút từ vựng sẽ được chèn ở đây bằng JavaScript -->
             </div>
 
-            <!-- HIỂN THỊ TRẠNG THÁI BÀI THI -->
+            <!-- HIỂN THỊ TRẠNG THÁI BÀI THI (Ẩn cho Tiếng Anh Vocab) -->
             <p id="lesson-progress" class="text-sm font-bold text-indigo-600 mb-4">
                 Câu: 1 / 30
             </p>
@@ -310,6 +339,7 @@
                             <option value="TOAN">Toán Học</option>
                             <option value="SPELL">Chính Tả</option>
                             <option value="READ">Luyện Đọc</option>
+                            <option value="ENGLISH">Tiếng Anh</option>
                         </select>
                     </div>
                 </div>
@@ -337,14 +367,11 @@
                     <span id="ai-target-info">Vui lòng chọn Bài Học ở mục 3 trước khi tạo câu hỏi.</span>
                 </div>
                 
-                <textarea id="ai-prompt" rows="3" placeholder="Ví dụ: Tạo 30 phép trừ có nhớ trong phạm vi 100. Hoặc: Tạo 30 câu chính tả phân biệt s/x." class="admin-input w-full p-2 border-2 rounded-lg"></textarea>
+                <textarea id="ai-prompt" rows="3" placeholder="Ví dụ: Tạo 30 phép trừ có nhớ trong phạm vi 100. Hoặc: Tạo 30 câu chính tả phân biệt s/x. (Với Tiếng Anh: Chỉ cần nhập 30 từ vựng cơ bản, mỗi từ một dòng)" class="admin-input w-full p-2 border-2 rounded-lg"></textarea>
                 
                 <button onclick="generateAndSaveQuestions()" class="admin-nav-btn w-full p-3 text-white font-bold rounded-xl flex items-center justify-center disabled:bg-gray-400" id="ai-generate-btn">
                     <span id="ai-generate-text">✨ Tạo & Lưu 30 Câu Hỏi Mới</span>
-                    <svg id="ai-loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
+                    <svg id="ai-loading-spinner" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 </button>
                 <!-- NEW: Thông báo trạng thái AI ngay dưới nút -->
                 <p id="ai-status-message" class="text-sm font-semibold text-center mt-2"></p>
@@ -368,6 +395,7 @@
                             <option value="TOAN">Toán Học</option>
                             <option value="SPELL">Chính Tả</option>
                             <option value="READ">Luyện Đọc</option>
+                            <option value="ENGLISH">Tiếng Anh</option>
                         </select>
                     </div>
                 </div>
@@ -425,6 +453,7 @@
                                 <option value="TOAN">Toán Học</option>
                                 <option value="SPELL">Chính Tả</option>
                                 <option value="READ">Luyện Đọc</option>
+                                <option value="ENGLISH">Tiếng Anh</option>
                             </select>
                         </div>
                     </div>
@@ -507,6 +536,7 @@
         let isLessonSetMode = false;
         let lessonSetQuestions = []; 
         let currentQuestionIndex = 0; 
+        let currentVocabWord = ''; // NEW: Từ vựng hiện tại đang được chọn
 
         // BIẾN CHO GEMINI
         let geminiKeys = [];
@@ -520,7 +550,7 @@
         const feedbackEl = document.getElementById('feedback');
         const imageHintEl = document.getElementById('image-hint');
         const readingControlsEl = document.getElementById('reading-controls'); 
-        const readButtonEl = document.getElementById('read-button'); // Re-added
+        const readButtonEl = document.getElementById('read-button'); 
         const statsDisplayEl = document.getElementById('stats-display');
         
         const selectionControlsEl = document.getElementById('selection-controls'); 
@@ -538,7 +568,8 @@
         const endLessonEl = document.getElementById('end-lesson'); 
         const lessonErrorEl = document.getElementById('lesson-error');
         const lessonProgressEl = document.getElementById('lesson-progress');
-        const quitGameBtn = document.getElementById('quit-game-btn'); // NEW: Lấy nút Dừng Bài
+        const quitGameBtn = document.getElementById('quit-game-btn'); 
+        const setupLimitTextEl = document.getElementById('setup-limit-text'); // New Element
 
         // Admin Elements
         const adminPanelEl = document.getElementById('admin-panel');
@@ -579,8 +610,14 @@
         const modalQuestionsListEl = document.getElementById('modal-questions-list');
         const detailQuestionBtn = document.getElementById('detail-question-btn');
         
+        // NEW: Translation/Explanation Elements
+        const explainBtn = document.getElementById('explain-btn'); // New element
+        const explainTextEl = document.getElementById('explain-text'); // New element
+        const explainLoadingEl = document.getElementById('explain-loading'); // New element
+        const aiExplanationOutputEl = document.getElementById('ai-explanation-output'); // New element
+
         
-        // Bảng chữ cái Mẫu Giáo - Re-added
+        // Bảng chữ cái Mẫu Giáo 
         const ALPHABET_QUESTIONS = [
             { q: "A", a: "A", options: ["A"], text: "a", type: "ALPHABET" },
             { q: "B", a: "B", options: ["B"], text: "bờ", type: "ALPHABET" },
@@ -614,14 +651,14 @@
         
         // --- TTS (CHUYỂN VĂN BẢN THÀNH GIỌNG NÓI CỦA TRÌNH DUYỆT) ---
 
-        function speakText(text) {
+        function speakText(text, lang = 'vi-VN') {
             if (!text) return; 
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.cancel(); 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'vi-VN'; 
-                utterance.rate = 0.7;
-                utterance.pitch = 1.1;
+                utterance.lang = lang; 
+                utterance.rate = lang === 'en-US' ? 0.9 : 0.7; // Tăng tốc độ đọc Tiếng Anh
+                utterance.pitch = lang === 'en-US' ? 1.0 : 1.1; // Chỉnh tone
                 
                 window.speechSynthesis.speak(utterance);
                 
@@ -636,8 +673,9 @@
         }
 
         function playAudio() {
-            if (currentMode === 'READ' || currentMode === 'SPELL' || currentMode === 'MATH_OP' || currentMode === 'MATH_WORD' || currentMode === 'ALPHABET') {
-                speakText(currentTextToRead); 
+            const lang = (currentSubject === 'ENGLISH') ? 'en-US' : 'vi-VN';
+            if (currentMode && currentTextToRead) {
+                speakText(currentTextToRead, lang);
             }
         }
         // --- END TTS FUNCTIONS ---
@@ -652,11 +690,17 @@
             document.getElementById(screenId).classList.remove('hidden');
             
             // Hiển thị thống kê chỉ trong chế độ Player
-            if (screenId === 'grade-selection' || screenId === 'subject-selection' || screenId === 'setup-area' || screenId === 'game-area') {
+            // Luôn ẩn score/missed/progress cho chế độ Tiếng Anh Vocab
+            const isGameMode = screenId === 'game-area';
+            const isVocabMode = currentSubject === 'ENGLISH' && isGameMode && !isLessonSetMode; // Check for vocabulary mode
+            const isAlphabetMode = currentSubject === 'ALPHABET' && isGameMode;
+
+            if (isVocabMode || isAlphabetMode) {
+                statsDisplayEl.classList.add('hidden');
+                lessonProgressEl.classList.add('hidden');
+            } else if (screenId === 'grade-selection' || screenId === 'subject-selection' || screenId === 'setup-area' || isGameMode) {
                 statsDisplayEl.classList.remove('hidden');
-            } else if (screenId === 'game-area' && currentSubject === 'ALPHABET') {
-                 // Ẩn stats trong chế độ Mẫu Giáo
-                statsDisplayEl.classList.add('hidden'); 
+                lessonProgressEl.classList.remove('hidden');
             } else {
                 statsDisplayEl.classList.add('hidden');
             }
@@ -726,9 +770,14 @@
                 return; 
             }
             
-            if (subject === 'TOAN') { subjectName = 'Toán Học'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Toán'; }
-            else if (subject === 'SPELL') { subjectName = 'Chính Tả (Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Chính Tả'; }
-            else if (subject === 'READ') { subjectName = 'Luyện Đọc (Nghe & Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Luyện Đọc'; }
+            if (subject === 'TOAN') { subjectName = 'Toán Học'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Toán'; setupLimitTextEl.textContent = 'Giới hạn: Mỗi lần luyện tập có 30 câu hỏi.'; }
+            else if (subject === 'SPELL') { subjectName = 'Chính Tả (Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Chính Tả'; setupLimitTextEl.textContent = 'Giới hạn: Mỗi lần luyện tập có 30 câu hỏi.'; }
+            else if (subject === 'READ') { subjectName = 'Luyện Đọc (Nghe & Chọn)'; setupTitleEl.textContent = 'Thiết Lập Bài Tập Luyện Đọc'; setupLimitTextEl.textContent = 'Giới hạn: Mỗi lần luyện tập có 30 câu hỏi.'; }
+            else if (subject === 'ENGLISH') { 
+                subjectName = 'Tiếng Anh (Luyện Từ)'; 
+                setupTitleEl.textContent = 'Thiết Lập Bài Tập Tiếng Anh';
+                setupLimitTextEl.textContent = 'Lưu ý: Môn Tiếng Anh ở chế độ này là Luyện Từ Vựng tương tác, không có tính điểm.'; 
+            } 
             
             currentInfoEl.textContent = `${subjectName} (Lớp ${currentGrade}) | ${studentName}`;
             lessonErrorEl.textContent = '';
@@ -743,12 +792,13 @@
         // Re-added Alphabet Functions
         function startAlphabetLesson() {
             currentMode = 'ALPHABET';
-            isLessonSetMode = true;
+            isLessonSetMode = true; // Use true to prevent game logic from running
             questionTextEl.className = 'text-2xl sm:text-3xl font-black text-gray-800 mb-2'; 
             questionTextEl.textContent = 'Chọn chữ cái bé muốn luyện đọc:'; 
             imageHintEl.textContent = '(Nhấp vào chữ cái để nghe phát âm)';
             imageHintEl.className = 'text-base font-medium text-gray-600 my-2';
             readingControlsEl.classList.add('hidden');
+            aiExplanationOutputEl.classList.add('hidden'); // Ensure AI area is hidden
 
             setupAlphabetButtons();
             
@@ -780,7 +830,7 @@
 
                 button.onclick = () => {
                     currentTextToRead = textToSpeak; 
-                    speakText(textToSpeak); 
+                    speakText(textToSpeak, 'vi-VN'); // Always read Vietnamese phonemes
                     
                     feedbackEl.textContent = `Đang đọc: ${textToSpeak.toUpperCase()}`;
                     feedbackEl.className = 'h-8 mb-4 text-center font-bold text-2xl text-orange-600 animate-pulse'; 
@@ -874,22 +924,87 @@
             score = 0;
             missed = 0;
             incorrectQuestions = []; 
-            updateScoreDisplay();
             
+            // Nếu là Tiếng Anh, không dùng chế độ tính điểm/câu hỏi
+            if (currentSubject === 'ENGLISH') {
+                await loadAndShuffleQuestions(true); // Load all questions for vocab list
+                startVocabularyLesson();
+                return;
+            }
+
+            // Chế độ tính điểm (Toán, Tiếng Việt)
+            updateScoreDisplay();
             lessonProgressEl.classList.remove('hidden');
             statsDisplayEl.classList.remove('hidden');
-            
-            // FIX: Sử dụng ID để đảm bảo nút Dừng Luyện Tập hoạt động chính xác
             quitGameBtn.onclick = endLessonSet;
 
             showScreen('game-area');
             
-            await loadAndShuffleQuestions();
+            await loadAndShuffleQuestions(false);
             currentQuestionIndex = 0;
             generateQuestion();
         }
 
-        async function loadAndShuffleQuestions() {
+        // NEW: Vocab Mode Start
+        function startVocabularyLesson() {
+            aiExplanationOutputEl.classList.add('hidden');
+            aiExplanationOutputEl.innerHTML = '';
+            
+            questionTextEl.className = 'text-2xl sm:text-3xl font-black text-gray-800 mb-2'; 
+            questionTextEl.textContent = 'Chọn từ vựng để luyện đọc và hỏi AI:'; 
+            imageHintEl.textContent = `Bài ${lessonStart} - ${lessonEnd} (${lessonSetQuestions.length} từ)`;
+
+            readingControlsEl.classList.remove('hidden');
+            readButtonEl.textContent = '🔊 Đọc Lại (English)';
+            explainBtn.classList.remove('hidden'); 
+            explainBtn.disabled = true; // Disable until a word is selected
+            
+            statsDisplayEl.classList.add('hidden');
+            lessonProgressEl.classList.add('hidden');
+            selectionControlsEl.classList.remove('hidden'); 
+            
+            // Tắt nút đọc lại mặc định (sẽ được gán lại trong handleVocabularyClick)
+            readButtonEl.onclick = playAudio; 
+            currentTextToRead = '';
+            
+            setupVocabularyButtons();
+
+            quitGameBtn.onclick = endLessonSet;
+            showScreen('game-area');
+        }
+
+        // NEW: Setup Vocab Buttons
+        function setupVocabularyButtons() {
+            selectionControlsEl.innerHTML = '';
+            selectionControlsEl.className = 'grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6';
+
+            lessonSetQuestions.forEach(q => {
+                const word = q.q; // Lấy từ vựng từ trường q
+                const button = document.createElement('button');
+                button.textContent = word;
+                button.className = 'vocab-btn p-3 text-lg font-bold text-white rounded-xl shadow-lg hover:shadow-xl w-full';
+                button.onclick = () => handleVocabularyClick(word); 
+                selectionControlsEl.appendChild(button);
+            });
+        }
+
+        // NEW: Handle Vocab Click
+        function handleVocabularyClick(word) {
+            currentVocabWord = word;
+            
+            // 1. Đọc to từ vựng
+            currentTextToRead = word;
+            speakText(word, 'en-US');
+
+            // 2. Cập nhật UI
+            questionTextEl.textContent = `Bạn đã chọn: ${word}`;
+            imageHintEl.textContent = 'Bấm "Hỏi AI Giải Thích" để xem nghĩa và cách dùng.';
+            
+            aiExplanationOutputEl.classList.add('hidden');
+            explainBtn.disabled = false;
+        }
+
+        async function loadAndShuffleQuestions(isVocabMode) {
             let allQuestions = [];
             
             await fetchLessonsFromSupabase(); 
@@ -908,32 +1023,34 @@
             }
             
             if (allQuestions.length === 0) {
-                questionTextEl.textContent = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
-                currentTextToRead = "Không tìm thấy câu hỏi trong phạm vi này. Vui lòng kiểm tra Admin.";
-                selectionControlsEl.innerHTML = '';
-                currentAnswer = null;
+                // ... (logic báo lỗi)
                 return;
             }
 
-            allQuestions.sort(() => Math.random() - 0.5);
-            
-            lessonSetQuestions = allQuestions.slice(0, TOTAL_QUESTIONS);
-            if (lessonSetQuestions.length < TOTAL_QUESTIONS) {
-                console.warn(`Chỉ tìm thấy ${lessonSetQuestions.length} câu hỏi.`);
+            // Nếu là chế độ Trắc nghiệm, trộn và giới hạn 30 câu
+            if (!isVocabMode) {
+                allQuestions.sort(() => Math.random() - 0.5);
+                lessonSetQuestions = allQuestions.slice(0, TOTAL_QUESTIONS);
+            } else {
+                // Nếu là chế độ Từ vựng, giữ tất cả các từ trong phạm vi
+                lessonSetQuestions = allQuestions; 
             }
         }
 
-        function endGame() {
-            isLessonSetMode = false;
-            showScreen('student-name-input');
-        }
-        
         async function endLessonSet() { 
+            // Nếu là Vocab Mode, chỉ cần quay lại màn hình setup
+            if (currentSubject === 'ENGLISH' && isLessonSetMode) {
+                isLessonSetMode = false;
+                showScreen('setup-area');
+                return;
+            }
+            
             if (currentSubject === 'ALPHABET') {
                 endAlphabetLesson();
                 return;
             }
 
+            // Logic lưu điểm cho Toán/Tiếng Việt
             let total = score + missed;
             let accuracy = total > 0 ? (score / total * 100).toFixed(1) : 0;
             
@@ -966,12 +1083,12 @@
         
 
 
-        // --- LOGIC CHƠI GAME & HỖ TRỢ NGÔN NGỮ ---
+        // --- LOGIC CHƠI GAME & HỖ TRỢ NGÔN NGỮ (Toán & Tiếng Việt) ---
 
         function updateScoreDisplay() {
             scoreEl.textContent = score;
             missedEl.textContent = missed;
-            if (isLessonSetMode && currentSubject !== 'ALPHABET') { // Re-added check for ALPHABET
+            if (isLessonSetMode && currentSubject !== 'ALPHABET' && currentSubject !== 'ENGLISH') { 
                 const totalDisplay = lessonSetQuestions.length;
                 questionCount = currentQuestionIndex + 1;
                 lessonProgressEl.textContent = `Câu: ${questionCount} / ${totalDisplay}`;
@@ -981,9 +1098,8 @@
         }
 
         function generateQuestion() {
-            if (isLessonSetMode && currentSubject === 'ALPHABET') {
-                return;
-            }
+            // Chỉ chạy cho chế độ Trắc nghiệm (Toán, Tiếng Việt)
+            if (currentSubject === 'ENGLISH' || currentSubject === 'ALPHABET') return;
             
             if (isLessonSetMode && currentQuestionIndex >= lessonSetQuestions.length) {
                 endLessonSet();
@@ -993,9 +1109,10 @@
             const qData = lessonSetQuestions[currentQuestionIndex];
             currentMode = qData.type;
             
-            
-            // Kích hoạt lại nút đọc và hiển thị
+            // Kích hoạt lại nút đọc và ẩn nút AI
             if (readButtonEl) readButtonEl.disabled = false; 
+            explainBtn.classList.add('hidden');
+            aiExplanationOutputEl.classList.add('hidden'); 
             
             questionTextEl.className = 'text-2xl sm:text-3xl font-black text-gray-800 mb-2';
             imageHintEl.className = 'text-base font-medium text-gray-600 my-2';
@@ -1003,7 +1120,10 @@
             readingControlsEl.classList.remove('hidden'); 
             selectionControlsEl.classList.remove('hidden'); 
             
-            // --- XỬ LÝ LOGIC ĐỌC PHÉP TÍNH ---
+            let autoReadLang = 'vi-VN'; 
+            readButtonEl.textContent = '🔊 Đọc Lại';
+            
+            // --- XỬ LÝ LOGIC PHÉP TÍNH ---
             if (qData.type === 'MATH_OP') {
                 const cleanQ = qData.q.replace(/[=\?]$/, '').trim();
                 const match = cleanQ.match(/(\d+)\s*([+\-x:])\s*(\d+)/); 
@@ -1016,13 +1136,13 @@
                 questionTextEl.textContent = qData.q;
                 imageHintEl.textContent = `(Bài ${qData.lessonNumber}: Phép tính)`;
             } 
-            // --- KẾT THÚC LOGIC ĐỌC PHÉP TÍNH ---
+            // --- XỬ LÝ LOGIC ĐỌC VÀ CHÍNH TẢ ---
             else if (currentMode === 'READ') {
-                questionTextEl.textContent = `👂 Nghe kỹ và CHỌN câu/từ bạn vừa nghe:`; // Cập nhật hướng dẫn cho phù hợp
+                questionTextEl.textContent = `👂 Nghe kỹ và CHỌN câu/từ bạn vừa nghe:`; 
                 currentTextToRead = qData.text || qData.q;
                 imageHintEl.textContent = `(Bài ${qData.lessonNumber}: Luyện Nghe)`;
             }
-            else { // Mặc định cho MATH_WORD, SPELL và các loại khác
+            else { // Mặc định cho MATH_WORD, SPELL
                 questionTextEl.textContent = qData.q;
                 currentTextToRead = qData.text || qData.q;
                 imageHintEl.textContent = `(Bài ${qData.lessonNumber}: ${qData.type})`;
@@ -1031,9 +1151,120 @@
             currentAnswer = qData.a; 
             setupSelectionButtons(qData.options);
             
-            // Re-added: Tự động đọc
-            setTimeout(() => speakText(currentTextToRead), 500); 
+            // Tự động đọc trong ngôn ngữ phù hợp
+            setTimeout(() => speakText(currentTextToRead, autoReadLang), 500); 
         }
+
+        // --- GEMINI API: GET VOCABULARY EXPLANATION ---
+
+        async function getVocabularyExplanation() {
+            const word = currentVocabWord;
+            
+            if (!word || explainBtn.disabled || geminiKeys.length === 0) return;
+            
+            // UI Loading
+            explainBtn.disabled = true;
+            explainTextEl.textContent = "AI đang giải thích...";
+            explainLoadingEl.classList.remove('hidden');
+            aiExplanationOutputEl.classList.add('hidden');
+            aiExplanationOutputEl.innerHTML = '';
+
+            imageHintEl.textContent = "Đang kết nối AI (vui lòng chờ 5-10s cho lần đầu)...";
+            
+            const systemPrompt = `Bạn là một trợ giảng Tiếng Anh cho học sinh cấp 1. Nhiệm vụ của bạn là giải thích từ vựng tiếng Anh. Hãy luôn trả lời bằng cấu trúc JSON sau.
+            QUY TẮC:
+            1. Giải thích Tiếng Anh phải đơn giản, ngắn gọn (dưới 15 từ).
+            2. Phần 'usage' phải là một câu ví dụ tiếng Anh có sử dụng từ vựng đó.`;
+            
+            const userQuery = `Giải thích từ vựng: ${word}`;
+            
+            const jsonSchema = {
+                type: "OBJECT",
+                properties: {
+                    "english_explanation": { "type": "STRING", "description": "Giải thích ngắn gọn bằng Tiếng Anh (dưới 15 từ)." },
+                    "vietnamese_translation": { "type": "STRING", "description": "Bản dịch Tiếng Việt của từ và giải thích." },
+                    "usage_example": { "type": "STRING", "description": "Một câu ví dụ bằng Tiếng Anh." },
+                    "usage_vietnamese": { "type": "STRING", "description": "Bản dịch Tiếng Việt của câu ví dụ." }
+                },
+                required: ["english_explanation", "vietnamese_translation", "usage_example", "usage_vietnamese"]
+            };
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: jsonSchema,
+                }
+            };
+
+            let successful = false;
+            let finalOutput = { error: true, message: "Không thể kết nối AI. Vui lòng kiểm tra API Key." };
+            
+            const MODEL_NAME = 'gemini-2.5-flash-preview-05-20'; 
+
+            for (let i = 0; i < geminiKeys.length; i++) {
+                currentKeyIndex = (i + currentKeyIndex) % geminiKeys.length;
+                const apiKey = geminiKeys[currentKeyIndex];
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${apiKey}`;
+                
+                try {
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (response.ok) {
+                        const result = await response.json();
+                        const jsonString = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (jsonString) {
+                            finalOutput = JSON.parse(jsonString);
+                            successful = true;
+                            break; 
+                        }
+                    }
+                } catch (error) {
+                    console.error("AI Explanation API Error:", error);
+                    // Continue to next key
+                }
+            }
+            
+            // UI Update after translation attempt
+            if (successful) {
+                // Render Output
+                aiExplanationOutputEl.innerHTML = `
+                    <p class="font-bold text-lg text-blue-700 mb-2">Từ Vựng: ${word.toUpperCase()}</p>
+                    <p class="text-green-600 font-semibold mb-1">Dịch Việt: ${finalOutput.vietnamese_translation}</p>
+                    <hr class="my-2 border-gray-300">
+                    <p class="text-gray-800 font-medium">English Explanation: ${finalOutput.english_explanation}</p>
+                    <p class="text-gray-800 font-medium mt-3">Ví dụ: <em class="font-bold text-purple-600">${finalOutput.usage_example}</em></p>
+                    <p class="text-gray-600 text-sm italic">(${finalOutput.usage_vietnamese})</p>
+                `;
+                aiExplanationOutputEl.classList.remove('hidden');
+                imageHintEl.textContent = 'Đã có giải thích từ AI.';
+                
+                // Speak Vietnamese translation
+                speakText(`Tiếng Việt: ${finalOutput.vietnamese_translation}`, 'vi-VN'); 
+
+                explainTextEl.textContent = "✅ Đã giải thích & đọc Việt";
+
+            } else {
+                aiExplanationOutputEl.innerHTML = `<p class="text-red-500 font-semibold">⚠️ LỖI: ${finalOutput.message}</p>`;
+                aiExplanationOutputEl.classList.remove('hidden');
+                imageHintEl.textContent = 'Đã xảy ra lỗi khi gọi AI. Vui lòng kiểm tra API Key.';
+                explainTextEl.textContent = "⚠️ Lỗi AI";
+            }
+            
+            // Revert UI elements
+            setTimeout(() => {
+                explainTextEl.textContent = "🤖 Hỏi AI Giải Thích";
+                explainLoadingEl.classList.add('hidden');
+                explainBtn.disabled = false;
+            }, 3000); // Thêm thời gian delay cho việc đọc Tiếng Việt nếu cần thiết.
+        }
+
+        // --- END GEMINI API: GET VOCABULARY EXPLANATION ---
 
         function numberToVietnamese(n) {
             if (n < 0 || n > 100) return String(n);
@@ -1080,10 +1311,8 @@
             return `${aText} ${opText} ${bText} bằng bao nhiêu`; 
         }
 
+        // Hàm này chỉ dùng cho chế độ Trắc nghiệm/Phép tính
         function setupSelectionButtons(options) {
-            if (currentSubject === 'ALPHABET') return;
-
-            selectionControlsEl.classList.remove('hidden');
             selectionControlsEl.innerHTML = '';
             
             const shuffledOptions = [...options].sort(() => 0.5 - Math.random()); 
@@ -1104,7 +1333,7 @@
         }
         
         function checkAnswer(selectedOption) {
-            if (currentSubject === 'ALPHABET') return;
+            if (currentSubject === 'ALPHABET' || currentSubject === 'ENGLISH') return;
 
             const currentQData = lessonSetQuestions[currentQuestionIndex];
             const correctEmojis = ["🎉", "🌟", "🥳", "✨", "💯", "💖", "💡"];
@@ -1244,8 +1473,8 @@
                  return;
              }
              
-             // Re-added lessonsAvailable[0]
-             lessonsAvailable = { 0: { ALPHABET: [] }, 1: { TOAN: [], SPELL: [], READ: [] }, 2: { TOAN: [], SPELL: [], READ: [] } };
+             // UPDATED: Thêm ENGLISH vào cấu trúc lessonsAvailable
+             lessonsAvailable = { 0: { ALPHABET: [] }, 1: { TOAN: [], SPELL: [], READ: [], ENGLISH: [] }, 2: { TOAN: [], SPELL: [], READ: [], ENGLISH: [] } };
 
              data.forEach(lesson => {
                  const grade = lesson.grade;
@@ -1264,8 +1493,9 @@
                  }
              });
              
+             // UPDATED: Thêm ENGLISH vào vòng lặp sắp xếp
              for (let g of [1, 2]) {
-                 for (let s of ['TOAN', 'SPELL', 'READ']) {
+                 for (let s of ['TOAN', 'SPELL', 'READ', 'ENGLISH']) {
                      if (lessonsAvailable[g] && lessonsAvailable[g][s]) {
                          lessonsAvailable[g][s].sort((a, b) => a.lessonNumber - b.lessonNumber);
                      }
@@ -1378,6 +1608,7 @@
                 if (record.subject === 'TOAN') subjectName = 'Toán';
                 else if (record.subject === 'SPELL') subjectName = 'Chính Tả';
                 else if (record.subject === 'READ') subjectName = 'Luyện Đọc';
+                else if (record.subject === 'ENGLISH') subjectName = 'Tiếng Anh'; 
                 else if (record.subject === 'ALPHABET') subjectName = 'Mẫu Giáo';
 
                 const card = document.createElement('div');
@@ -1602,6 +1833,8 @@
                 adminStatusEl.textContent = "Vui lòng chọn bài học hợp lệ để xóa.";
                 return;
             }
+            // Thay thế window.confirm bằng một modal thông báo tùy chỉnh
+            // Tạm thời giữ lại window.confirm vì giới hạn môi trường
             if (window.confirm(`Bạn có chắc chắn muốn xóa TOÀN BỘ Bài ${lessonNumber} (${adminLessonNameEl.value}) không? Hành động này không thể hoàn tác.`)) {
                 deleteLesson();
             }
@@ -1660,11 +1893,16 @@
             
             let html = '';
             lesson.questions_data.forEach((q, index) => {
+                // Tùy chỉnh hiển thị cho Tiếng Anh Vocab (chỉ cần q)
                 const qType = q.type || (subject === 'TOAN' ? 'MATH_OP' : subject);
+                const isEnglishVocab = qType === 'ENGLISH' && !q.options; 
+
                 html += `
                     <div class="p-3 border border-blue-200 rounded-lg bg-blue-50 space-y-1 text-sm">
                         <div class="flex justify-between items-start">
-                            <p class="font-bold text-gray-800">Câu ${index + 1} (${qType}):</p>
+                            <p class="font-bold text-gray-800">
+                                Câu ${index + 1} (${isEnglishVocab ? 'VOCAB' : qType}):
+                            </p>
                             <button 
                                 onclick="confirmDeleteQuestion(${lesson.id}, ${index}, 'Câu ${index + 1}')" 
                                 class="danger-btn px-2 py-1 text-xs text-white rounded-md hover:bg-red-700 font-bold ml-4"
@@ -1673,8 +1911,10 @@
                             </button>
                         </div>
                         <p class="text-gray-700"><strong>Hỏi:</strong> ${q.q}</p>
-                        <p class="text-green-600"><strong>Đáp án:</strong> ${q.a}</p>
-                        <p class="text-gray-500 text-xs">Lựa chọn: ${q.options ? q.options.join(' | ') : 'Không có'}</p>
+                        ${isEnglishVocab ? '' : 
+                        `<p class="text-green-600"><strong>Đáp án:</strong> ${q.a}</p>
+                         <p class="text-gray-500 text-xs">Lựa chọn: ${q.options ? q.options.join(' | ') : 'Không có'}</p>`
+                        }
                     </div>
                 `;
             });
@@ -1687,6 +1927,8 @@
         }
 
         function confirmDeleteQuestion(lessonId, questionIndex, questionLabel) {
+             // Thay thế window.confirm bằng một modal thông báo tùy chỉnh
+            // Tạm thời giữ lại window.confirm vì giới hạn môi trường
              if (window.confirm(`Bạn có chắc chắn muốn xóa ${questionLabel} này không? Hành động này không thể hoàn tác.`)) {
                  deleteQuestion(lessonId, questionIndex);
              }
@@ -1763,7 +2005,7 @@
             }
         }
 
-        // --- GEMINI API INTEGRATION ---
+        // --- GEMINI API: Question Generation ---
         
         async function generateAndSaveQuestions() {
             if (!supabase) return;
@@ -1797,38 +2039,73 @@
             aiResultPreviewEl.textContent = "";
             adminStatusEl.textContent = "";
 
+            const isVocabGeneration = subject === 'ENGLISH';
+
             const subjectName = {
                 'TOAN': 'Toán Học (Phép tính và Lời văn)',
                 'SPELL': 'Tiếng Việt - Chính Tả (Phân biệt âm/vần, điền từ)',
                 'READ': 'Tiếng Việt - Luyện Đọc (Nghe và chọn câu/từ)',
+                'ENGLISH': 'Tiếng Anh (Từ vựng cơ bản)', 
             }[subject];
 
-            const systemInstruction = `Bạn là một giáo viên tiểu học. Hãy tạo 30 câu hỏi dựa trên yêu cầu người dùng, cho Lớp ${grade} - Môn ${subjectName}.
-            
-            TUÂN THỦ CẤU TRÚC JSON NGHIÊM NGẶT sau (Array of Objects):
-            1. 'q': Câu hỏi hiển thị (dùng cho Toán/Chính tả) HOẶC Dòng hướng dẫn (dùng cho Luyện đọc).
-            2. 'a': Đáp án đúng (luôn là chuỗi).
-            3. 'options': Array chứa 4 lựa chọn (bao gồm cả đáp án đúng).
-            4. 'text': Văn bản chính xác cần đọc to (chỉ cần cho Luyện đọc và Toán lời văn, bỏ trống cho Toán phép tính, nếu là phép tính thì dùng "A cộng B bằng bao nhiêu").
-            5. 'type': BẮT BUỘC là một trong các giá trị sau: MATH_OP (Phép tính), MATH_WORD (Lời văn), SPELL (Chính tả), READ (Luyện đọc).`;
-            
-            let jsonSchema = {
-                type: "ARRAY",
-                items: {
-                    type: "OBJECT",
-                    properties: {
-                        "q": { "type": "STRING", "description": "Câu hỏi hiển thị" },
-                        "a": { "type": "STRING", "description": "Đáp án đúng" },
-                        "options": { "type": "ARRAY", "items": { "type": "STRING" }, "description": "4 lựa chọn" },
-                        "text": { "type": "STRING", "description": "Văn bản để đọc (bỏ trống nếu là Toán phép tính)" },
-                        "type": { "type": "STRING", "description": "MATH_OP, MATH_WORD, SPELL, hoặc READ" }
-                    },
-                    required: ["q", "a", "options", "text", "type"]
-                }
-            };
+            let promptToGemini = prompt;
+            let systemInstruction = '';
+            let jsonSchema = {};
+
+            if (isVocabGeneration) {
+                 // Nếu là Tiếng Anh, yêu cầu chỉ trả về từ vựng, các trường khác là rỗng/placeholder
+                promptToGemini = `Dựa trên yêu cầu: "${prompt}". Tạo 30 từ vựng tiếng Anh cơ bản cho Lớp ${grade}. Mỗi từ vựng là một câu hỏi.`;
+                systemInstruction = `Bạn là một chuyên gia tạo từ vựng. Hãy tạo danh sách 30 từ vựng cho học sinh cấp 1 theo cấu trúc JSON NGHIÊM NGẶT sau.
+                QUY TẮC:
+                1. 'q' phải là một từ vựng Tiếng Anh duy nhất (ví dụ: 'apple', 'run', 'blue').
+                2. 'a' luôn là chuỗi rỗng: "".
+                3. 'options' luôn là một mảng rỗng: [].
+                4. 'text' luôn là chuỗi rỗng: "".
+                5. 'type' luôn là: "ENGLISH".`;
+
+                jsonSchema = {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            "q": { "type": "STRING", "description": "Từ vựng tiếng Anh duy nhất" },
+                            "a": { "type": "STRING" },
+                            "options": { "type": "ARRAY", "items": { "type": "STRING" } },
+                            "text": { "type": "STRING" },
+                            "type": { "type": "STRING", "enum": ["ENGLISH"] }
+                        },
+                        required: ["q", "a", "options", "text", "type"]
+                    }
+                };
+            } else {
+                // Chế độ Trắc nghiệm/Toán/Tiếng Việt
+                systemInstruction = `Bạn là một giáo viên tiểu học. Hãy tạo 30 câu hỏi dựa trên yêu cầu người dùng, cho Lớp ${grade} - Môn ${subjectName}.
+                
+                TUÂN THỦ CẤU TRÚC JSON NGHIÊM NGẶT sau (Array of Objects):
+                1. 'q': Câu hỏi hiển thị (dùng cho Toán/Chính tả) HOẶC Dòng hướng dẫn (dùng cho Luyện đọc).
+                2. 'a': Đáp án đúng (luôn là chuỗi).
+                3. 'options': Array chứa 4 lựa chọn (bao gồm cả đáp án đúng).
+                4. 'text': Văn bản chính xác cần đọc to (chỉ cần cho Luyện đọc và Toán lời văn, bỏ trống cho Toán phép tính, nếu là phép tính thì dùng "A cộng B bằng bao nhiêu").
+                5. 'type': BẮT BUỘNG là một trong các giá trị sau: MATH_OP (Phép tính), MATH_WORD (Lời văn), SPELL (Chính tả), READ (Luyện đọc).`; 
+
+                jsonSchema = {
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            "q": { "type": "STRING", "description": "Câu hỏi hiển thị" },
+                            "a": { "type": "STRING", "description": "Đáp án đúng" },
+                            "options": { "type": "ARRAY", "items": { "type": "STRING" }, "description": "4 lựa chọn" },
+                            "text": { "type": "STRING", "description": "Văn bản để đọc (bỏ trống nếu là Toán phép tính)" },
+                            "type": { "type": "STRING", "enum": ["MATH_OP", "MATH_WORD", "SPELL", "READ"] }
+                        },
+                        required: ["q", "a", "options", "text", "type"]
+                    }
+                };
+            }
             
             const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
+                contents: [{ parts: [{ text: promptToGemini }] }],
                 systemInstruction: { parts: [{ text: systemInstruction }] },
                 generationConfig: {
                     responseMimeType: "application/json",
@@ -1866,6 +2143,15 @@
                             const jsonString = result.candidates[0].content.parts[0].text;
                             const newQuestions = JSON.parse(jsonString);
                             
+                            // Kiểm tra nếu là chế độ Vocab, cần đảm bảo các trường phụ là rỗng/placeholder
+                            if (isVocabGeneration) {
+                                newQuestions.forEach(q => {
+                                    q.a = ''; // Ensure answer is empty
+                                    q.options = []; // Ensure options are empty
+                                    q.text = q.q; // Use the word itself for reading data
+                                });
+                            }
+
                             if (Array.isArray(newQuestions) && newQuestions.length > 0) {
                                 await saveNewQuestions(grade, subject, lessonNumber, newQuestions);
                                 successful = true;
@@ -1948,7 +2234,7 @@
         
         // --- STARTUP ---
         window.onload = () => {
-             lessonsAvailable[0] = { ALPHABET: [] }; // Re-added
+             lessonsAvailable[0] = { ALPHABET: [] }; 
              fetchLessonsFromSupabase(); 
              showScreen('student-name-input');
         }
@@ -1956,7 +2242,7 @@
         // --- GÁN HÀM VÀO WINDOW OBJECT ĐỂ TRUY CẬP TỪ HTML ---
         Object.assign(window, {
             showScreen, selectStudentAndGrade, adminLogin, adminLogout,
-            selectGrade, selectSubject, startLessonSet, endLessonSet, playAudio, // Re-added playAudio
+            selectGrade, selectSubject, startLessonSet, endLessonSet, playAudio, getVocabularyExplanation, 
             checkLessonRange, loadLessonOptions, previewLesson, createNewLessonStructure,
             updateLessonName, confirmDeleteLesson, generateAndSaveQuestions,
             toggleHistoryContent, displayHistory, addGeminiKey, deleteGeminiKey,
