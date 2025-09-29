@@ -547,7 +547,8 @@
         let geminiKeys = [];
         let currentKeyIndex = 0;
         // NEW: Max Lesson Limits for Player mode, stored in config table
-        let maxLessonLimits = { 1: { TOAN: 5, SPELL: 5, READ: 5 }, 2: { TOAN: 5, SPELL: 5, READ: 5 } };
+        // KHỞI TẠO TƯỜNG MINH TRONG loadMaxLessonLimits
+        let maxLessonLimits = { 1: { TOAN: {}, SPELL: {}, READ: {} }, 2: { TOAN: {}, SPELL: {}, READ: {} } }; 
         
         // --- ELEMENTS ---
         const scoreEl = document.getElementById('score');
@@ -868,9 +869,11 @@
              let maxLessonLimit = 5; // Mặc định là 5
              
              // Lấy cấu hình giới hạn (Max limit) từ biến toàn cục
-             if (maxLessonLimits[grade] && maxLessonLimits[grade][subject] && typeof maxLessonLimits[grade][subject].max === 'number') {
-                 maxLessonLimit = maxLessonLimits[grade][subject].max;
-             }
+             const config = maxLessonLimits[grade] && maxLessonLimits[grade][subject] 
+                           ? maxLessonLimits[grade][subject] 
+                           : { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
+             
+             maxLessonLimit = config.max;
 
              await fetchLessonsFromSupabase(); 
              
@@ -885,17 +888,14 @@
              let forcedStart = 1;
              let forcedEnd = maxLessonLimit;
 
-             if (maxLessonLimits[grade] && maxLessonLimits[grade][subject]) {
-                 const config = maxLessonLimits[grade][subject];
-                 isRangeLocked = config.lockRange === true;
-                 
-                 // Đảm bảo forcedStart và forcedEnd không vượt quá Max limit và Max DB
-                 if (config.playerStartRange && config.playerStartRange >= 1) {
-                     forcedStart = Math.min(config.playerStartRange, maxLessonLimit, maxLessonFromDB || 1);
-                 }
-                 if (config.playerEndRange && config.playerEndRange >= forcedStart) {
-                     forcedEnd = Math.min(config.playerEndRange, maxLessonLimit, maxLessonFromDB || 1);
-                 }
+             isRangeLocked = config.lockRange === true;
+             
+             // Đảm bảo forcedStart và forcedEnd không vượt quá Max limit và Max DB
+             if (config.playerStartRange && config.playerStartRange >= 1) {
+                 forcedStart = Math.min(config.playerStartRange, maxLessonLimit, maxLessonFromDB || 1);
+             }
+             if (config.playerEndRange && config.playerEndRange >= forcedStart) {
+                 forcedEnd = Math.min(config.playerEndRange, maxLessonLimit, maxLessonFromDB || 1);
              }
              
              // Sử dụng giá trị nhỏ hơn giữa DB Max và Admin Limit (cho dropdown range)
@@ -1252,6 +1252,8 @@
         async function loadMaxLessonLimits() {
             if (!supabase) return;
 
+            const defaultSettings = { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
+
             try {
                 const { data, error } = await supabase
                     .from('config')
@@ -1259,46 +1261,38 @@
                     .eq('id', 1)
                     .maybeSingle();
 
-                if (error && error.code !== 'PGRST116') throw error; // PGRST116: no rows found
+                if (error && error.code !== 'PGRST116') throw error; 
 
-                // FIX: Đảm bảo maxLessonLimits luôn có cấu trúc {1: {}, 2: {}} để tránh lỗi undefined
-                // Đặt giá trị mặc định cho các trường mới: max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false
                 if (data && data.max_lesson_limits) {
+                    let loadedLimits = data.max_lesson_limits;
+                    
+                    // Khởi tạo cấu trúc đầy đủ, sử dụng giá trị DB nếu có, nếu không thì dùng mặc định
                     maxLessonLimits = { 1: {}, 2: {} };
                     for (const grade of [1, 2]) {
                         for (const subject of ['TOAN', 'SPELL', 'READ']) {
-                             const existing = data.max_lesson_limits[grade] ? (data.max_lesson_limits[grade][subject] || {}) : {};
+                            const existingGradeData = loadedLimits[grade] || {};
+                            const existingSubjectData = existingGradeData[subject] || {};
                              
-                             // FIX: Ensure it's a nested object for consistency
-                             if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
-                             
-                             maxLessonLimits[grade][subject] = {
-                                 max: existing.max !== undefined ? existing.max : 5,
-                                 playerStartRange: existing.playerStartRange !== undefined ? existing.playerStartRange : 1,
-                                 playerEndRange: existing.playerEndRange !== undefined ? existing.playerEndRange : 5,
-                                 lockRange: existing.lockRange === true // Chỉ true khi được set là true
-                             };
+                            maxLessonLimits[grade][subject] = {
+                                max: existingSubjectData.max !== undefined ? existingSubjectData.max : defaultSettings.max,
+                                playerStartRange: existingSubjectData.playerStartRange !== undefined ? existingSubjectData.playerStartRange : defaultSettings.playerStartRange,
+                                playerEndRange: existingSubjectData.playerEndRange !== undefined ? existingSubjectData.playerEndRange : defaultSettings.playerEndRange,
+                                lockRange: existingSubjectData.lockRange === true 
+                            };
                         }
                     }
                 } else {
                     // Nếu không có data, giữ nguyên mặc định
                     maxLessonLimits = {
-                         1: { TOAN: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, SPELL: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, READ: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false } },
-                         2: { TOAN: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, SPELL: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false }, READ: { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false } }
+                         1: { TOAN: {...defaultSettings}, SPELL: {...defaultSettings}, READ: {...defaultSettings} },
+                         2: { TOAN: {...defaultSettings}, SPELL: {...defaultSettings}, READ: {...defaultSettings} }
                     };
                 }
                 
-                // Đảm bảo admin-max-lesson luôn hiển thị giá trị hiện tại khi load
+                // Cập nhật Admin UI sau khi tải xong
                 const grade = parseInt(adminGradeEl.value);
                 const subject = adminSubjectEl.value;
-                
-                // Lấy giá trị từ cấu trúc đã được đảm bảo an toàn
-                const config = maxLessonLimits[grade] && maxLessonLimits[grade][subject] ? maxLessonLimits[grade][subject] : { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
-
-                adminMaxLessonEl.value = config.max;
-                playerStartLessonEl.value = config.playerStartRange;
-                playerEndLessonEl.value = config.playerEndRange;
-                lockPlayerRangeEl.checked = config.lockRange;
+                loadAdminRangeControls(grade, subject);
 
 
             } catch (e) {
@@ -1306,6 +1300,18 @@
             }
         }
         
+        // Hàm mới để tải và hiển thị các controls Admin Range
+        function loadAdminRangeControls(grade, subject) {
+            const config = maxLessonLimits[grade] && maxLessonLimits[grade][subject] 
+                           ? maxLessonLimits[grade][subject] 
+                           : { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
+
+            adminMaxLessonEl.value = config.max;
+            playerStartLessonEl.value = config.playerStartRange;
+            playerEndLessonEl.value = config.playerEndRange;
+            lockPlayerRangeEl.checked = config.lockRange;
+        }
+
         // NEW: Update Max Lesson Limits in Supabase config table
         async function updateMaxLesson() {
             if (!supabase) return;
@@ -1323,9 +1329,10 @@
             // Cập nhật cấu trúc Max
             if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
             if (!maxLessonLimits[grade][subject]) {
-                // Giữ lại các giá trị player range nếu đã có
+                // Nếu chưa có, khởi tạo với Max mới và Player Range mặc định
                 maxLessonLimits[grade][subject] = { max: newMax, playerStartRange: 1, playerEndRange: 5, lockRange: false };
             } else {
+                // Chỉ cập nhật Max, giữ nguyên Player Range
                 maxLessonLimits[grade][subject].max = newMax;
             }
             
@@ -1364,7 +1371,7 @@
             // Đảm bảo cấu trúc tồn tại
             if (!maxLessonLimits[grade]) maxLessonLimits[grade] = {};
             if (!maxLessonLimits[grade][subject]) {
-                 // Nếu chưa có, khởi tạo với max mặc định là 5
+                 // Nếu chưa có, khởi tạo với Max mặc định
                  maxLessonLimits[grade][subject] = { max: 5 };
             }
             
@@ -1700,16 +1707,8 @@
              const grade = parseInt(adminGradeEl.value);
              const subject = adminSubjectEl.value;
              
-             // Lấy cấu hình hiện tại để hiển thị trong Admin UI
-             const config = maxLessonLimits[grade] && maxLessonLimits[grade][subject] 
-                           ? maxLessonLimits[grade][subject] 
-                           : { max: 5, playerStartRange: 1, playerEndRange: 5, lockRange: false };
-
-             adminMaxLessonEl.value = config.max;
-             playerStartLessonEl.value = config.playerStartRange;
-             playerEndLessonEl.value = config.playerEndRange;
-             lockPlayerRangeEl.checked = config.lockRange;
-
+             // Tải và hiển thị cấu hình Player Range cho Grade/Subject hiện tại
+             loadAdminRangeControls(grade, subject);
              
              // Need to safely check for existence of grade 0 data in admin logic
              const options = lessonsAvailable[grade] && lessonsAvailable[grade][subject] ? lessonsAvailable[grade][subject] : [];
